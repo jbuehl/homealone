@@ -1,0 +1,22 @@
+[project]
+name = "homealone"
+version = "0.0.20"
+authors = [
+  { name="Joe Buehl", email="jbuehl@buehltech.com" },
+]
+description = "Home automation platform"
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.5"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Home Automation",
+]
+[project.urls]
+"Homepage" = "https://github.com/jbuehl/homealone"
+"Bug Tracker" = "https://github.com/jbuehl/homealone/issues"
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
