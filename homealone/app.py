@@ -11,7 +11,6 @@ class Application(object):
     def __init__(self, name, globals,
                  publish=True,
                  state=False, shared=False, changeMonitor=True,
-                 # metrics=False,
                  remote=False, watch=[], ignore=[]):
         self.name = name
         self.globals = globals                      # application global variables
@@ -20,7 +19,6 @@ class Application(object):
         self.shared = shared
         self.changeMonitor = changeMonitor
         self.stateInterface = None                  # Interface resource for state file
-        # self.metrics = metrics                      # publish metrics if true
         self.event = threading.Event()              # state change event
         self.resources = Collection("resources", event=self.event)    # resources to be published by REST server
         self.globals["resources"] = self.resources
@@ -32,8 +30,7 @@ class Application(object):
         self.logger = DataLogger("logger", self.name, self.resources)
 
         if state:
-            if not os.path.exists(stateDir):
-                os.mkdir(stateDir)
+            os.makedirs(stateDir, exist_ok=True)
             self.stateInterface = FileInterface("stateInterface", fileName=stateDir+self.name+".state", shared=shared, changeMonitor=changeMonitor)
             self.stateInterface.start()
             self.globals["stateInterface"] = self.stateInterface

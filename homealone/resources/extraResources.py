@@ -32,10 +32,9 @@ class SensorGroup(Sensor):
 
 # A set of Controls whose state can be changed together
 class ControlGroup(SensorGroup, Control):
-    def __init__(self, name, controlList, stateList=[], stateMode=False, **kwargs):
-        SensorGroup.__init__(self, name, controlList, **kwargs)
+    def __init__(self, name, controlList, stateList=[], stateMode=False, style="controlGroup", **kwargs):
+        SensorGroup.__init__(self, name, controlList, style=style, **kwargs)
         Control.__init__(self, name, **kwargs)
-        self.type="controlGroup"
         self.stateMode = stateMode  # which state to return: False = SensorGroup, True = groupState
         self.groupState = 0
         if stateList == []:
@@ -281,7 +280,7 @@ class MinMaxControl(StateControl):
 
     def setState(self, state, wait=False):
         state = int(state)
-        debug("debugState", "MinMaxControl", self.name, "setState", state, self.minValue, self.maxValue)
+        debug("debugState", "MinMaxControl", self.name, "setState", state, self.min, self.max)
         if state < self.min:
             value = self.min
         elif state > self.max:

@@ -1,12 +1,11 @@
 [project]
 name = "homealone"
-version = "0.0.20"
+version = "0.0.21"
 authors = [
   { name="Joe Buehl", email="jbuehl@buehltech.com" },
 ]
 description = "Home automation platform"
 readme = "README.md"
-license = { file="LICENSE" }
 requires-python = ">=3.5"
 classifiers = [
     "Programming Language :: Python :: 3",
