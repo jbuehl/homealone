@@ -46,6 +46,8 @@ class RestServer(object):
             self.restAddr = multicastAddr
             self.stateSocket = None
             self.stateSequence = 0
+            self.stateTimeStamp = 0
+            self.resourceTimeStamp = 0
         else:
             log("RestServer", "unable to find an available port")
             self.server = None
