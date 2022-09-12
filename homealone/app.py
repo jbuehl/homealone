@@ -9,39 +9,45 @@ from .interfaces.fileInterface import *
 
 class Application(object):
     def __init__(self, name, globals,
-                 publish=True,
-                 state=False, shared=False, changeMonitor=True,
-                 remote=False, watch=[], ignore=[]):
+                 publish=True, advert=True,
+                 remote=False, watch=[], ignore=[], remoteResources=True,
+                 state=False, shared=False, changeMonitor=True):
         self.name = name
         self.globals = globals                      # application global variables
-        self.publish = publish                      # run REST server if true
-        self.state = state                          # create and maintain a state file if true
-        self.shared = shared
-        self.changeMonitor = changeMonitor
-        self.stateInterface = None                  # Interface resource for state file
         self.event = threading.Event()              # state change event
-        self.resources = Collection("resources", event=self.event)    # resources to be published by REST server
+        self.resources = Collection("resources", event=self.event)    # application resources
         self.globals["resources"] = self.resources
         self.schedule = Schedule("schedule")        # schedule of tasks to run
         self.startList = []                         # resources that need to be started
-        self.remote = remote
-        self.restProxy = None
-        self.remoteResources = None
+        # publish resources via REST server
+        if publish:
+            self.restServer = RestServer(self.name, self.resources, event=self.event, label=self.name, advert=advert)
+        else:
+            self.restServer = None
+        # remote resource proxy
+        if remote:
+            if remoteResources:
+                self.remoteResources = Collection("remoteResources", event=self.event)
+                self.globals["remoteResources"] = self.remoteResources
+            else:
+                self.remoteResources = self.resources
+            self.restProxy = RestProxy("restProxy", self.remoteResources, watch=watch, ignore=ignore, event=self.event)
+        else:
+            self.restProxy = None
+            self.remoteResources = None
         self.logger = DataLogger("logger", self.name, self.resources)
-
+        # persistent state
         if state:
             os.makedirs(stateDir, exist_ok=True)
             self.stateInterface = FileInterface("stateInterface", fileName=stateDir+self.name+".state", shared=shared, changeMonitor=changeMonitor)
             self.stateInterface.start()
             self.globals["stateInterface"] = self.stateInterface
-        if remote:
-            self.remoteResources = Collection("remoteResources", event=self.event)
-            self.globals["remoteResources"] = self.remoteResources
-            self.restProxy = RestProxy("restProxy", self.remoteResources, watch=watch, ignore=ignore, event=self.event)
+        else:
+            self.stateInterface = None                  # Interface resource for state file
 
     # start the application processes
     def run(self):
-        if self.remote:
+        if self.restProxy:
             self.restProxy.start()
         if self.logger:
             self.logger.start()
@@ -49,8 +55,7 @@ class Application(object):
             resource.start()
         if list(self.schedule.keys()) != []:
             self.schedule.start()
-        if self.publish:
-            self.restServer = RestServer(self.name, self.resources, event=self.event, label=self.name)
+        if self.restServer:
             self.restServer.start()
 
     # define an Interface resource
@@ -79,7 +84,7 @@ class Application(object):
     # define a Task resource
     def task(self, task, event=True, publish=True):
         self.schedule.addTask(task)
-        self.globals[task.name] = self.schedule[task.name]
+        self.globals[task.name] = task
         if event:
             task.event = self.event
         if publish:
