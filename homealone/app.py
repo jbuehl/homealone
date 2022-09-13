@@ -9,16 +9,16 @@ from .interfaces.fileInterface import *
 
 class Application(object):
     def __init__(self, name, globals,
-                 publish=True, advert=True,
-                 remote=False, watch=[], ignore=[], remoteResources=True,
-                 state=False, shared=False, changeMonitor=True):
+                 publish=True, advert=True,                                 # resource publishing parameters
+                 remote=False, watch=[], ignore=[], remoteResources=True,   # remote resource proxy parameters
+                 state=False, shared=False, changeMonitor=True):            # persistent state parameters
         self.name = name
-        self.globals = globals                      # application global variables
-        self.event = threading.Event()              # state change event
-        self.resources = Collection("resources", event=self.event)    # application resources
+        self.globals = globals                                              # application global variables
+        self.event = threading.Event()                                      # state change event
+        self.resources = Collection("resources", event=self.event)          # application resources
         self.globals["resources"] = self.resources
-        self.schedule = Schedule("schedule")        # schedule of tasks to run
-        self.startList = []                         # resources that need to be started
+        self.schedule = Schedule("schedule")                                # schedule of tasks to run
+        self.startList = []                                                 # resources that need to be started
         # publish resources via REST server
         if publish:
             self.restServer = RestServer(self.name, self.resources, event=self.event, label=self.name, advert=advert)
@@ -26,10 +26,10 @@ class Application(object):
             self.restServer = None
         # remote resource proxy
         if remote:
-            if remoteResources:
+            if remoteResources:     # separate collection for remote resources
                 self.remoteResources = Collection("remoteResources", event=self.event)
                 self.globals["remoteResources"] = self.remoteResources
-            else:
+            else:                   # use the same collection for remote and local resources
                 self.remoteResources = self.resources
             self.restProxy = RestProxy("restProxy", self.remoteResources, watch=watch, ignore=ignore, event=self.event)
         else:
@@ -45,17 +45,17 @@ class Application(object):
         else:
             self.stateInterface = None                  # Interface resource for state file
 
-    # start the application processes
+    # run the application processes
     def run(self):
-        if self.restProxy:
+        if self.restProxy:                      # remote resource proxy
             self.restProxy.start()
-        if self.logger:
+        if self.logger:                         # data logger
             self.logger.start()
-        for resource in self.startList:
+        for resource in self.startList:         # other resources
             resource.start()
-        if list(self.schedule.keys()) != []:
+        if list(self.schedule.keys()) != []:    # task schedule
             self.schedule.start()
-        if self.restServer:
+        if self.restServer:                     # resource publication
             self.restServer.start()
 
     # define an Interface resource
