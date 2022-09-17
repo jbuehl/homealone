@@ -11,6 +11,7 @@ class Application(object):
     def __init__(self, name, globals,
                  publish=True, advert=True,                                 # resource publishing parameters
                  remote=False, watch=[], ignore=[], remoteResources=True,   # remote resource proxy parameters
+                 logger=True,                                               # data logger
                  state=False, shared=False, changeMonitor=True):            # persistent state parameters
         self.name = name
         self.globals = globals                                              # application global variables
@@ -35,7 +36,11 @@ class Application(object):
         else:
             self.restProxy = None
             self.remoteResources = None
-        self.logger = DataLogger("logger", self.name, self.resources)
+        # data logger
+        if logger:
+            self.logger = DataLogger("logger", self.name, self.resources)
+        else:
+            self.logger = None
         # persistent state
         if state:
             os.makedirs(stateDir, exist_ok=True)
