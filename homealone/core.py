@@ -246,7 +246,7 @@ class Sensor(Resource):
     def __init__(self, name, interface=None, addr=None, type=None, style="sensor",
                  factor=1, offset=0, resolution=0,
                  poll=10, event=None, persistence=None, interrupt=None,
-                 location=None, group="", label=None):
+                 location=None, group="", label=""):
         try:
             if self.type:   # init has already been called for this object - FIXME
                 return
