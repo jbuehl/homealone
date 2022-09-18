@@ -93,6 +93,7 @@ class DataLogger(object):
     def purgeDataThread(self):
         # get list of log files that are eligible to be purged
         debug("debugPurgeData", "purging logs more than", purgeDays, "days old")
+        today = time.strftime("%Y%m%d")
         for logFile in sorted(os.listdir(self.logDir))[:-purgeDays]:
             # only purge past files
             debug("debugPurgeData", "checking", logFile)
