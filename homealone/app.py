@@ -6,12 +6,14 @@ from .rest.restServer import *
 from .rest.restProxy import *
 from .logging.logging import *
 from .interfaces.fileInterface import *
+from homealone.interfaces.osInterface import *
 
 class Application(object):
     def __init__(self, name, globals,
                  publish=True, advert=True,                                 # resource publishing parameters
                  remote=False, watch=[], ignore=[], remoteResources=True,   # remote resource proxy parameters
                  logger=True,                                               # data logger
+                 system=False,                                              # system resources
                  state=False, shared=False, changeMonitor=True):            # persistent state parameters
         self.name = name
         self.globals = globals                                              # application global variables
@@ -41,6 +43,17 @@ class Application(object):
             self.logger = DataLogger("logger", self.name, self.resources)
         else:
             self.logger = None
+        # system resources
+        if system:
+            self.osInterface = OSInterface("osInterface")
+            self.globals["osInterface"] = self.osInterface
+            self.resource(Sensor(hostname+"CpuTemp", self.osInterface, "cpuTemp", style="tempC"))
+            self.resource(Sensor(hostname+"CpuLoad", self.osInterface, "cpuLoad", style="pct"))
+            self.resource(Sensor(hostname+"Uptime", self.osInterface, "uptime"))
+            self.resource(Sensor(hostname+"IpAddr", self.osInterface, "ipAddr eth0"))
+            self.resource(Sensor(hostname+"DiskUsage", self.osInterface, "diskUse /", style="pct"))
+            self.group("System")
+            self.label()
         # persistent state
         if state:
             os.makedirs(stateDir, exist_ok=True)
