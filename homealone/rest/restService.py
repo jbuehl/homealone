@@ -60,7 +60,8 @@ class RestService(Sensor):
         return True
 
     def __repr__(self):
-        return "version: "+str(self.version)+"\n"+ \
+        return "server: "+self.interface.serviceAddr+"\n"+ \
+               "version: "+str(self.version)+"\n"+ \
                "resource time: "+str(self.resourceTimeStamp)+"\n"+ \
                "state time: "+str(self.stateTimeStamp)+"\n"+ \
                "missed seq: "+str(self.missedSeq)+"\n"+ \
