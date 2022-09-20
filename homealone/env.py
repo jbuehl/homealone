@@ -14,7 +14,7 @@ externalUrl = "example.com"
 appDir = sys.path[0]
 # site configuration directory - add to path so config can be imported
 siteDir = "/etc/homealone/site"
-sys.path.insert(0, siteDir)
+sys.path.append(siteDir)
 keyDir = siteDir+"/keys/"       # external credentials
 stateDir = appDir+"/state/"     # app specific states
 dataDir = appDir+"/data/"       # data logging
