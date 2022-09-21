@@ -46,6 +46,7 @@ def requestHandler(request, response, service, resources):
                 resource = resources.getRes(resName, False)
                 if request.headers['Content-type'] == "application/json":
                     request.data = json.loads(request.data)
+                debug('debugRestServer', "data:", request.data)
                 resource.__setattr__(attr, request.data[attr])
             except (KeyError, AttributeError):           # resource or attr not found
                 response.status = 404   # not found
