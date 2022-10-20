@@ -4,8 +4,6 @@ from homealone.rest.restConfig import *
 from homealone.schedule import *
 import threading
 
-messageTimeout = beaconTimeout
-
 # create a Resource from a serialized dict
 def loadResource(classDict, globalDict):
     def parseClass(classDict):
@@ -79,6 +77,9 @@ class RestService(Sensor):
         debug('debugRestService', "RestService", self.name, "disabled", reason)
         self.enabled = False
         self.interface.stop()
+        if self.messageTimer:
+            self.messageTimer.cancel()
+            debug('debugMessageTimer', self.name, "timer cancelled", "disabled", self.messageTimer.name, int(time.time()))
         self.messageTimer = None
         for resource in list(self.resources.values()):
             resource.disable()
@@ -99,23 +100,25 @@ class RestService(Sensor):
 
     # define a timer to disable the service if the message timer times out
     # can't use a socket timeout because multiple threads are using the same port
-    def messageTimeout(self):
-        debug('debugMessageTimer', self.name, "timer expired")
-        debug('debugRestProxyDisable', self.name, "read message timeout")
+    def endTimer(self):
+        debug('debugMessageTimer', self.name, "timer expired", self.messageTimer.name, int(time.time()))
+        debug('debugRestProxyDisable', self.name, "advert message timeout")
+        self.messageTimer = None
         self.disable("timeout")
 
     # start the message timer
     def startTimer(self):
-        if messageTimeout:
-            self.messageTimer = threading.Timer(messageTimeout, self.messageTimeout)
+        if restAdvertTimeout:
+            self.messageTimer = threading.Timer(restAdvertTimeout, self.endTimer)
             self.messageTimer.start()
-            debug('debugMessageTimer', self.name, "timer started", messageTimeout, "seconds")
+            debug('debugMessageTimer', self.name, "timer started", restAdvertTimeout, "seconds", self.messageTimer.name, int(time.time()))
 
     # cancel the message timer
     def cancelTimer(self, reason=""):
         if self.messageTimer:
             self.messageTimer.cancel()
-            debug('debugMessageTimer', self.name, "timer cancelled", reason)
+            debug('debugMessageTimer', self.name, "timer cancelled", reason, self.messageTimer.name, int(time.time()))
+            self.messageTimer = None
 
     # load resources from the specified REST paths
     def load(self, serviceResources):

@@ -52,6 +52,7 @@ ipv4MulticastAddr = "224.0.0.1"
 ipv6MulticastAddr = "ff02::1"
 multicastAddr = ipv4MulticastAddr
 restAdvertInterval = 10
+restAdvertTimeout = 60
 restTimeout = 60
 restRetryInterval = 10
 
