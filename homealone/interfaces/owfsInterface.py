@@ -14,7 +14,8 @@ class OWFSInterface(Interface):
                 value = owfs.read()
                 try:
                     return float(value)
-                except:
-                    return value
+                except Exception as ex:
+                    logException(self.name, addr, str(value), ex)
+                    return 0
         except:
             return 0
