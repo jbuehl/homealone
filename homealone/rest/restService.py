@@ -1,6 +1,5 @@
 from homealone import *
 from homealone.resources.extraResources import *
-from homealone.rest.restConfig import *
 from homealone.schedule import *
 import threading
 
