@@ -57,11 +57,12 @@ def requestHandler(request, response, service, resources):
 
 # RESTful web services server interface
 class RestServer(object):
-    def __init__(self, name, resources=None, port=None, advert=True, event=None, label=""):
+    def __init__(self, name, resources=None, port=None, advert=True, block=True, event=None, label=""):
         debug('debugRestServer', name, "creating RestServer", "advert:", advert)
         self.name = name
         self.resources = resources
         self.advert = advert
+        self.block = block
         if event:
             self.event = event
         else:
@@ -87,7 +88,7 @@ class RestServer(object):
             else:
                 self.label = label
             debug('debugInterrupt', self.label, "event", self.event)
-            self.server = HttpServer(port=self.port, handler=requestHandler, args=(self, resources,), start=False)
+            self.server = HttpServer(port=self.port, handler=requestHandler, args=(self, resources,), start=False, block=False)
             self.restAddr = multicastAddr
             self.stateSocket = None
             self.stateSequence = 0
@@ -105,6 +106,8 @@ class RestServer(object):
         waitForDns(localController)
         # start polling the resource states
         self.resources.start()
+        # start the HTTP server
+        self.server.start()
         if self.advert:
             # start the thread to send the resource states periodically and also when one changes
             def stateAdvert():
@@ -131,8 +134,7 @@ class RestServer(object):
                         self.resourceTimeStamp = int(time.time())
                     lastStates = currentStates
                 debug('debugRestServer', self.name, "REST state ended")
-            stateAdvertThread = LogThread(name="stateAdvertThread", target=stateAdvert)
-            stateAdvertThread.start()
+            startThread(name="stateAdvertThread", target=stateAdvert)
 
             # start the thread to trigger the advertisement message periodically
             def stateTrigger():
@@ -142,11 +144,10 @@ class RestServer(object):
                     self.event.set()
                     time.sleep(restAdvertInterval)
                 debug('debugRestServer', self.name, "REST state trigger ended")
-            stateTriggerThread = LogThread(name="stateTriggerThread", target=stateTrigger)
-            stateTriggerThread.start()
-
-        # start the HTTP server
-        self.server.start()
+            startThread(name="stateTriggerThread", target=stateTrigger)
+        #wait forever
+        if self.block:
+            block()
 
     def openSocket(self):
         msgSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
