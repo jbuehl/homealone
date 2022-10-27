@@ -11,7 +11,7 @@ class RestInterface(Interface):
         self.cache = cache                  # cache the states
         self.writeThrough = writeThrough    # cache is write through
         self.enabled = False
-        self.updateAddr(serviceAddr)
+        self.setServiceAddr(serviceAddr)
         debug('debugRest', self.name, "created", self.serviceAddr)
 
     def start(self):
@@ -27,7 +27,7 @@ class RestInterface(Interface):
                 self.states[state] = None
 
     # update the service address
-    def updateAddr(self, serviceAddr):
+    def setServiceAddr(self, serviceAddr):
         self.serviceAddr = serviceAddr      # address of the REST service to target (ipAddr:port)
         (ipAddr, port) = self.serviceAddr.split(":")
         self.client = HttpClient(ipAddr, int(port))

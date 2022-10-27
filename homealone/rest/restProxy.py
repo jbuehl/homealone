@@ -120,7 +120,7 @@ class RestProxy(LogThread):
                     service.cancelTimer("message received")
                     if serviceAddr != service.interface.serviceAddr:
                         debug('debugRestProxyUpdate', self.name, "updating address", service.name, serviceAddr)
-                        service.interface.updateAddr(serviceAddr) # update the ipAddr:port in case it changed
+                        service.interface.setServiceAddr(serviceAddr) # update the ipAddr:port in case it changed
                     if not service.enabled:     # the service was previously disabled but it is broadcasting again
                         # re-enable it
                         debug('debugRestProxyDisable', self.name, "reenabling", serviceName, serviceAddr, version, stateTimeStamp, resourceTimeStamp)
