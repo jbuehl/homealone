@@ -8,12 +8,10 @@ from picohttp.httpClient import *
 class RestInterface(Interface):
     def __init__(self, name, interface=None, event=None, serviceAddr="", cache=True, writeThrough=True):
         Interface.__init__(self, name, interface=interface, event=event)
-        self.serviceAddr = serviceAddr      # address of the REST service to target (ipAddr:port)
         self.cache = cache                  # cache the states
         self.writeThrough = writeThrough    # cache is write through
         self.enabled = False
-        (ipAddr, port) = self.serviceAddr.split(":")
-        self.client = HttpClient(ipAddr, int(port))
+        self.updateAddr(serviceAddr)
         debug('debugRest', self.name, "created", self.serviceAddr)
 
     def start(self):
@@ -27,6 +25,12 @@ class RestInterface(Interface):
             # invalidate the state cache
             for state in list(self.states.keys()):
                 self.states[state] = None
+
+    # update the service address
+    def updateAddr(self, serviceAddr):
+        self.serviceAddr = serviceAddr      # address of the REST service to target (ipAddr:port)
+        (ipAddr, port) = self.serviceAddr.split(":")
+        self.client = HttpClient(ipAddr, int(port))
 
     # disable the RestService that uses this interface
     def disableService(self):
