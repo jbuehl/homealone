@@ -12,6 +12,7 @@ class Application(object):
     def __init__(self, name, globals,
                  publish=True, advert=True,                                 # resource publishing parameters
                  remote=False, watch=[], ignore=[], remoteResources=True,   # remote resource proxy parameters
+                    remoteEvent=False,
                  logger=True,                                               # data logger
                  system=False,                                              # system resources
                  state=False, shared=False, changeMonitor=True):            # persistent state parameters
@@ -30,7 +31,11 @@ class Application(object):
         # remote resource proxy
         if remote:
             if remoteResources:     # separate collection for remote resources
-                self.remoteResources = Collection("remoteResources", event=self.event)
+                if remoteEvent:     # separate event for remote resources
+                    self.remoteEvent = threading.Event()
+                else:
+                    self.remoteEvent = self.event
+                self.remoteResources = Collection("remoteResources", event=self.remoteEvent)
                 self.globals["remoteResources"] = self.remoteResources
             else:                   # use the same collection for remote and local resources
                 self.remoteResources = self.resources
