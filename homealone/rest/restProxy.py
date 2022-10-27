@@ -118,12 +118,14 @@ class RestProxy(LogThread):
                 else:   # service is already in the cache
                     service = self.services[serviceName]
                     service.cancelTimer("message received")
+                    if serviceAddr != service.interface.serviceAddr:
+                        debug('debugRestProxyUpdate', self.name, "updating address", service.name, serviceAddr)
+                        service.interface.serviceAddr = serviceAddr # update the ipAddr:port in case it changed
                     if not service.enabled:     # the service was previously disabled but it is broadcasting again
                         # re-enable it
                         debug('debugRestProxyDisable', self.name, "reenabling", serviceName, serviceAddr, version, stateTimeStamp, resourceTimeStamp)
                         # update the resource cache
                         # self.addResources(service)
-                        service.interface.serviceAddr = serviceAddr # update the ipAddr:port in case it changed
                         service.enable()
                 # load the resources or states in a separate thread if there was a change
                 if (resourceTimeStamp > service.resourceTimeStamp) or serviceResources or \
