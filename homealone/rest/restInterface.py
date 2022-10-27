@@ -1,9 +1,9 @@
 import json
-import requests
-import urllib.parse
+# import requests
+# import urllib.parse
 import sys
 from homealone import *
-from homealone.rest.restConfig import *
+from picohttp.httpClient import *
 
 class RestInterface(Interface):
     def __init__(self, name, interface=None, event=None, serviceAddr="", cache=True, writeThrough=True):
@@ -12,6 +12,8 @@ class RestInterface(Interface):
         self.cache = cache                  # cache the states
         self.writeThrough = writeThrough    # cache is write through
         self.enabled = False
+        (ipAddr, port) = self.serviceAddr.split(":")
+        self.client = HttpClient(ipAddr, int(port))
         debug('debugRest', self.name, "created", self.serviceAddr)
 
     def start(self):
@@ -64,22 +66,39 @@ class RestInterface(Interface):
     # read the json data from the specified path and return a dictionary
     def readRest(self, path):
         debug('debugRestStates', self.name, "readRest", path)
+        # try:
+        #     url = "http://"+self.serviceAddr+urllib.parse.quote(path)
+        #     debug('debugRestGet', self.name, "GET", url)
+        #     response = requests.get(url, timeout=restTimeout)
+        #     debug('debugRestGet', self.name, "status", response.status_code)
+        #     if response.status_code == 200:
+        #         debug('debugRestGet', self.name, "response", response.json())
+        #         return response.json()
+        #     else:
+        #         log(self.name, "read state status", response.status_code)
+        #         return {}
+        # except requests.exceptions.Timeout:
+        #     log(self.name, "read state timeout", path)
+        #     self.disableService()
+        # except Exception as ex:
+        #     logException(self.name+" read exception", ex)
+        #     self.disableService()
+
         try:
-            url = "http://"+self.serviceAddr+urllib.parse.quote(path)
-            debug('debugRestGet', self.name, "GET", url)
-            response = requests.get(url, timeout=restTimeout)
-            debug('debugRestGet', self.name, "status", response.status_code)
-            if response.status_code == 200:
-                debug('debugRestGet', self.name, "response", response.json())
-                return response.json()
+            debug('debugRestGet', self.name, "GET", self.serviceAddr+path)
+            response = self.client.get(path)
+            debug('debugRestGet', self.name, "status", response.status)
+            if response.status == 200:
+                debug('debugRestGet', self.name, "data", response.data)
+                if response.data:
+                    return json.loads(response.data)
+                else:
+                    return {}
             else:
-                log(self.name, "read state status", response.status_code)
+                log(self.name, "read state status", response.status)
                 return {}
-        except requests.exceptions.Timeout:
-            log(self.name, "read state timeout", path)
-            self.disableService()
         except Exception as ex:
-            logException(self.name+" read exception", ex)
+            logException(self.name+" read exception "+self.serviceAddr, ex)
             self.disableService()
 
     # write the control state to the specified address
@@ -106,17 +125,28 @@ class RestInterface(Interface):
     def writeRest(self, path, data):
         debug('debugRestStates', self.name, "writeRest", path, data)
         try:
-            url = "http://"+self.serviceAddr+urllib.parse.quote(path)
-            debug('debugRestPut', self.name, "PUT", url, "data:", data)
-            response = requests.put(url,
+            # url = "http://"+self.serviceAddr+urllib.parse.quote(path)
+            # debug('debugRestPut', self.name, "PUT", url, "data:", data)
+            # response = requests.put(url,
+            #                  headers={"Content-type":"application/json"},
+            #                  data=data)
+            # debug('debugRestPut', self.name, "status", response.status_code)
+            # if response.status_code == 200:
+            #     return True
+            # else:
+            #     log(self.name, "write state status", response.status_code)
+            #     return False
+
+            debug('debugRestPut', self.name, "PUT", self.serviceAddr+path, "data:", data)
+            response = self.client.put(path,
                              headers={"Content-type":"application/json"},
                              data=data)
-            debug('debugRestPut', self.name, "status", response.status_code)
-            if response.status_code == 200:
+            debug('debugRestPut', self.name, "status", response.status)
+            if response.status == 200:
                 return True
             else:
-                log(self.name, "write state status", response.status_code)
+                log(self.name, "write state status", response.status)
                 return False
         except Exception as ex:
-            logException(self.name+" write exception", ex)
+            logException(self.name+" write exception "+self.serviceAddr, ex)
             self.disableService()
