@@ -32,10 +32,11 @@ class SensorGroup(Sensor):
 
 # A set of Controls whose state can be changed together
 class ControlGroup(SensorGroup, Control):
-    def __init__(self, name, controlList, stateList=[], stateMode=False, style="controlGroup", **kwargs):
+    def __init__(self, name, controlList, stateList=[], stateMode=False, wait=False, style="controlGroup", **kwargs):
         SensorGroup.__init__(self, name, controlList, style=style, **kwargs)
         Control.__init__(self, name, **kwargs)
         self.stateMode = stateMode  # which state to return: False = SensorGroup, True = groupState
+        self.wait = wait
         self.groupState = 0
         if stateList == []:
             self.stateList = [[0,1]]*(len(self.sensorList))
@@ -67,8 +68,10 @@ class ControlGroup(SensorGroup, Control):
                     debug("debugControlGroup", self.name, "control:", control.name, "state:", self.groupState)
                     control.setState(self.stateList[controlIdx][self.groupState])
                 debug('debugThread', self.name, "finished")
-            self.setGroupThread = LogThread(name="setGroupThread", target=setGroup)
-            self.setGroupThread.start()
+            if self.wait:
+                setGroup()
+            else:
+                startThread(name="setGroupThread", target=setGroup)
             self.notify(state)
             return True
 
