@@ -70,8 +70,8 @@ class RestInterface(Interface):
     # read the json data from the specified path and return a dictionary
     def readRest(self, path):
         debug('debugRestStates', self.name, "readRest", path)
-        ####################################################################
         try:
+            ####################################################################
             url = "http://"+self.serviceAddr+urllib.parse.quote(path)
             debug('debugRestGet', self.name, "GET", url)
             response = requests.get(url, timeout=restTimeout)
@@ -85,30 +85,26 @@ class RestInterface(Interface):
         except requests.exceptions.Timeout:
             log(self.name, "read state timeout", path)
             self.disableService()
+            ####################################################################
+            # debug('debugRestGet', self.name, "GET", self.serviceAddr+path)
+            # response = self.client.get(path)
+            # debug('debugRestGet', self.name, "status", response.status)
+            # if response.status == 200:
+            #     debug('debugRestGet', self.name, "data", response.data)
+            #     if response.data:
+            #         return json.loads(response.data)
+            #     else:
+            #         return {}
+            # elif response.status == 0:
+            #     log(self.name, "read exception", response.data)
+            #     self.disableService()
+            # else:
+            #     log(self.name, "read status", response.status)
+            #     return {}
+            ####################################################################
         except Exception as ex:
-            logException(self.name+" uncaught read exception", ex)
+            logException(self.name+" uncaught read exception "+self.serviceAddr, ex)
             self.disableService()
-        ####################################################################
-        # try:
-        #     debug('debugRestGet', self.name, "GET", self.serviceAddr+path)
-        #     response = self.client.get(path)
-        #     debug('debugRestGet', self.name, "status", response.status)
-        #     if response.status == 200:
-        #         debug('debugRestGet', self.name, "data", response.data)
-        #         if response.data:
-        #             return json.loads(response.data)
-        #         else:
-        #             return {}
-        #     elif response.status == 0:
-        #         log(self.name, "read exception", response.data)
-        #         self.disableService()
-        #     else:
-        #         log(self.name, "read status", response.status)
-        #         return {}
-        # except Exception as ex:
-        #     logException(self.name+" uncaught read exception "+self.serviceAddr, ex)
-        #     self.disableService()
-        ####################################################################
 
     # write the control state to the specified address
     # addr is the REST path to the specified resource
