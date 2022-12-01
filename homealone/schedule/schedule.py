@@ -288,10 +288,10 @@ class Schedule(Collection):
                 log(self.name, "exception running task", task.name, type(ex).__name__, str(ex))
 
 # a Task specifies a control to be set to a specified state at a specified time
-class Task(Control):
+class Task(StateControl):
     def __init__(self, name, schedTime=None, control=None, controlState=1, endTime=None, endState=0,
                  parent=None, enabled=True, **kwargs):
-        Control.__init__(self, name, **kwargs)
+        StateControl.__init__(self, name, initial=normalState(enabled), **kwargs)
         self.type = "task"
         self.schedTime = schedTime          # when to run the task
         self.control = control              # which control to set, can be a name
