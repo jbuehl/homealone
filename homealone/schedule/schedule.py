@@ -1,6 +1,7 @@
 # Classes related to schedules
 
 from homealone.core import *
+from homealone.resources.extraResources import *
 from .sunriseset import *
 
 # day of week identifiers
@@ -290,9 +291,10 @@ class Schedule(Collection):
 # a Task specifies a control to be set to a specified state at a specified time
 class Task(StateControl):
     def __init__(self, name, schedTime=None, control=None, controlState=1, endTime=None, endState=0,
-                 parent=None, enabled=True, **kwargs):
-        StateControl.__init__(self, name, initial=normalState(enabled), **kwargs)
+                 parent=None, enabled=True, interface=None, **kwargs):
+        StateControl.__init__(self, name, interface=interface, initial=normalState(enabled), **kwargs)
         self.type = "task"
+        self.className = "Task"
         self.schedTime = schedTime          # when to run the task
         self.control = control              # which control to set, can be a name
         self.controlState = controlState    # the state to set the control to
