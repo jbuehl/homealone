@@ -54,10 +54,11 @@ class RestInterface(Interface):
     # get state values of all sensors on this interface
     def getStates(self, path="/states"):
         debug('debugRestStates', self.name, "getStates", "path", path)
-        try:
-            states = self.readRest(path)[path.split("/")[-1]]
-        except KeyError:
-            states = {}
+        states = self.readRest(path)
+        # try:
+        #     states = self.readRest(path)[path.split("/")[-1]]
+        # except KeyError:
+        #     states = {}
         debug('debugRestStates', self.name, "getStates", "states", states)
         self.setStates(states)
         return states
@@ -85,6 +86,7 @@ class RestInterface(Interface):
         except requests.exceptions.Timeout:
             log(self.name, "read state timeout", path)
             self.disableService()
+            return {}
             ####################################################################
             # debug('debugRestGet', self.name, "GET", self.serviceAddr+path)
             # response = self.client.get(path)
@@ -105,6 +107,7 @@ class RestInterface(Interface):
         except Exception as ex:
             logException(self.name+" uncaught read exception "+self.serviceAddr, ex)
             self.disableService()
+            return {}
 
     # write the control state to the specified address
     # addr is the REST path to the specified resource
