@@ -194,8 +194,7 @@ class Schedule(Collection):
         Collection.addRes(self, resource)
         if resource.schedTime.event != "":
             # if an event is specified, add a child task with a specific date and time
-            self.addRes(resource.child())
-            debug('debugEvent', self.name, "adding", resource.child().__str__())
+            self.addTask(resource.addChild())
 
     # add a task to the scheduler list
     def addTask(self, task):
@@ -248,7 +247,7 @@ class Schedule(Collection):
                 debug('debugSched', self.name, "checking ", taskName,
                         task.schedTime.year, task.schedTime.month, task.schedTime.day,
                         task.schedTime.hour, task.schedTime.minute, task.schedTime.weekday,
-                        task.schedTime.event)
+                        task.schedTime.event, "enabled", task.enabled)
                 if task.enabled:
                     if self.shouldRun(task.schedTime, now):
                         self.setControlState(task, task.controlState)
@@ -262,7 +261,7 @@ class Schedule(Collection):
                         self.delTask(taskName)
                         # reschedule the next occurrence if the task was a child of an event task
                         if task.parent:
-                            self.addTask(task.parent.child())
+                            self.addTask(task.parent.addChild())
                         del(task)
 
     def shouldRun(self, schedTime, now):
@@ -300,7 +299,8 @@ class Task(StateControl):
         self.controlState = controlState    # the state to set the control to
         self.endTime = endTime              # optional end time
         self.endState = endState            # optional state to set the control to at the end time
-        self.parent = parent
+        self.parent = parent                # this task's parent if it is a child
+        self.child = None                   # this task's child - there can only be one
         self.enabled = normalState(enabled)
 
     def getState(self, missing=None):
@@ -312,18 +312,23 @@ class Task(StateControl):
     def setState(self, state):
         if not self.interface:
             self.enabled = state
+            debug("debugTask", self.name, "enabled", self.enabled)
+            if self.child:
+                self.child.enabled = state
+                debug("debugTask", self.child.name, "enabled", self.child.enabled)
             self.notify(state)
             return True
         else:
             return Control.setState(self, state)
 
     # create a child task for the event on a specific date and time
-    def child(self):
+    def addChild(self):
         schedTime = copy.copy(self.schedTime)
         schedTime.eventTime(latLong)
         schedTime.event = ""
         schedTime.lastTime()
-        return Task(self.name+"Event", schedTime, self.control, self.controlState, parent=self)
+        self.child = Task(self.name+"Event", schedTime, self.control, self.controlState, parent=self, enabled=self.enabled)
+        return self.child
 
     # dictionary of pertinent attributes
     def dict(self, expand=False):
