@@ -59,14 +59,17 @@ class ControlGroup(SensorGroup, Control):
             return Control.setState(self, state)
         else:
             debug('debugState', self.name, "setState ", state)
-            self.groupState = int(state)  # use Cycle - FIXME
+            self.groupState = state # int(state)  # use Cycle - FIXME
             # Run it asynchronously in a separate thread.
             def setGroup():
                 debug('debugThread', self.name, "started")
                 for controlIdx in range(len(self.sensorList)):
                     control = self.sensorList[controlIdx]
                     debug("debugControlGroup", self.name, "control:", control.name, "state:", self.groupState)
-                    control.setState(self.stateList[controlIdx][self.groupState])
+                    if isinstance(self.groupState, int):
+                        control.setState(self.stateList[controlIdx][self.groupState])
+                    else:
+                        control.setState(self.groupState)
                 debug('debugThread', self.name, "finished")
             if self.wait:
                 setGroup()
