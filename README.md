@@ -26,3 +26,13 @@ The design of the project targets the following goals.  Not all of them have bee
 -  Does not provide applications - Examples are provided, however they must be tailored for specific hardware.
 -  Does not provide a user interface - An example web based user interface is provided that may be extended.
 -  Operating system specific - Currently only runs on Raspberry Pi OS, however there is no inherent reason it could not be made OS independent.
+
+### Documentation
+
+More detailed documentation and examples may be found in these files.
+
+[Object Model](docs/README.model.md)
+[Specific hardware supported](docs/README.resources.md)
+[Remote resources](docs/README.remote.md)
+[Applications](docs/README.apps.md)
+[Services](docs/README.services.md)
