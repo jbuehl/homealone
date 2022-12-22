@@ -10,7 +10,7 @@ At the lowest level, a template is defined that allows a hardware interface to b
 
 ### Design goals
 
-The design of the project targets the following goals.  Not all of them have been strictly met.
+The design of the project targets the following goals.
 
 -  Distributed - Functions are distributed across devices in the system.
 -  Devices are autonomous - Whenever possible, devices can run independently of the system.  There is no requirement for a centralized controller.
@@ -31,8 +31,8 @@ The design of the project targets the following goals.  Not all of them have bee
 
 More detailed documentation and examples may be found in these files.
 
-[Object Model](docs/README.model.md)
-[Specific hardware supported](docs/README.resources.md)
-[Remote resources](docs/README.remote.md)
-[Applications](docs/README.apps.md)
-[Services](docs/README.services.md)
+- [Object Model](docs/README.model.md)
+- [Specific hardware support](docs/README.resources.md)
+- [Remote resources](docs/README.remote.md)
+- [Applications](docs/README.apps.md)
+- [Services](docs/README.services.md)
