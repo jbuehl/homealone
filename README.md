@@ -16,14 +16,14 @@ The design of the project targets the following goals.
 -  Devices are autonomous - Whenever possible, devices can run independently of the system.  There is no requirement for a centralized controller.
 -  Devices are dynamically discoverable - Devices can be added or removed from the system without requiring changes to a system configuration.
 -  Connected to the local home network - Devices are connected to the system via the local wired or wireless home network.
--  Not dependent on the internet - The system may be accessed remotely via the internet and use cloud servers for certain functions, however internet connectivity is not required.
+-  Not dependent on the internet - The system may be accessed remotely via the internet and use cloud servers for certain functions, however internet connectivity is not required for routine functions.
 -  Reasonably secure - The system does not explicitly implement any security features.  It relies on the security of the local network.
 -  Not dependent on proprietary systems, interfaces, or devices - Proprietary interfaces and devices may be accessed, but there is no requirement for any particular manufacturer's products.
 -  Open source - All code is open source.
 
 ### Limitations
 
--  Does not provide applications - Examples are provided, however they must be tailored for specific hardware.
+-  Does not provide applications - Examples are provided, however they must be tailored for specific installations.
 -  Does not provide a user interface - An example web based user interface is provided that may be extended.
 -  Operating system specific - Currently only runs on Raspberry Pi OS, however there is no inherent reason it could not be made OS independent.
 
