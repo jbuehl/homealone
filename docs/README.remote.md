@@ -22,16 +22,16 @@ Homealone objects on other servers.
 * REST resource - an identifier in a the HTTP path that may describe a Homealone resource
 
 ### Implementation
-The interface consists of two parts implemented on the server:  A periodic UDP message that is broadcast, and an HTTP server that supports a REST interface over TCP.  The UDP message performs the functions of advertising the availability of the server on the network and notifying clients of changes in the configuration or state of the server's Homealone resources.  The REST server allows clients to query details about Homealone resource configuration and state.
+The interface consists of two parts:  A periodic UDP message that is periodically broadcast by the server, and an HTTP server that supports a REST interface over TCP.  The UDP message performs the functions of advertising the availability of the server on the network, notifying clients of changes in the configuration or states of the server's Homealone resources, and letting clients know that the server is active.  The REST server allows clients to query details about Homealone resource configuration and states, and to direct a server to change the states of Control resources.
 
 #### Service advertising
 The Homealone remote server uses periodic messages sent to a multicast address to advertise itself on the local network.  
-The message contains the service name, and port that carries the REST interface. If multiple Homealone services are running on the same host they must use different ports.
+The message contains the service name, and port that carries the corresponding REST interface. If multiple Homealone services are running on the same host they must use different ports.
 
 The message contains a service REST resource and optionally a resources REST resource and states REST resource.
 If the message only contains a service REST resource, the message serves to notify clients that the server is
 still active and there haven't been any resource or state changes since the last message.  The timestamps will be the
-same as the previous message and the sequence number will be incremented by 1.
+same as the previous message and the sequence number will contain the sequence number of the previous message incremented by 1.
 
 A client will create local resources that serve as proxies for the resources on a server.  The states of the resources
 are cached in the client and updated when the states of the server resources change.  When a client receives a message
@@ -43,7 +43,7 @@ the current states of all resources on the server and an updated resource timest
 for that service with the new values.
 
 If the configuration of the Homealone resources on a service changes, the next message will include both a resources REST resource,
-a states REST resource, and an updated state timestamp.  The client will delete and recreate the proxied Homealone resources for
+a states REST resource, and an updated state timestamp.  The client will update the proxied Homealone resources for
 that service, and update their states.
 
 If a client receives a message from an active server that contains a changed timestamp but no resources or states REST resources,
@@ -58,6 +58,7 @@ it will request either the resources or the states from the service and update i
 ```
 
 ### REST interface
+The REST interface follows the conventions for HTTP verb usage and path construction.
 
 #### Verbs
 The HTTP following verbs are implemented by the remote server:
