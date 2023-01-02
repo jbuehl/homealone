@@ -16,15 +16,6 @@ import time
 #     notify message timeout
 #     service restarts
 
-# set default service port if not specified
-def setServicePorts(serviceList):
-    newServiceList = []
-    for service in serviceList:
-        if len(service.split(".")) < 2:
-            service = service+"Service"
-        newServiceList.append(service)
-    return newServiceList
-
 def parseServiceData(data, addr):
     try:
         serviceData = json.loads(data.decode("utf-8"))
@@ -38,7 +29,7 @@ def parseServiceData(data, addr):
         except:
             serviceStates = None
         serviceData = serviceData["service"]
-        serviceName = serviceData["name"]+"Service"
+        serviceName = serviceData["name"]
         serviceAddr = addr[0]+":"+str(serviceData["port"])
         try:
             stateTimeStamp = serviceData["statetimestamp"]
@@ -71,9 +62,8 @@ class RestProxy(LogThread):
         self.event = event
         self.cache = cache
         self.cacheTime = 0                      # time of the last update to the cache
-        self.watch = setServicePorts(watch)     # services to watch for
-        self.ignore = setServicePorts(ignore)   # services to ignore
-        # self.ignore.append("services."+socket.gethostname()+":"+str(restServicePort))   # always ignore services on this host
+        self.watch = watch                      # services to watch for
+        self.ignore = ignore                    # services to ignore
         debug('debugRestProxy', name, "watching", self.watch)    # watch == [] means watch all services
         debug('debugRestProxy', name, "ignoring", self.ignore)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

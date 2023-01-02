@@ -25,7 +25,7 @@ class Application(object):
         self.startList = []                                                 # resources that need to be started
         # publish resources via REST server
         if publish:
-            self.restServer = RestServer(self.name, self.resources, event=self.event, label=self.name, advert=advert)
+            self.restServer = RestServer(self.name, self.resources, event=self.event, label=labelize(self.name), advert=advert)
         else:
             self.restServer = None
         # remote resource proxy
