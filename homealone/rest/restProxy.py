@@ -21,7 +21,7 @@ def setServicePorts(serviceList):
     newServiceList = []
     for service in serviceList:
         if len(service.split(".")) < 2:
-            service = "services."+service
+            service = service+"Service"
         newServiceList.append(service)
     return newServiceList
 
@@ -38,7 +38,7 @@ def parseServiceData(data, addr):
         except:
             serviceStates = None
         serviceData = serviceData["service"]
-        serviceName = "services."+serviceData["name"]
+        serviceName = serviceData["name"]+"Service"
         serviceAddr = addr[0]+":"+str(serviceData["port"])
         try:
             stateTimeStamp = serviceData["statetimestamp"]
