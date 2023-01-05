@@ -101,17 +101,25 @@ class RestServer(object):
     def start(self):
         if not self.server:
             return
-        debug('debugRestServer', self.name, "starting RestServer")
         # wait for the network to be available
         waitForDns(localController)
         # start polling the resource states
         self.resources.start()
         # start the HTTP server
-        self.server.start()
+        debug('debugRestServer', self.name, "starting RestServer")
+        started = False
+        while not started:
+            try:
+                self.server.start()
+                started = True
+            except Exception as ex:
+                log(self.name, "Unable to start RestServer", str(ex))
+                time.sleep(restRetryInterval)
+        debug('debugRestServer', self.name, "RestServer started")
         if self.advert:
             # start the thread to send the resource states periodically and also when one changes
             def stateAdvert():
-                debug('debugRestServer', self.name, "REST state started")
+                debug('debugRestServer', self.name, "Advert thread started")
                 resources = self.resources.dump()   # don't send expanded resources
                 states = self.resources.getStates()
                 lastStates = states
@@ -133,7 +141,7 @@ class RestServer(object):
                         resources = self.resources.dump()   # don't send expanded resources
                         self.resourceTimeStamp = int(time.time())
                     lastStates = currentStates
-                debug('debugRestServer', self.name, "REST state ended")
+                debug('debugRestServer', self.name, "Advert thread ended")
             startThread(name="stateAdvertThread", target=stateAdvert)
 
             # start the thread to trigger the advertisement message periodically
