@@ -439,3 +439,14 @@ class RemoteControl(RemoteSensor):
             return self.resources[self.name].setState(value, **kwargs)
         except KeyError:
             return False
+
+# sensor that is an alias for another sensor
+class AliasSensor(Sensor):
+    def __init__(self, name, interface, addr, sensor, **kwargs):
+        Sensor.__init__(self, name, interface, addr, **kwargs)
+        type = "sensor"
+        self.className = "Sensor"
+        self.sensor = sensor
+
+    def getState(self, missing=None):
+        return self.sensor.getState()
