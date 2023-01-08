@@ -8,6 +8,7 @@ import socket
 import time
 import struct
 
+# handle REST requests
 def requestHandler(request, response, service, resources):
     (type, resName, attr) = fixedList(request.path, 3)
     debug('debugRestServer', "type:", type, "resName:", resName, "attr:", attr)
@@ -63,60 +64,43 @@ class RestServer(object):
         self.resources = resources
         self.advert = advert
         self.block = block
-        if event:
+        if event:       # use specified event
             self.event = event
-        else:
+        else:           # use the event of the resources
             self.event = self.resources.event
-        self.port = None
-        if port:
-            self.port = port
-        else:
-            # look for an available port in the pool
-            restSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            for port in restServicePorts:
-                try:
-                    restSocket.bind(("", port))
-                    self.port = port
-                    debug('debugRestServer', "using port", port)
-                    break
-                except OSError:
-                    pass
-            restSocket.close()
-        if self.port:
-            if label == "":
-                self.label = hostname+":"+str(self.port)
-            else:
-                self.label = label
-            debug('debugInterrupt', self.label, "event", self.event)
-            self.server = HttpServer(port=self.port, handler=requestHandler, args=(self, resources,), start=False, block=False)
-            self.restAddr = multicastAddr
-            self.stateSocket = None
-            self.stateSequence = 0
-            self.stateTimeStamp = 0
-            self.resourceTimeStamp = 0
-        else:
-            log("RestServer", "unable to find an available port")
-            self.server = None
+        if port:        # use the specified port
+            self.ports = [port]
+        else:           # use an available port from the pool
+            self.ports = restServicePorts
+        self.label = label
+        debug('debugInterrupt', self.label, "event", self.event)
+        self.advertSocket = None
+        self.advertSequence = 0
+        self.stateTimeStamp = 0
+        self.resourceTimeStamp = 0
+        self.restServer = None
 
     def start(self):
-        if not self.server:
-            return
         # wait for the network to be available
         waitForDns(localController)
         # start polling the resource states
         self.resources.start()
         # start the HTTP server
         debug('debugRestServer', self.name, "starting RestServer")
-        started = False
-        while not started:
+        self.port = 0
+        while not self.port:
             try:
-                self.server.start()
-                started = True
+                self.restServer = HttpServer(port=self.ports, handler=requestHandler, args=(self, self.resources,), start=False, block=False)
+                self.port = self.restServer.start()
+                if self.port:
+                    break
             except Exception as ex:
                 log(self.name, "Unable to start RestServer", str(ex))
-                time.sleep(restRetryInterval)
+            time.sleep(restRetryInterval)
         debug('debugRestServer', self.name, "RestServer started")
         if self.advert:
+            if self.label == "":
+                self.label = hostname+":"+str(self.port)
             # start the thread to send the resource states periodically and also when one changes
             def stateAdvert():
                 debug('debugRestServer', self.name, "Advert thread started")
@@ -169,7 +153,7 @@ class RestServer(object):
                "label": self.label,
                "statetimestamp": self.stateTimeStamp,
                "resourcetimestamp": self.resourceTimeStamp,
-               "seq": self.stateSequence}
+               "seq": self.advertSequence}
 
     def sendStateMessage(self, resources=None, states=None):
         stateMsg = {"service": self.getServiceData()}
@@ -177,13 +161,13 @@ class RestServer(object):
             stateMsg["resources"] = resources
         if states:
             stateMsg["states"] = states
-        if not self.stateSocket:
-            self.stateSocket = self.openSocket()
+        if not self.advertSocket:
+            self.advertSocket = self.openSocket()
         try:
             debug('debugRestState', self.name, str(list(stateMsg.keys())))
-            self.stateSocket.sendto(bytes(json.dumps(stateMsg), "utf-8"),
-                                                (self.restAddr, restAdvertPort))
+            self.advertSocket.sendto(bytes(json.dumps(stateMsg), "utf-8"),
+                                                (multicastAddr, restAdvertPort))
         except socket.error as exception:
             log("socket error", str(exception))
-            self.stateSocket = None
-        self.stateSequence += 1
+            self.advertSocket = None
+        self.advertSequence += 1
