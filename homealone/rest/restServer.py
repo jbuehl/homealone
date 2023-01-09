@@ -90,14 +90,16 @@ class RestServer(object):
         self.port = 0
         while not self.port:
             try:
-                self.restServer = HttpServer(port=self.ports, handler=requestHandler, args=(self, self.resources,), start=False, block=False)
+                self.restServer = HttpServer(port=self.ports, handler=requestHandler, args=(self, self.resources,),
+                                             reuse=False, start=False, block=False)
                 self.port = self.restServer.start()
                 if self.port:
                     break
             except Exception as ex:
                 log(self.name, "Unable to start RestServer", str(ex))
+            debug('debugRestServer', self.name, "sleeping for", restRetryInterval)
             time.sleep(restRetryInterval)
-        debug('debugRestServer', self.name, "RestServer started")
+        debug('debugRestServer', self.name, "RestServer started on port", self.port)
         if self.advert:
             if self.label == "":
                 self.label = hostname+":"+str(self.port)
