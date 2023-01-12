@@ -84,7 +84,7 @@ class RestInterface(Interface):
                 log(self.name, "read status", response.status_code)
                 return {}
         except requests.exceptions.Timeout:
-            log(self.name, "read state timeout", path)
+            log(self.name, "read state timeout", self.serviceAddr, path)
             self.disableService()
             return {}
             ####################################################################
