@@ -70,6 +70,8 @@ class Application(object):
 
     # run the application processes
     def run(self):
+        # wait for the network to be available
+        waitForNetwork(localController)
         if self.restProxy:                      # remote resource proxy
             self.restProxy.start()
         if self.logger:                         # data logger

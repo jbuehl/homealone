@@ -81,8 +81,6 @@ class RestServer(object):
         self.restServer = None
 
     def start(self):
-        # wait for the network to be available
-        waitForDns(localController)
         # start polling the resource states
         self.resources.start()
         # start the HTTP server
