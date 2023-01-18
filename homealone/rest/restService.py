@@ -128,8 +128,9 @@ class RestService(Sensor):
             if not serviceResources or \
                     (isinstance(serviceResources["args"]["resources"], list)):  # if expanded resources not provided, get them
                 serviceResources = self.interface.readRest("/resources?expand=true")
-            for resource in serviceResources["args"]["resources"]:
-                self.loadResource(resource)
+            if self.enabled:    # don't do this if there was a read error that disabled the service
+                for resource in serviceResources["args"]["resources"]:
+                    self.loadResource(resource)
         except Exception as ex:
             logException(self.name+" load", ex)
 
