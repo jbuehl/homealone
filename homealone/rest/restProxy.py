@@ -74,7 +74,9 @@ class RestProxy(LogThread):
         debug('debugThread', self.name, "started")
         while True:
             # wait for a notification message from a service
-            (data, addr) = self.socket.recvfrom(32768)   # FIXME - need to handle arbitrarily large data
+            (data, addr) = self.socket.recvfrom(32768)  # FIXME - need to handle arbitrarily large data
+            if addr[0][0:7] == "169.254":               # ignore messages if the network isn't fully up
+                continue
             debug('debugRestMessage', self.name, "notification data", data)
             # parse the message
             (serviceName, serviceAddr, serviceLabel, version, serviceSeq, stateTimeStamp, resourceTimeStamp, serviceStates, serviceResources) = \
