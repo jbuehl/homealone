@@ -67,11 +67,11 @@ class MCP23017Interface(Interface):
         if self.interface:
             gpio.setmode(gpio.BCM)
             # configure the MCP23017
-            self.interface.write((self.addr, MCP23017Interface.IODIR+self.bank), self.inOut)    # I/O direction
-            self.interface.write((self.addr, MCP23017Interface.GPINTEN+self.bank), self.inOut)  # enable interrupts for inputs
-            self.interface.write((self.addr, MCP23017Interface.GPPU+self.bank), self.inOut)     # pull up resistors on inputs
-            self.interface.write((self.addr, MCP23017Interface.IOCON), 0x04)                    # interrupt pins are open drain
-            # additional configuration
+            self.config.insert(0, (MCP23017Interface.IODIR, self.inOut))    # I/O direction
+            self.config.insert(1, (MCP23017Interface.GPINTEN, self.inOut))  # enable interrupts for inputs
+            self.config.insert(2, (MCP23017Interface.GPPU, self.inOut))     # pull up resistors on inputs
+            self.config.insert(3, (MCP23017Interface.IOCON, 0x04))          # interrupt pins are open drain
+            # write the configuration
             for config in self.config:
                 reg = config[0]+self.bank   # offset register with bank
                 debug('debugGPIO', self.name, "start", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%reg, "value: 0x%02x"%config[1])
@@ -96,7 +96,7 @@ class MCP23017Interface(Interface):
     # interrupt handler for this interface
     def interrupt(self):
         intFlags = self.interface.read((self.addr, MCP23017Interface.INTF+self.bank))
-        debug('debugGPIO', self.name, "interrupt", "addr: 0x%02x"%self.addr, "bank:", self.bank, "intFlags: 0x%02x"%intFlags)
+        debug('debugGPIO', self.name, "int  ", "addr: 0x%02x"%self.addr, "bank:", self.bank, "intFlags: 0x%02x"%intFlags)
         self.readState()
         for i in range(8):
             if (intFlags >> i) & 0x01:
@@ -118,7 +118,7 @@ class MCP23017Interface(Interface):
 
     def readState(self):
         byte = self.interface.read((self.addr, MCP23017Interface.GPIO+self.bank))
-        debug('debugGPIO', self.name, "read", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%(MCP23017Interface.GPIO+self.bank), "value: 0x%02x"%byte)
+        debug('debugGPIO', self.name, "read ", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%(MCP23017Interface.GPIO+self.bank), "value: 0x%02x"%byte)
         self.state = byte
 
     def write(self, addr, value):
