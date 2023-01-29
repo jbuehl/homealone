@@ -78,7 +78,7 @@ class RestService(Sensor):
         self.interface.stop()
         if self.messageTimer:
             self.messageTimer.cancel()
-            debug('debugMessageTimer', self.name, "timer cancelled", "disabled", self.messageTimer.name, int(time.time()))
+            debug('debugMessageTimer', self.name, "timer cancelled", "disabled", int(time.time()))
         self.messageTimer = None
         for resource in list(self.resources.values()):
             resource.disable()
@@ -100,7 +100,7 @@ class RestService(Sensor):
     # define a timer to disable the service if the message timer times out
     # can't use a socket timeout because multiple threads are using the same port
     def endTimer(self):
-        debug('debugMessageTimer', self.name, "timer expired", self.messageTimer.name, int(time.time()))
+        debug('debugMessageTimer', self.name, "timer expired", int(time.time()))
         debug('debugRestProxyDisable', self.name, "advert message timeout")
         self.messageTimer = None
         self.disable("timeout")
@@ -110,13 +110,13 @@ class RestService(Sensor):
         if restAdvertTimeout:
             self.messageTimer = threading.Timer(restAdvertTimeout, self.endTimer)
             self.messageTimer.start()
-            debug('debugMessageTimer', self.name, "timer started", restAdvertTimeout, "seconds", self.messageTimer.name, int(time.time()))
+            debug('debugMessageTimer', self.name, "timer started", restAdvertTimeout, "seconds", int(time.time()))
 
     # cancel the message timer
     def cancelTimer(self, reason=""):
         if self.messageTimer:
             self.messageTimer.cancel()
-            debug('debugMessageTimer', self.name, "timer cancelled", reason, self.messageTimer.name, int(time.time()))
+            debug('debugMessageTimer', self.name, "timer cancelled", reason, int(time.time()))
             self.messageTimer = None
 
     # load resources from the specified REST paths
