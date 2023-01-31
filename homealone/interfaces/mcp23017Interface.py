@@ -73,7 +73,10 @@ class MCP23017Interface(Interface):
             self.config.insert(3, (MCP23017Interface.IOCON, 0x04))          # interrupt pins are open drain
             # write the configuration
             for config in self.config:
-                reg = config[0]+self.bank   # offset register with bank
+                if config[0] != MCP23017Interface.IOCON:
+                    reg = config[0]+self.bank   # offset register with bank
+                else:                           # except for IOCON
+                    reg = config[0]
                 debug('debugGPIO', self.name, "start", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%reg, "value: 0x%02x"%config[1])
                 self.interface.write((self.addr, reg), config[1])
             # get the current state
