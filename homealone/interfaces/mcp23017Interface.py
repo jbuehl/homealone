@@ -1,3 +1,4 @@
+import threading
 from homealone import *
 # import whichever gpio library is installed
 try:
@@ -14,8 +15,8 @@ gpioInterfaces = {}
 def interruptCallback(pin, value=1):
     debug('debugGPIO', "interruptCallback", "pin:", pin, "value:", value)
     try:
-        # call the interrupt routine for the MCP23017Interface associated with the pin
-        gpioInterfaces[pin].interrupt()
+        # activate the interrupt routine for the MCP23017Interface associated with the pin
+        gpioInterfaces[pin].event.set()
     except KeyError:
         # the interrupt occurred on a pin not associated with a MCP23017Interface
         log("interruptCallback", "unknown interrupt", "pin:", pin, "value:", value, "gpioInterfaces:", gpioInterfaces)
@@ -57,6 +58,7 @@ class MCP23017Interface(Interface):
             self.config = config
             self.state = 0x00
             gpioInterfaces[self.interruptPin] = self
+            self.event = threading.Event()
         else:
             self.interface = None
             self.bank = 0
@@ -88,6 +90,7 @@ class MCP23017Interface(Interface):
             elif gpioLibrary == "RPi.GPIO":
                 gpio.setup(self.interruptPin, gpio.IN, pull_up_down=gpio.PUD_UP)
                 gpio.add_event_detect(self.interruptPin, gpio.FALLING, callback=interruptCallback)
+            startThread(self.name, self.interrupt)
         else:   # direct only supports output - FIXME
             gpio.setmode(gpio.BOARD)
             for pin in MCP23017Interface.gpioPins:
@@ -96,21 +99,26 @@ class MCP23017Interface(Interface):
                 debug('debugGPIO', self.name, "write", pin, 0)
                 gpio.output(pin, 0)
 
-    # interrupt handler for this interface
+    # interrupt handler thread for this interface
     def interrupt(self):
-        intFlags = self.interface.read((self.addr, MCP23017Interface.INTF+self.bank))
-        debug('debugGPIO', self.name, "int  ", "addr: 0x%02x"%self.addr, "bank:", self.bank, "intFlags: 0x%02x"%intFlags)
-        self.readState()
-        for i in range(8):
-            if (intFlags >> i) & 0x01:
-                try:
-                    sensor = self.sensorAddrs[i]
-                    state = (self.state >> i) & 0x01
-                    debug('debugGPIO', self.name, "notifying", sensor.name, state)
-                    sensor.notify(state)
-                except KeyError:
-                    debug('debugGPIO', self.name, "no sensor for interrupt on addr", i, self.sensorAddrs)
-
+        debug('debugGPIO', self.name, "starting interrupt thread")
+        self.event.clear()
+        while True:
+            self.event.wait()
+            self.event.clear()
+            intFlags = self.interface.read((self.addr, MCP23017Interface.INTF+self.bank))
+            debug('debugGPIO', self.name, "int  ", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%(MCP23017Interface.INTF+self.bank), "intFlags: 0x%02x"%intFlags)
+            self.state = self.interface.read((self.addr, MCP23017Interface.INTCAP+self.bank))
+            debug('debugGPIO', self.name, "read ", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%(MCP23017Interface.INTCAP+self.bank), "value: 0x%02x"%self.state)
+            for i in range(8):
+                if (intFlags >> i) & 0x01:
+                    try:
+                        sensor = self.sensorAddrs[i]
+                        state = (self.state >> i) & 0x01
+                        debug('debugGPIO', self.name, "notifying", sensor.name, state)
+                        sensor.notify(state)
+                    except KeyError:
+                        debug('debugGPIO', self.name, "no sensor for interrupt on addr", i, self.sensorAddrs)
 
     def read(self, addr):
         if self.interface:
