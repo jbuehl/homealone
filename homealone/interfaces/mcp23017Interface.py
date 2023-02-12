@@ -16,7 +16,7 @@ def interruptCallback(pin, value=1):
     debug('debugGPIO', "interruptCallback", "pin:", pin, "value:", value)
     try:
         # activate the interrupt routine for the MCP23017Interface associated with the pin
-        gpioInterfaces[pin].event.set()
+        gpioInterfaces[pin].interruptEvent.set()
     except KeyError:
         # the interrupt occurred on a pin not associated with a MCP23017Interface
         log("interruptCallback", "unknown interrupt", "pin:", pin, "value:", value, "gpioInterfaces:", gpioInterfaces)
@@ -102,14 +102,19 @@ class MCP23017Interface(Interface):
     # interrupt handler thread for this interface
     def interrupt(self):
         debug('debugGPIO', self.name, "starting interrupt thread")
+        self.lastState = self.interface.read((self.addr, MCP23017Interface.GPIO+self.bank))
+        debug('debugGPIO', self.name, "read ", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%(MCP23017Interface.GPIO+self.bank), "value: 0x%02x"%self.lastState)
         self.interruptEvent.clear()
         while True:
             self.interruptEvent.wait()
             self.interruptEvent.clear()
-            intFlags = self.interface.read((self.addr, MCP23017Interface.INTF+self.bank))
-            debug('debugGPIO', self.name, "int  ", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%(MCP23017Interface.INTF+self.bank), "intFlags: 0x%02x"%intFlags)
+            # intFlags = self.interface.read((self.addr, MCP23017Interface.INTF+self.bank))
             self.state = self.interface.read((self.addr, MCP23017Interface.INTCAP+self.bank))
             debug('debugGPIO', self.name, "read ", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%(MCP23017Interface.INTCAP+self.bank), "value: 0x%02x"%self.state)
+            # because INTF register isn't reliable, compare current state to previous for input pins
+            intFlags = (self.state ^ self.lastState) & self.inOut
+            self.lastState = self.state
+            debug('debugGPIO', self.name, "int  ", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%(MCP23017Interface.INTF+self.bank), "intFlags: 0x%02x"%intFlags)
             for i in range(8):
                 if (intFlags >> i) & 0x01:
                     try:
@@ -129,7 +134,7 @@ class MCP23017Interface(Interface):
 
     def readState(self):
         byte = self.interface.read((self.addr, MCP23017Interface.GPIO+self.bank))
-        debug('debugGPIO', self.name, "read ", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%(MCP23017Interface.GPIO+self.bank), "value: 0x%02x"%byte)
+        debug('debugGPIORead', self.name, "read ", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%(MCP23017Interface.GPIO+self.bank), "value: 0x%02x"%byte)
         self.state = byte
 
     def write(self, addr, value):
