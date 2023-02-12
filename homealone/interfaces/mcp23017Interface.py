@@ -58,7 +58,7 @@ class MCP23017Interface(Interface):
             self.config = config
             self.state = 0x00
             gpioInterfaces[self.interruptPin] = self
-            self.event = threading.Event()
+            self.interruptEvent = threading.Event()
         else:
             self.interface = None
             self.bank = 0
@@ -102,10 +102,10 @@ class MCP23017Interface(Interface):
     # interrupt handler thread for this interface
     def interrupt(self):
         debug('debugGPIO', self.name, "starting interrupt thread")
-        self.event.clear()
+        self.interruptEvent.clear()
         while True:
-            self.event.wait()
-            self.event.clear()
+            self.interruptEvent.wait()
+            self.interruptEvent.clear()
             intFlags = self.interface.read((self.addr, MCP23017Interface.INTF+self.bank))
             debug('debugGPIO', self.name, "int  ", "addr: 0x%02x"%self.addr, "reg: 0x%02x"%(MCP23017Interface.INTF+self.bank), "intFlags: 0x%02x"%intFlags)
             self.state = self.interface.read((self.addr, MCP23017Interface.INTCAP+self.bank))
