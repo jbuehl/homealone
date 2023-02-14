@@ -120,8 +120,9 @@ class MCP23017Interface(Interface):
                     try:
                         sensor = self.sensorAddrs[i]
                         state = (self.state >> i) & 0x01
-                        debug('debugGPIO', self.name, "notifying", sensor.name, state)
-                        sensor.notify(state)
+                        if sensor.event:    # don't notify polled sensors
+                            debug('debugGPIO', self.name, "notifying", sensor.name, state)
+                            sensor.notify(state)
                     except KeyError:
                         debug('debugGPIO', self.name, "no sensor for interrupt on addr", i, self.sensorAddrs)
 
