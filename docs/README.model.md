@@ -7,9 +7,9 @@ First, let's define the terminology used in this project.
 ##### HARDWARE
 These describe the physical hardware that the system is built from.
 
-- device - the hardware components that make up the system
+- device - a hardware component that makes up the system
 - sensor - a device that has a state that can be read
-- control - a device whose state can be read and also changed
+- control - a device that has a state that can be read and also changed
 - server - a device that may be connected to one or more sensors and communicates with one or more clients
 - client - a device that communicates with one or more servers
 - interface - the connection over which two devices communicate
@@ -39,11 +39,13 @@ Another example is a sprinkler valve.  The state of the valve is either open or 
 
 ### Naming
 
-Every resource has a system-wide unique identifier.  The namespace is flat.
+Every resource has a system-wide unique identifier.  The namespace is flat.  Identifiers consist of one or more upper and lower case letters, numerals, and underscores.  They are case sensitive.
 
 ### States
 
-Every Sensor has an associated state.  A Sensor state is a single scalar number or string.  If a hardware device has multiple attributes or controls, it should be represented as multiple Sensor or Control objects.  The state of a Sensor is obtained by an explicit call.  A Sensor may implement an event that is set when its state changes that can be used for notification.
+Every Sensor has an associated state.  A Sensor state is a single integer or floating point number, or a string.  True, False, and None are not valid states. A state value of None indicates an undefined state. A state may not be a list, tuple, dict, or other object.
+
+If a hardware device has multiple attributes or controls, it should be represented as multiple Sensor or Control objects.  The state of a Sensor is obtained by an explicit call.  A Sensor may implement an event that is set when its state changes that can be used for notification.
 
 ### Object model
 
@@ -59,6 +61,7 @@ The object model is defined by the following core classes:
 ##### Object
 The base class for Homealone objects.  It implements the dump() function which is used to serialize objects as JSON.  Deserialization is implemented by the static loadResource() function.
 
+	- className
 	- dump()
 
 ##### Resource
@@ -120,3 +123,4 @@ These attributes may be applied to an object derived from Sensor to define how t
 	- style
 	- label
 	- group
+	- location
