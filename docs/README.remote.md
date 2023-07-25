@@ -2,7 +2,7 @@
 
 ### Overview
 Homealone applications can expose their Homealone resources via an interface that is implemented in
-ha/rest/remoteServer.py. This allows a client application to access
+rest/remoteServer.py. This allows a client application to access
 Homealone objects on other servers.
 
 ### Requirements
@@ -170,7 +170,7 @@ shows the notification of state changes of resources.
 					 "resourceTimestamp": 1595529166,
 					 "seq": 666}
 
- 3. Return the list of Homealone resources on the host sprinklers.local.
+3. Return the list of Homealone resources on the host sprinklers.local.
 
         Request:     GET sprinklers.local:7378/resources
 
@@ -249,7 +249,8 @@ shows the notification of state changes of resources.
 10. Unsolicited message that is broadcast periodically and whenever one of the states changes
 	   that shows the current states of all resources in the service sprinklerService.
 
-       Message:     {"service": {"name": "sprinklerService",
+       Message:     
+                    {"service": {"name": "sprinklerService",
                                  "label": "Sprinklers",
 								 "stateTimestamp": 1595529456,
 								 "resourceTimestamp": 1595529456,

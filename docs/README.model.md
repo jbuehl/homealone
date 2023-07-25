@@ -1,4 +1,4 @@
-# Homealone home automation platform object model
+# Homealone object model
 
 ### Terminology
 
@@ -28,27 +28,11 @@ These are the core Python classes that are used to describe the system.
 These terms describe the roles played by the software components in the system.
 
 - application - the implementation of a collection of resources and interfaces that runs on a server
-- service - an application that implements the server side of an interface to a client device or server device
-- client - an application that implements the client side of an interface to a server device
+- service - an application that implements the server side of the Remote interface to a client device or server device
+- client - an application that implements the client side of the Remote interface to a server device
 
-### Example
-
-A simple example is a temperature sensor that may be in a room, outside the house, or immersed in a swimming pool.  All it does is to report the ambient temperature of the air or water it is in.  Let's consider a digital temperature sensor that uses the I<sup>2</sup>C hardware interface.  When a read command is sent to the address of the device it returns a byte that represents the temperature in degrees Celsius.  Two software objects defined by this project are required: a Sensor and an Interface.  The Sensor can be just the base object because all it needs to do is to implement the get state function that reads the state of the sensor from the interface it is associated with.  The Interface object must be specific to the I<sup>2</sup>C interface so it is a I2CInterface object that is derived from the base Interface object.  It can use the Python SMBus library that performs all the low level I<sup>2</sup>C protocol functions to read a byte and implement the read function.
-
-Another example is a sprinkler valve.  The state of the valve is either open or closed, and it is operated remotely from the network.  The voltage to the valve is switched using a relay or semiconductor that is controlled by a GPIO pin on the controller.  A Control object and an Interface object are needed to implement this.  The Control object inherits the get state function from the Sensor object, but it also defines a set state function that changes the state of the device.  The GPIOInterface object implements the read and write functions that get and set a GPIO pin.
-
-### Naming
-
-Every resource has a system-wide unique identifier.  The namespace is flat.  Identifiers consist of one or more upper and lower case letters, numerals, and underscores.  They are case sensitive.
-
-### States
-
-Every Sensor has an associated state.  A Sensor state is a single integer or floating point number, or a string.  True, False, and None are not valid states. A state value of None indicates an undefined state. A state may not be a list, tuple, dict, or other object.
-
-If a hardware device has multiple attributes or controls, it should be represented as multiple Sensor or Control objects.  The state of a Sensor is obtained by an explicit call.  A Sensor may implement an event that is set when its state changes that can be used for notification.
 
 ### Object model
-
 The object model is defined by the following core classes:
 
 	+ class Object(object):
@@ -117,10 +101,7 @@ These classes are inherited from the core classes and implement time based funct
 	- class Task(Control):
     - class SchedTime(Object):
 
-### User interface attributes
-These attributes may be applied to an object derived from Sensor to define how the object is presented in a user interface:
+### Example
+A simple example is a temperature sensor that may be in a room, outside the house, or immersed in a swimming pool.  All it does is to report the ambient temperature of the air or water it is in.  Let's consider a digital temperature sensor that uses the I<sup>2</sup>C hardware interface.  When a read command is sent to the address of the device it returns a byte that represents the temperature in degrees Celsius.  Two software objects defined by this project are required: a Sensor and an Interface.  The Sensor can be just the base object because all it needs to do is to implement the get state function that reads the state of the sensor from the interface it is associated with.  The Interface object must be specific to the I<sup>2</sup>C interface so it is a I2CInterface object that is derived from the base Interface object.  It can use the Python SMBus library that performs all the low level I<sup>2</sup>C protocol functions to read a byte and implement the read function.
 
-	- style
-	- label
-	- group
-	- location
+Another example is a sprinkler valve.  The state of the valve is either open or closed, and it is operated remotely from the network.  The voltage to the valve is switched using a relay or semiconductor that is controlled by a GPIO pin on the controller.  A Control object and an Interface object are needed to implement this.  The Control object inherits the get state function from the Sensor object, but it also defines a set state function that changes the state of the device.  The GPIOInterface object implements the read and write functions that get and set a GPIO pin.

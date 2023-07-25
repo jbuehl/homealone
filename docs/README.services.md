@@ -11,3 +11,6 @@ Metrics may be captured by recording the states of all sensors with a numeric st
 
 ### Notification
 The notification service may be used to send messages to users via some external service such as SMS.  A notification may be triggered by an explicit request from an application (deprecated), or it may be triggered by a state change of a particular resource.
+
+### Naming
+The naming service implements the ability to define resource names that are aliases of actual resources (not implemented).
