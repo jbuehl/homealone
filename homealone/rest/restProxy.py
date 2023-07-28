@@ -165,7 +165,11 @@ class RestProxy(LogThread):
         self.resources.addRes(service, 1)                       # the resource of the service
         self.resources.addRes(service.missedSeqSensor)          # missed messages
         self.resources.addRes(service.missedSeqPctSensor)       # percent of missed messages
+        resourceNames = list(self.resources.keys())
         for resource in list(service.resources.values()):       # resources from the service
+            if resource.name in resourceNames:                  # check for duplicates
+                if self.resources.getRes(resource.name).enabled:
+                    debug('debugRestProxy', self.name, "duplicate resource", resource.name)
             self.resources.addRes(resource)
         self.cacheTime = service.resourceTimeStamp # FIXME
         self.event.set()
