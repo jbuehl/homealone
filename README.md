@@ -2,7 +2,7 @@
 
 ### Overview
 
-This project implements a platform and application framework that enables sensing and control of various devices in a home.
+This project defines a platform and application framework that enables sensing and control of various devices in a home.
 
 Any device in the home whose state can be sensed or controlled electronically can be connected to a system that can manage that device and allow remote access. Examples of devices include such things as light fixtures, sprinkler valves, temperature sensors, door sensors, etc.  This project does not define specific hardware for these devices, but rather defines the software that allows any device to be interfaced to the system.
 
@@ -32,7 +32,8 @@ The design of the project targets the following goals.
 More detailed documentation and examples may be found in these files.
 
 - [Object Model](docs/README.model.md)
-- [Specific hardware support](docs/README.resources.md)
+- [Resource naming and attributes](docs/README.naming.md)
 - [Remote resources](docs/README.remote.md)
 - [Applications](docs/README.apps.md)
 - [Services](docs/README.services.md)
+- [Specific hardware support](docs/README.resources.md)
