@@ -23,16 +23,16 @@ def loadResource(classDict, globalDict):
     exec("resource = "+parseClass(classDict), globalDict, localDict)
     return localDict["resource"]
 
-# proxy for a REST service
-class RestService(Sensor):
-    def __init__(self, name, interface, addr=None, version=0, stateTimeStamp=-1, resourceTimeStamp=-1, proxy=None, type="service", **kwargs):
+# proxy for a remote service
+class ProxyService(Sensor):
+    def __init__(self, name, interface, addr=None, version=0, stateTimeStamp=-1, resourceTimeStamp=-1, remoteClient=None, type="service", **kwargs):
         Sensor.__init__(self, name, interface, addr=addr, type=type, **kwargs)
-        debug('debugRestService', "RestService", name, "created")
+        debug('debugProxyService', "ProxyService", name, "created")
         self.version = version
         self.stateTimeStamp = stateTimeStamp      # the last time the states were updated
         self.resourceTimeStamp = resourceTimeStamp      # the last time the resources were updated
         self.resources = Collection(self.name+"/Resources")           # resources on this service
-        self.proxy = proxy              # RestProxy that is following this service
+        self.remoteClient = remoteClient              # RemoteClient that is following this service
         self.enabled = False
         self.messageTimer = None
         self.updating = False
@@ -65,7 +65,7 @@ class RestService(Sensor):
                "---------------"
 
     def enable(self):
-        debug('debugRestService', "RestService", self.name, "enabled")
+        debug('debugProxyService', "ProxyService", self.name, "enabled")
         for resource in list(self.resources.values()):
             resource.enable()
         self.interface.start()
@@ -73,7 +73,7 @@ class RestService(Sensor):
         self.notify(True)
 
     def disable(self, reason=""):
-        debug('debugRestService', "RestService", self.name, "disabled", reason)
+        debug('debugProxyService', "ProxyService", self.name, "disabled", reason)
         self.enabled = False
         self.interface.stop()
         if self.messageTimer:
@@ -85,7 +85,7 @@ class RestService(Sensor):
         self.notify(False)
 
     def logSeq(self, seq):
-        debug('debugRestSeq', "RestService", self.name, seq, self.lastSeq, self.missedSeq, self.missedSeqPct)
+        debug('debugRemoteSeq', "ProxyService", self.name, seq, self.lastSeq, self.missedSeq, self.missedSeqPct)
         if seq == 0:
             self.lastSeq = 0    # reset when the service starts
             self.missedSeqPct = 0.0
@@ -101,16 +101,16 @@ class RestService(Sensor):
     # can't use a socket timeout because multiple threads are using the same port
     def endTimer(self):
         debug('debugMessageTimer', self.name, "timer expired", int(time.time()))
-        debug('debugRestProxyDisable', self.name, "advert message timeout")
+        debug('debugremoteProxyDisable', self.name, "advert message timeout")
         self.messageTimer = None
         self.disable("timeout")
 
     # start the message timer
     def startTimer(self):
-        if restAdvertTimeout:
-            self.messageTimer = threading.Timer(restAdvertTimeout, self.endTimer)
+        if remoteAdvertTimeout:
+            self.messageTimer = threading.Timer(remoteAdvertTimeout, self.endTimer)
             self.messageTimer.start()
-            debug('debugMessageTimer', self.name, "timer started", restAdvertTimeout, "seconds", int(time.time()))
+            debug('debugMessageTimer', self.name, "timer started", remoteAdvertTimeout, "seconds", int(time.time()))
 
     # cancel the message timer
     def cancelTimer(self, reason=""):

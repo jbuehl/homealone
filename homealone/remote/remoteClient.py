@@ -1,6 +1,6 @@
 from homealone import *
-from homealone.rest.restService import *
-from homealone.rest.restInterface import *
+from homealone.remote.proxyService import *
+from homealone.remote.restInterface import *
 import json
 import threading
 import socket
@@ -19,7 +19,7 @@ import time
 def parseServiceData(data, addr):
     try:
         serviceData = json.loads(data.decode("utf-8"))
-        debug('debugRestProxyData', "data", serviceData)
+        debug('debugRemoteClientData', "data", serviceData)
         try:
             serviceResources = serviceData["resources"]
         except KeyError:
@@ -52,9 +52,9 @@ def parseServiceData(data, addr):
 # Detect changes in resource configuration on each service
 # Remove resources on services that don't respond
 
-class RestProxy(LogThread):
+class RemoteClient(LogThread):
     def __init__(self, name, resources, watch=[], ignore=[], event=None, cache=True):
-        debug('debugRestProxy', name, "starting", name)
+        debug('debugRemoteClient', name, "starting", name)
         LogThread.__init__(self, target=self.restProxyThread)
         self.name = name
         self.services = {}                      # cached services
@@ -64,11 +64,11 @@ class RestProxy(LogThread):
         self.cacheTime = 0                      # time of the last update to the cache
         self.watch = watch                      # services to watch for
         self.ignore = ignore                    # services to ignore
-        debug('debugRestProxy', name, "watching", self.watch)    # watch == [] means watch all services
-        debug('debugRestProxy', name, "ignoring", self.ignore)
+        debug('debugRemoteClient', name, "watching", self.watch)    # watch == [] means watch all services
+        debug('debugRemoteClient', name, "ignoring", self.ignore)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind((multicastAddr, restAdvertPort))
+        self.socket.bind((multicastAddr, remoteAdvertPort))
 
     def restProxyThread(self):
         debug('debugThread', self.name, "started")
@@ -77,7 +77,7 @@ class RestProxy(LogThread):
             (data, addr) = self.socket.recvfrom(32768)  # FIXME - need to handle arbitrarily large data
             if addr[0][0:7] == "169.254":               # ignore messages if the network isn't fully up
                 continue
-            debug('debugRestMessage', self.name, "notification data", data)
+            debug('debugRemoteMessage', self.name, "notification data", data)
             # parse the message
             (serviceName, serviceAddr, serviceLabel, version, serviceSeq, stateTimeStamp, resourceTimeStamp, serviceStates, serviceResources) = \
                 parseServiceData(data, addr)
@@ -87,22 +87,22 @@ class RestProxy(LogThread):
             if serviceName in list(self.resources.aliases.keys()):
                 newServiceName = self.resources.aliases[serviceName]["name"]
                 newServiceLabel = self.resources.aliases[serviceName]["label"]
-                debug('debugRestProxy', self.name, "renaming", serviceName, "to", newServiceName)
+                debug('debugRemoteClient', self.name, "renaming", serviceName, "to", newServiceName)
                 serviceName = newServiceName
                 serviceLabel = newServiceLabel
             # determine if this service should be processed based on watch and ignore lists
             if ((self.watch != []) and (serviceName  in self.watch)) or ((self.watch == []) and (serviceName not in self.ignore)):
-                debug('debugRestProxy', self.name, "processing", serviceName, serviceAddr, stateTimeStamp, resourceTimeStamp)
+                debug('debugRemoteClient', self.name, "processing", serviceName, serviceAddr, stateTimeStamp, resourceTimeStamp)
                 if serviceName not in list(self.services.keys()):
                     # this is one not seen before, create a new service proxy
-                    debug('debugRestProxyAdd', self.name, "adding", serviceName, serviceAddr, version, stateTimeStamp, resourceTimeStamp)
-                    self.services[serviceName] = RestService(serviceName,
+                    debug('debugRemoteClientAdd', self.name, "adding", serviceName, serviceAddr, version, stateTimeStamp, resourceTimeStamp)
+                    self.services[serviceName] = ProxyService(serviceName,
                                                             RestInterface(serviceName+"Interface",
                                                                             serviceAddr=serviceAddr,
                                                                             event=self.event,
                                                                             cache=self.cache),
                                                             version=version,
-                                                            proxy=self,
+                                                            remoteClient=self,
                                                             label=serviceLabel,
                                                             group="Services")
                     service = self.services[serviceName]
@@ -111,11 +111,11 @@ class RestProxy(LogThread):
                     service = self.services[serviceName]
                     service.cancelTimer("message received")
                     if serviceAddr != service.interface.serviceAddr:
-                        debug('debugRestProxyUpdate', self.name, "updating address", service.name, serviceAddr)
+                        debug('debugRemoteClientUpdate', self.name, "updating address", service.name, serviceAddr)
                         service.interface.setServiceAddr(serviceAddr) # update the ipAddr:port in case it changed
                     if not service.enabled:     # the service was previously disabled but it is broadcasting again
                         # re-enable it
-                        debug('debugRestProxyDisable', self.name, "reenabling", serviceName, serviceAddr, version, stateTimeStamp, resourceTimeStamp)
+                        debug('debugRemoteClientDisable', self.name, "reenabling", serviceName, serviceAddr, version, stateTimeStamp, resourceTimeStamp)
                         # update the resource cache
                         # self.addResources(service)
                         service.enable()
@@ -130,7 +130,7 @@ class RestProxy(LogThread):
                 service.startTimer()
                 service.logSeq(serviceSeq)
             else:
-                debug('debugRestProxy', self.name, "ignoring", serviceName, serviceAddr, stateTimeStamp, resourceTimeStamp)
+                debug('debugRemoteClient', self.name, "ignoring", serviceName, serviceAddr, stateTimeStamp, resourceTimeStamp)
         debug('debugThread', self.name, "terminated")
 
     # optionally load the resources for a service and add them to the proxy cache
@@ -139,12 +139,12 @@ class RestProxy(LogThread):
         debug('debugThread', threading.currentThread().name, "started")
         try:
             if (resourceTimeStamp > service.resourceTimeStamp) or serviceResources:
-                debug('debugRestProxyUpdate', self.name, "updating resources", service.name, resourceTimeStamp)
+                debug('debugRemoteClientUpdate', self.name, "updating resources", service.name, resourceTimeStamp)
                 service.load(serviceResources)
                 service.resourceTimeStamp = resourceTimeStamp
                 self.addResources(service)
             if (stateTimeStamp > service.stateTimeStamp) or serviceStates:
-                debug('debugRestProxyStates', self.name, "updating states", service.name, stateTimeStamp)
+                debug('debugRemoteClientStates', self.name, "updating states", service.name, stateTimeStamp)
                 if not serviceStates:
                     # if states not provided, get them from the service
                     serviceStates = service.interface.getStates()
@@ -161,7 +161,7 @@ class RestProxy(LogThread):
     # add the resource of the service as well as
     # all the resources from the specified service to the cache
     def addResources(self, service):
-        debug('debugRestProxy', self.name, "adding resources for service", service.name)
+        debug('debugRemoteClient', self.name, "adding resources for service", service.name)
         self.resources.addRes(service, 1)                       # the resource of the service
         self.resources.addRes(service.missedSeqSensor)          # missed messages
         self.resources.addRes(service.missedSeqPctSensor)       # percent of missed messages
@@ -169,7 +169,7 @@ class RestProxy(LogThread):
         for resource in list(service.resources.values()):       # resources from the service
             if resource.name in resourceNames:                  # check for duplicates
                 if self.resources.getRes(resource.name).enabled:
-                    debug('debugRestProxy', self.name, "duplicate resource", resource.name)
+                    debug('debugRemoteClient', self.name, "duplicate resource", resource.name)
             self.resources.addRes(resource)
         self.cacheTime = service.resourceTimeStamp # FIXME
         self.event.set()
@@ -178,11 +178,11 @@ class RestProxy(LogThread):
     # disable all the resources from the specified service from the cache
     # don't delete the resource of the service
     # def disableResources(self, service):
-    #     debug('debugRestProxyDisable', self.name, "disabling resources for service", service.name)
+    #     debug('debugRemoteClientDisable', self.name, "disabling resources for service", service.name)
     #     for resourceName in list(service.resources.keys()):
     #         try:
     #             self.resources.getRes(resourceName).enabled = False
     #         except KeyError:
-    #             debug('debugRestProxyDisable', service.name, "error disabling", resourceName)
+    #             debug('debugRemoteClientDisable', service.name, "error disabling", resourceName)
     #     self.event.set()
     #     debug('debugInterrupt', self.name, "event set")

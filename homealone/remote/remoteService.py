@@ -11,7 +11,7 @@ import struct
 # handle REST requests
 def requestHandler(request, response, service, resources):
     (type, resName, attr) = fixedList(request.path, 3)
-    debug('debugRestServer', "type:", type, "resName:", resName, "attr:", attr)
+    debug('debugRemoteService', "type:", type, "resName:", resName, "attr:", attr)
     if request.method == "GET":
         data = None
         if type == "":              # no path specified
@@ -47,7 +47,7 @@ def requestHandler(request, response, service, resources):
                 resource = resources.getRes(resName, False)
                 if request.headers['Content-type'] == "application/json":
                     request.data = json.loads(request.data)
-                debug('debugRestServer', "data:", request.data)
+                debug('debugRemoteService', "data:", request.data)
                 resource.__setattr__(attr, request.data[attr])
             except (KeyError, AttributeError):           # resource or attr not found
                 response.status = 404   # not found
@@ -56,10 +56,10 @@ def requestHandler(request, response, service, resources):
     else:
         response.status = 501   # not implemented
 
-# RESTful web services server interface
-class RestServer(object):
+# Remote service interface
+class RemoteService(object):
     def __init__(self, name, resources=None, port=None, advert=True, block=True, event=None, label=""):
-        debug('debugRestServer', name, "creating RestServer", "advert:", advert)
+        debug('debugRemoteService', name, "creating RemoteService", "advert:", advert)
         self.name = name
         self.resources = resources
         self.advert = advert
@@ -84,7 +84,7 @@ class RestServer(object):
         # start polling the resource states
         self.resources.start()
         # start the HTTP server
-        debug('debugRestServer', self.name, "starting RestServer")
+        debug('debugRemoteService', self.name, "starting RemoteService")
         self.port = 0
         while not self.port:
             try:
@@ -95,15 +95,15 @@ class RestServer(object):
                     break
             except Exception as ex:
                 log(self.name, "Unable to start RestServer", str(ex))
-            debug('debugRestServer', self.name, "sleeping for", restRetryInterval)
+            debug('debugRemoteService', self.name, "sleeping for", restRetryInterval)
             time.sleep(restRetryInterval)
-        debug('debugRestServer', self.name, "RestServer started on port", self.port)
+        debug('debugRemoteService', self.name, "RestServer started on port", self.port)
         if self.advert:
             if self.label == "":
                 self.label = hostname+":"+str(self.port)
             # start the thread to send the resource states periodically and also when one changes
             def stateAdvert():
-                debug('debugRestServer', self.name, "Advert thread started")
+                debug('debugRemoteService', self.name, "Advert thread started")
                 resources = self.resources.dump()   # don't send expanded resources
                 states = self.resources.getStates()
                 lastStates = states
@@ -125,17 +125,17 @@ class RestServer(object):
                         resources = self.resources.dump()   # don't send expanded resources
                         self.resourceTimeStamp = int(time.time())
                     lastStates = currentStates
-                debug('debugRestServer', self.name, "Advert thread ended")
+                debug('debugRemoteService', self.name, "Advert thread ended")
             startThread(name="stateAdvertThread", target=stateAdvert)
 
             # start the thread to trigger the advertisement message periodically
             def stateTrigger():
-                debug('debugRestServer', self.name, "REST state trigger started", restAdvertInterval)
+                debug('debugRemoteService', self.name, "Remote state trigger started", remoteAdvertInterval)
                 while True:
                     debug('debugInterrupt', self.name, "trigger", "set", self.event)
                     self.event.set()
-                    time.sleep(restAdvertInterval)
-                debug('debugRestServer', self.name, "REST state trigger ended")
+                    time.sleep(remoteAdvertInterval)
+                debug('debugRemoteService', self.name, "Remote state trigger ended")
             startThread(name="stateTriggerThread", target=stateTrigger)
         #wait forever
         if self.block:
@@ -164,9 +164,9 @@ class RestServer(object):
         if not self.advertSocket:
             self.advertSocket = self.openSocket()
         try:
-            debug('debugRestState', self.name, str(list(stateMsg.keys())))
+            debug('debugRemoteState', self.name, str(list(stateMsg.keys())))
             self.advertSocket.sendto(bytes(json.dumps(stateMsg), "utf-8"),
-                                                (multicastAddr, restAdvertPort))
+                                                (multicastAddr, remoteAdvertPort))
         except socket.error as exception:
             log("socket error", str(exception))
             self.advertSocket = None

@@ -2,8 +2,8 @@
 
 from .core import *
 from .schedule import *
-from .rest.restServer import *
-from .rest.restProxy import *
+from .remote.remoteService import *
+from .remote.remoteClient import *
 from .logging.logging import *
 from .interfaces.fileInterface import *
 from homealone.interfaces.osInterface import *
@@ -23,11 +23,11 @@ class Application(object):
         self.globals["resources"] = self.resources
         self.schedule = Schedule("schedule")                                # schedule of tasks to run
         self.startList = []                                                 # resources that need to be started
-        # publish resources via REST server
+        # publish resources via remote service
         if publish:
-            self.restServer = RestServer(self.name, self.resources, event=self.event, label=labelize(self.name), advert=advert)
+            self.remoteService = RemoteService(self.name, self.resources, event=self.event, label=labelize(self.name), advert=advert)
         else:
-            self.restServer = None
+            self.remoteService = None
         # remote resource proxy
         if remote:
             if remoteResources:     # separate collection for remote resources
@@ -39,9 +39,9 @@ class Application(object):
                 self.globals["remoteResources"] = self.remoteResources
             else:                   # use the same collection for remote and local resources
                 self.remoteResources = self.resources
-            self.restProxy = RestProxy("restProxy", self.remoteResources, watch=watch, ignore=ignore, event=self.event)
+            self.remoteClient = RemoteClient("remoteClient", self.remoteResources, watch=watch, ignore=ignore, event=self.event)
         else:
-            self.restProxy = None
+            self.remoteClient = None
             self.remoteResources = None
         # data logger
         if logger:
@@ -72,16 +72,16 @@ class Application(object):
     def run(self):
         # wait for the network to be available
         waitForNetwork(localController)
-        if self.restProxy:                      # remote resource proxy
-            self.restProxy.start()
+        if self.remoteClient:                      # remote resource proxy
+            self.remoteClient.start()
         if self.logger:                         # data logger
             self.logger.start()
         for resource in self.startList:         # other resources
             resource.start()
         if list(self.schedule.keys()) != []:    # task schedule
             self.schedule.start()
-        if self.restServer:                     # resource publication
-            self.restServer.start()
+        if self.remoteService:                     # resource publication
+            self.remoteService.start()
 
     # define an Interface resource
     def interface(self, interface, event=False, start=False):
