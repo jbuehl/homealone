@@ -44,10 +44,8 @@ archiveService = "archive"
 archiveDir = "/archives/"
 
 # remote interface parameters
-restServicePorts = [7378, 7377, 7376, 7375, 7374, 7373, 7372, 7371]
-restServicePort = 7378
-remoteAdvertPort = 4244 # 7379
-# remoteNotificationPort = 7370
+remoteAdvertPort = 7370
+restServicePortPool = [7378, 7377, 7376, 7375, 7374, 7373, 7372, 7371]
 ipv4MulticastAddr = "224.0.0.1"
 ipv6MulticastAddr = "ff02::1"
 multicastAddr = ipv4MulticastAddr

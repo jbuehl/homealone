@@ -71,7 +71,7 @@ class RemoteService(object):
         if port:        # use the specified port
             self.ports = [port]
         else:           # use an available port from the pool
-            self.ports = restServicePorts
+            self.ports = restServicePortPool
         self.label = label
         debug('debugInterrupt', self.label, "event", self.event)
         self.advertSocket = None
