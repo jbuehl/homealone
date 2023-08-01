@@ -34,7 +34,7 @@ class RestInterface(Interface):
 
     # disable the RestService that uses this interface
     def disableService(self):
-        debug('debugRemoteProxyDisable', self.name, "disabled")
+        debug('debugRemoteClientDisable', self.name, "disabled")
         for sensor in list(self.sensors.values()):
             if sensor.type == "service":    # just disable the service, it will disable the rest
                 sensor.disable("REST I/O error")
