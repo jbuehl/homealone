@@ -39,12 +39,8 @@ class ProxyService(Sensor):
         self.lastSeq = 0                # the last message sequence number received
         self.missedSeq = 0              # count of how many missed messages for this service
         self.missedSeqPct = 0.0         # percentage of missed messages
-        try:
-            serviceName = name.split(".")[1]
-        except IndexError:
-            serviceName = name
-        self.missedSeqSensor = AttributeSensor(serviceName+"-missedSeq", None, None, self, "missedSeq")
-        self.missedSeqPctSensor = AttributeSensor(serviceName+"-missedSeqPct", None, None, self, "missedSeqPct")
+        self.missedSeqSensor = AttributeSensor(self.name+"-missedSeq", None, None, self, "missedSeq")
+        self.missedSeqPctSensor = AttributeSensor(self.name+"-missedSeqPct", None, None, self, "missedSeqPct")
 
     def getState(self, missing=None):
         return normalState(self.enabled)
@@ -101,7 +97,7 @@ class ProxyService(Sensor):
     # can't use a socket timeout because multiple threads are using the same port
     def endTimer(self):
         debug('debugMessageTimer', self.name, "timer expired", int(time.time()))
-        debug('debugremoteProxyDisable', self.name, "advert message timeout")
+        debug('debugRemoteProxyDisable', self.name, "advert message timeout")
         self.messageTimer = None
         self.disable("timeout")
 
@@ -121,10 +117,8 @@ class ProxyService(Sensor):
 
     # load resources from the specified REST paths
     def load(self, serviceResources):
-        debug('debugLoadService', self.name, "load", serviceResources)
+        debug('debugLoadService', self.name, "load")
         try:
-            # self.delResources()
-            # self.addResources()
             if not serviceResources or \
                     (isinstance(serviceResources["args"]["resources"], list)):  # if expanded resources not provided, get them
                 serviceResources = self.interface.readRest("/resources?expand=true")
@@ -136,9 +130,9 @@ class ProxyService(Sensor):
 
     # instantiate the resource from the specified dictionary
     def loadResource(self, resourceDict):
-        debug('debugLoadService', self.name, "loadResource", resourceDict)
         resourceDict["args"]["interface"] = None
         resource = loadResource(resourceDict, globals())
+        debug('debugLoadService', self.name, "loadResource", resource.name)
         # replace the resource interface and addr with the REST interface and addr
         resource.interface = self.interface
         resource.addr = resource.name

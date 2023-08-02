@@ -6,15 +6,7 @@ import threading
 import socket
 import time
 
-# Proxy for the resources exposed by one or more REST services
-
-# Usecases:
-#     proxy detects new service
-#     service states updated
-#     service resources updated
-#     rest i/o error
-#     notify message timeout
-#     service restarts
+# Client side for remote services
 
 def parseServiceData(data, addr):
     try:
@@ -48,20 +40,15 @@ def parseServiceData(data, addr):
         logException("parseServiceData", ex)
         return ("", "", "", 0, 0, 0, 0, {}, [])
 
-# Autodiscover services and resources
-# Detect changes in resource configuration on each service
-# Remove resources on services that don't respond
-
 class RemoteClient(LogThread):
     def __init__(self, name, resources, watch=[], ignore=[], event=None, cache=True):
         debug('debugRemoteClient', name, "starting", name)
         LogThread.__init__(self, target=self.restProxyThread)
         self.name = name
-        self.services = {}                      # cached services
-        self.resources = resources              # resource cache
+        self.services = {}                      # proxied services
+        self.resources = resources              # local resources
         self.event = event
         self.cache = cache
-        self.cacheTime = 0                      # time of the last update to the cache
         self.watch = watch                      # services to watch for
         self.ignore = ignore                    # services to ignore
         debug('debugRemoteClient', name, "watching", self.watch)    # watch == [] means watch all services
@@ -83,20 +70,13 @@ class RemoteClient(LogThread):
                 parseServiceData(data, addr)
             if serviceName == "":   # message couldn't be parsed
                 continue
-            # rename it if there is an alias
-            if serviceName in list(self.resources.aliases.keys()):
-                newServiceName = self.resources.aliases[serviceName]["name"]
-                newServiceLabel = self.resources.aliases[serviceName]["label"]
-                debug('debugRemoteClient', self.name, "renaming", serviceName, "to", newServiceName)
-                serviceName = newServiceName
-                serviceLabel = newServiceLabel
             # determine if this service should be processed based on watch and ignore lists
             if ((self.watch != []) and (serviceName  in self.watch)) or ((self.watch == []) and (serviceName not in self.ignore)):
                 debug('debugRemoteClient', self.name, "processing", serviceName, serviceAddr, stateTimeStamp, resourceTimeStamp)
                 if serviceName not in list(self.services.keys()):
-                    # this is one not seen before, create a new service proxy
+                    # service has not been seen before, create a new service proxy
                     debug('debugRemoteClientAdd', self.name, "adding", serviceName, serviceAddr, version, stateTimeStamp, resourceTimeStamp)
-                    self.services[serviceName] = ProxyService(serviceName,
+                    self.services[serviceName] = ProxyService(serviceName+"Service",
                                                             RestInterface(serviceName+"Interface",
                                                                             serviceAddr=serviceAddr,
                                                                             event=self.event,
@@ -107,24 +87,21 @@ class RemoteClient(LogThread):
                                                             group="Services")
                     service = self.services[serviceName]
                     service.enable()
-                else:   # service is already in the cache
+                else:   # service is already known, update its attributes and enable it
                     service = self.services[serviceName]
                     service.cancelTimer("message received")
                     if serviceAddr != service.interface.serviceAddr:
                         debug('debugRemoteClientUpdate', self.name, "updating address", service.name, serviceAddr)
                         service.interface.setServiceAddr(serviceAddr) # update the ipAddr:port in case it changed
                     if not service.enabled:     # the service was previously disabled but it is broadcasting again
-                        # re-enable it
                         debug('debugRemoteClientDisable', self.name, "reenabling", serviceName, serviceAddr, version, stateTimeStamp, resourceTimeStamp)
-                        # update the resource cache
-                        # self.addResources(service)
                         service.enable()
                 # load the resources or states in a separate thread if there was a change
                 if (resourceTimeStamp > service.resourceTimeStamp) or serviceResources or \
                    (stateTimeStamp > service.stateTimeStamp) or serviceStates:
                     if not service.updating:    # prevent multiple updates at the same time
                         service.updating = True
-                        startThread(serviceName+"-update", self.loadService, args=(service, resourceTimeStamp, serviceResources,
+                        startThread(serviceName+"-update", self.updateService, args=(service, resourceTimeStamp, serviceResources,
                                                                                 stateTimeStamp, serviceStates,))
                 # start the message timer
                 service.startTimer()
@@ -133,56 +110,42 @@ class RemoteClient(LogThread):
                 debug('debugRemoteClient', self.name, "ignoring", serviceName, serviceAddr, stateTimeStamp, resourceTimeStamp)
         debug('debugThread', self.name, "terminated")
 
-    # optionally load the resources for a service and add them to the proxy cache
-    # optionally load the states of the service resources
-    def loadService(self, service, resourceTimeStamp, serviceResources, stateTimeStamp, serviceStates):
+    # if resources have changed, update the resources for a service and add them to the local collection
+    # if states have changed, update the states of the service resources
+    def updateService(self, service, resourceTimeStamp, serviceResources, stateTimeStamp, serviceStates):
         debug('debugThread', threading.currentThread().name, "started")
         try:
             if (resourceTimeStamp > service.resourceTimeStamp) or serviceResources:
                 debug('debugRemoteClientUpdate', self.name, "updating resources", service.name, resourceTimeStamp)
+                for resource in list(service.resources.values()):
+                    debug('debugRemoteClientUpdate', self.name, "updating resources", service.name, "disabling", resource.name)
+                    resource.disable()
                 service.load(serviceResources)
                 service.resourceTimeStamp = resourceTimeStamp
-                self.addResources(service)
+                self.addLocalResources(service)
             if (stateTimeStamp > service.stateTimeStamp) or serviceStates:
                 debug('debugRemoteClientStates', self.name, "updating states", service.name, stateTimeStamp)
                 if not serviceStates:
-                    # if states not provided, get them from the service
+                    # if state values were not provided, get them from the service
                     serviceStates = service.interface.getStates()
                 else:
-                    service.interface.setStates(serviceStates)     # load the interface cache
-                self.resources.setStates(serviceStates)        # update the resource collection cache
+                    service.interface.setStates(serviceStates)  # load the interface cache
+                self.resources.setStates(serviceStates)         # update the local resource cache
                 service.stateTimeStamp = stateTimeStamp
                 self.resources.notify()
         except Exception as ex:
-            logException(self.name+" loadService", ex)
+            logException(self.name+" updateService", ex)
         service.updating = False
         debug('debugThread', threading.currentThread().name, "terminated")
 
-    # add the resource of the service as well as
-    # all the resources from the specified service to the cache
-    def addResources(self, service):
+    # add all the resources related to the specified service to the local resource collection
+    def addLocalResources(self, service):
         debug('debugRemoteClient', self.name, "adding resources for service", service.name)
-        self.resources.addRes(service, 1)                       # the resource of the service
+        self.resources.addRes(service, 1)                       # the resource of the service proxy
         self.resources.addRes(service.missedSeqSensor)          # missed messages
         self.resources.addRes(service.missedSeqPctSensor)       # percent of missed messages
-        resourceNames = list(self.resources.keys())
         for resource in list(service.resources.values()):       # resources from the service
-            if resource.name in resourceNames:                  # check for duplicates
-                if self.resources.getRes(resource.name).enabled:
-                    debug('debugRemoteClient', self.name, "duplicate resource", resource.name)
+            debug('debugRemoteClientUpdate', self.name, "updating resources", service.name, "adding", resource.name)
             self.resources.addRes(resource)
-        self.cacheTime = service.resourceTimeStamp # FIXME
         self.event.set()
         debug('debugInterrupt', self.name, "event set")
-
-    # disable all the resources from the specified service from the cache
-    # don't delete the resource of the service
-    # def disableResources(self, service):
-    #     debug('debugRemoteClientDisable', self.name, "disabling resources for service", service.name)
-    #     for resourceName in list(service.resources.keys()):
-    #         try:
-    #             self.resources.getRes(resourceName).enabled = False
-    #         except KeyError:
-    #             debug('debugRemoteClientDisable', service.name, "error disabling", resourceName)
-    #     self.event.set()
-    #     debug('debugInterrupt', self.name, "event set")
