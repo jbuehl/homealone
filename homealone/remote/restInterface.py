@@ -48,7 +48,10 @@ class RestInterface(Interface):
             return None
         # return the state from the cache if it is there, otherwise read it from the service
         if (not self.cache) or (self.states[addr] == None):
-            self.states[addr] = self.readRest("/resources/"+addr+"/state")["state"]
+            try:
+                self.states[addr] = self.readRest("/resources/"+addr+"/state")["state"]
+            except KeyError:
+                self.states[addr] = None
         return self.states[addr]
 
     # get state values of all sensors on this interface
