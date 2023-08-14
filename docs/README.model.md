@@ -47,6 +47,7 @@ classDiagram
 	Object: dump()
 	Resource: name
 	Resource: type
+	Resource: enabled
 	Resource: enable()
 	Resource: disable()
 	Interface : interface
@@ -66,9 +67,9 @@ classDiagram
 	Sensor : getState()
 	Sensor : notify()
 	Control : setState(value)
-	Collection : addRes()
-	Collection : getRes()
-	Collection : delRes()
+	Collection : addRes(resource)
+	Collection : getRes(name)
+	Collection : delRes(name)
 ```
 
 ##### Object
@@ -82,55 +83,79 @@ Serialize the object to JSON.
 ##### Resource
 The base class for all Homealone resources.
 
-    - name
-	- type
-	- enable()
-	- disable()
+###### name
+The unique name for the resource.
+###### type
+The type of Resource.
+###### enabled
+Indicates whether the Resource is enabled (active) or not.
+###### enable()
+Enable the Resource.
+###### disable()
+Disable the Resource.
 
 ##### Interface
 Defines the abstract class for interface implementations.
 
-    - interface
-    - sensors
-    - event
-    - start()
-    - stop()
-    - read(addr)
-    - write(addr, value)
-    - notify()
+###### interface
+An Interface that this Interface is accessed through
+###### event
+An Event object that is set when the state of one or more the Sensors on this Interface changes.
+###### start()
+Start (activate) the Interface.
+###### stop()e) the Interface.
+Stop (deactivat)
+###### read(addr)
+Read the current value from the specified address.
+###### write(addr, value)
+Write the specified value to the spacified address.
+###### notify()
+Set the Interface's event to announce a state change of one of more of its Sensors.
 
 ##### Sensor
 Defines the model for the base Homealone sensor.
 
-    - interface
-    - addr
-    - event
-    - label
-    - group
-    - location
-    - notify()
-    - getState()
+###### interface
+The Interface that this sensor is accessed through.
+###### addr
+The address of the Sensor on the Interface.
+###### event
+An Event object that is set when the state of the Sensor changes.
+###### label
+Human readable name for this Sensor.
+###### group
+The list of groups that this Sensor is part of.
+###### location
+The coordinates of the physical location of this Sensor.
+###### notify()
+Set the Sensor's event to announce a state change.
+###### getState()
+Return the current state of the Sensor.
 
 ##### Control
 Defines the model for a sensor whose state can be changed.
 
-    - setState(value)
+###### setState(value)
+Set the state of the Control to the specified value.
 
 ##### Collection
 Defines an ordered collection of Resources.
 
-	- addRes()
-	- delRes()
-	- getRes()
+###### addRes(resource)
+Add the specified Resource to the Collection.
+###### getRes(name)
+Return the Resource specified by the name from the Collection.
+###### delRes(name)
+Remove the Resource specified by the name from the Collection.
 
 ### Time related classes
 These classes are inherited from the core classes and implement time based functions:
 
 	- class Schedule(Collection):
-    - class Cycle(Object):
+###### class Cycle(Object):
 	- class Sequence(Control):
 	- class Task(Control):
-    - class SchedTime(Object):
+###### class SchedTime(Object):
 
 ### Example
 A simple example is a temperature sensor that may be in a room, outside the house, or immersed in a swimming pool.  All it does is to report the ambient temperature of the air or water it is in.  Let's consider a digital temperature sensor that uses the I<sup>2</sup>C hardware interface.  When a read command is sent to the address of the device it returns a byte that represents the temperature in degrees Celsius.  Two software objects defined by this project are required: a Sensor and an Interface.  The Sensor can be just the base object because all it needs to do is to implement the get state function that reads the state of the sensor from the interface it is associated with.  The Interface object must be specific to the I<sup>2</sup>C interface so it is a I2CInterface object that is derived from the base Interface object.  It can use the Python SMBus library that performs all the low level I<sup>2</sup>C protocol functions to read a byte and implement the read function.
