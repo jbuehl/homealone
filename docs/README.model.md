@@ -19,9 +19,9 @@ These are the core Python classes that are used to describe the system.
 
 - Object - the base class for everything
 - Resource - base class for resources
+- Interface - a resource that is a representation of a physical interface
 - Sensor - a resource that is a representation of a physical sensor
 - Control - a resource that is a representation of a physical control
-- Interface - a resource that is a representation of a physical interface
 - Collection - a resource that is an ordered list of resources
 
 ##### IMPLEMENTATION
@@ -33,7 +33,7 @@ These terms describe the roles played by the software components in the system.
 
 
 ### Object model
-The object model is defined by the following core classes:
+Physical devices are represented by members of an model that is defined within an application.  The object model is defined by the following core classes:
 
 ```mermaid
 classDiagram
@@ -75,89 +75,62 @@ classDiagram
 ##### Object
 The base class for Homealone objects.  It implements the dump() function which is used to serialize objects as JSON.  Deserialization is implemented by the static loadResource() function.
 
-###### className
-The name of the class used to recreate a serialized object.  It may or may not be the same as the class name of an inherited object.
-###### dump()
-Serialize the object to JSON.
+- className - The name of the class used to recreate a serialized object.  It may or may not be the same as the class name of an inherited object.
+- dump() - Serialize the object to JSON.
 
 ##### Resource
 The base class for all Homealone resources.
 
-###### name
-The unique name for the resource.
-###### type
-The type of Resource.
-###### enabled
-Indicates whether the Resource is enabled (active) or not.
-###### enable()
-Enable the Resource.
-###### disable()
-Disable the Resource.
+- name - The unique name for the resource.
+- type - The type of Resource.
+- enabled - Indicates whether the Resource is enabled (active) or not.
+- enable() - Enable the Resource.
+- disable() - Disable the Resource.
 
 ##### Interface
 Defines the abstract class for interface implementations.
 
-###### interface
-An Interface that this Interface is accessed through
-###### event
-An Event object that is set when the state of one or more the Sensors on this Interface changes.
-###### start()
-Start (activate) the Interface.
-###### stop()e) the Interface.
-Stop (deactivat)
-###### read(addr)
-Read the current value from the specified address.
-###### write(addr, value)
-Write the specified value to the spacified address.
-###### notify()
-Set the Interface's event to announce a state change of one of more of its Sensors.
+- interface - An Interface that this Interface is accessed through
+- event - An Event object that is set when the state of one or more the Sensors on this Interface changes.
+- start() - Start (activate) the Interface.
+- stop() - Stop (deactivate) the Interface.
+- read(addr) - Read the current value from the specified address.
+- write(addr, value) - Write the specified value to the spacified address.
+- notify() - Set the Interface's event to announce a state change of one of more of its Sensors.
 
 ##### Sensor
 Defines the model for the base Homealone sensor.
 
-###### interface
-The Interface that this sensor is accessed through.
-###### addr
-The address of the Sensor on the Interface.
-###### event
-An Event object that is set when the state of the Sensor changes.
-###### label
-Human readable name for this Sensor.
-###### group
-The list of groups that this Sensor is part of.
-###### location
-The coordinates of the physical location of this Sensor.
-###### notify()
-Set the Sensor's event to announce a state change.
-###### getState()
-Return the current state of the Sensor.
+- interface - The Interface that this sensor is accessed through.
+- addr - The address of the Sensor on the Interface.
+- event - An Event object that is set when the state of the Sensor changes.
+- label - Human readable name for this Sensor.
+- group - The list of groups that this Sensor is part of.
+- location - The coordinates of the physical location of this Sensor.
+- notify() - Set the Sensor's event to announce a state change.
+- getState() - Return the current state of the Sensor.
 
 ##### Control
 Defines the model for a sensor whose state can be changed.
 
-###### setState(value)
-Set the state of the Control to the specified value.
+- setState(value) - Set the state of the Control to the specified value.
 
 ##### Collection
 Defines an ordered collection of Resources.
 
-###### addRes(resource)
-Add the specified Resource to the Collection.
-###### getRes(name)
-Return the Resource specified by the name from the Collection.
-###### delRes(name)
-Remove the Resource specified by the name from the Collection.
-
-### Time related classes
-These classes are inherited from the core classes and implement time based functions:
-
-	- class Schedule(Collection):
-###### class Cycle(Object):
-	- class Sequence(Control):
-	- class Task(Control):
-###### class SchedTime(Object):
+- addRes(resource) - Add the specified Resource to the Collection.
+- getRes(name) - Return the Resource specified by the name from the Collection.
+- delRes(name) - Remove the Resource specified by the name from the Collection.
 
 ### Example
 A simple example is a temperature sensor that may be in a room, outside the house, or immersed in a swimming pool.  All it does is to report the ambient temperature of the air or water it is in.  Let's consider a digital temperature sensor that uses the I<sup>2</sup>C hardware interface.  When a read command is sent to the address of the device it returns a byte that represents the temperature in degrees Celsius.  Two software objects defined by this project are required: a Sensor and an Interface.  The Sensor can be just the base object because all it needs to do is to implement the get state function that reads the state of the sensor from the interface it is associated with.  The Interface object must be specific to the I<sup>2</sup>C interface so it is a I2CInterface object that is derived from the base Interface object.  It can use the Python SMBus library that performs all the low level I<sup>2</sup>C protocol functions to read a byte and implement the read function.
 
 Another example is a sprinkler valve.  The state of the valve is either open or closed, and it is operated remotely from the network.  The voltage to the valve is switched using a relay or semiconductor that is controlled by a GPIO pin on the controller.  A Control object and an Interface object are needed to implement this.  The Control object inherits the get state function from the Sensor object, but it also defines a set state function that changes the state of the device.  The GPIOInterface object implements the read and write functions that get and set a GPIO pin.
+
+```mermaid
+classDiagram
+	Interface <|-- I2CInterface
+	Interface <|--GPIOInterface
+	I2CInterface <--Sensor
+	GPIOInterface <-- Control
+```
