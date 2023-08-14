@@ -71,11 +71,13 @@ classDiagram
 	Collection : delRes()
 ```
 
-##### Object
+#### Object
 The base class for Homealone objects.  It implements the dump() function which is used to serialize objects as JSON.  Deserialization is implemented by the static loadResource() function.
 
-	- className
-	- dump()
+#### className
+The name of the class used to recreate a serialized object.  It may or may not be the same as the class name of an inherited object.
+#### dump()
+Serialize the object to JSON.
 
 ##### Resource
 The base class for all Homealone resources.
