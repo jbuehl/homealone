@@ -42,6 +42,7 @@ classDiagram
 	Resource <|--Sensor
 	Sensor <|-- Control
 	Resource <|--Collection
+	OrderedDict <|--Collection
 	Object: className
 	Object: dump()
 	Resource: name
@@ -69,13 +70,6 @@ classDiagram
 	Collection : getRes()
 	Collection : delRes()
 ```
-
-	+ class Object(object):
-		+ class Resource(Object):
-		    - class Interface(Resource):
-		    + class Sensor(Resource):
-		        - class Control(Sensor):
-		    + class Collection(Resource, OrderedDict):
 
 ##### Object
 The base class for Homealone objects.  It implements the dump() function which is used to serialize objects as JSON.  Deserialization is implemented by the static loadResource() function.
