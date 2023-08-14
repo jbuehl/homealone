@@ -85,15 +85,17 @@ The object model is defined by the following core classes:
 
 ```mermaid
 classDiagram
+	Object <|-- Resource
+	Resource <|--Interface
+	Resource <|--Sensor
+	Sensor <|-- Control
+	Resource <|--Collection
 	Object: className
 	Object: dump()
-	Object <|-- Resource
 	Resource: name
 	Resource: type
 	Resource: enable()
 	Resource: disable()
-	Resource <|--Interface
-	Resource <|--Sensor
 	Interface : interface
 	Interface : sensors
 	Interface : event
@@ -111,8 +113,6 @@ classDiagram
 	Sensor : getState()
 	Sensor : notify()
 	Control : setState(value)
-	Sensor <|-- Control
-	Resource <|--Collection
 	Collection : addRes()
 	Collection : getRes()
 	Collection : delRes()
