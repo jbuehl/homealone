@@ -34,40 +34,88 @@ These terms describe the roles played by the software components in the system.
 
 ### Object model
 The object model is defined by the following core classes:
+```
+ classDiagram
+      Animal <|-- Duck
+      Animal <|-- Fish
+      Animal <|-- Zebra
+      Animal : +int age
+      Animal : +String gender
+      Animal: +isMammal()
+      Animal: +mate()
+      class Duck{
+          +String beakColor
+          +swim()
+          +quack()
+      }
+      class Fish{
+          -int sizeInFeet
+          -canEat()
+      }
+      class Zebra{
+          +bool is_wild
+          +run()
+      }
+
+```
+```mermaid
+ classDiagram
+      Animal <|-- Duck
+      Animal <|-- Fish
+      Animal <|-- Zebra
+      Animal : +int age
+      Animal : +String gender
+      Animal: +isMammal()
+      Animal: +mate()
+      class Duck{
+          +String beakColor
+          +swim()
+          +quack()
+       }
+      class Fish{
+          -int sizeInFeet
+          -canEat()
+      }
+      class Zebra{
+          +bool is_wild
+          +run()
+      }  
+
+```
 
 ```mermaid
-classDiagram TD;
-	Object: className;
-	Object: dump();
-	Object <|-- Resource;
-	Resource: name;
-	Resource: type;
-	Resource: enable();
-	Resource: disable();
-	Resource <|--Interface;
-	Resource <|--Sensor;
-	Interface : interface;
-	Interface : sensors;
-	Interface : event;
-	Interface : start();
-	Interface : stop();
-	Interface : read(addr);
-	Interface : write(addr, value);
-	Interface : notify();
-	Sensor : interface;
-	Sensor : addr;
-	Sensor : event;
-	Sensor : label;
-	Sensor : group;
-	Sensor : location;
-	Sensor : getState();
-	Sensor : notify();
-	Control : setState(value);
-	Sensor <|-- Control;
-	Resource <|--Collection;
-	Collection : addRes();
-	Collection : getRes();
-	Collection : delRes();
+classDiagram
+	Object: className
+	Object: dump()
+	Object <|-- Resource
+	Resource: name
+	Resource: type
+	Resource: enable()
+	Resource: disable()
+	Resource <|--Interface
+	Resource <|--Sensor
+	Interface : interface
+	Interface : sensors
+	Interface : event
+	Interface : start()
+	Interface : stop()
+	Interface : read(addr)
+	Interface : write(addr, value)
+	Interface : notify()
+	Sensor : interface
+	Sensor : addr
+	Sensor : event
+	Sensor : label
+	Sensor : group
+	Sensor : location
+	Sensor : getState()
+	Sensor : notify()
+	Control : setState(value)
+	Sensor <|-- Control
+	Resource <|--Collection
+	Collection : addRes()
+	Collection : getRes()
+	Collection : delRes()
 ```
 
 	+ class Object(object):
