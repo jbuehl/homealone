@@ -39,6 +39,15 @@ A Homealone remote service uses a RemoteService object to send periodic messages
 
 The message contains a service REST resource and optionally a resources REST resource and states REST resource. If the message only contains a service REST resource, the message serves to notify clients that the server is still active and there haven't been any resource or state changes since the last message.  The timestamps will be the same as the previous message and the sequence number will contain the sequence number of the previous message incremented by 1.
 
+```mermaid
+sequenceDiagram
+	participant RemoteClient
+	participant RemoteServer
+	loop
+		RemoteServer --> RemoteClient: service resource
+	end
+```
+
 #### Remote client
 A client that wants to access remote resources creates a RemoteClient object.  This object listens on the remote advertising port for messages from remote servers.  When a message is received from a service that it hasn't previously seen, the client creates a ProxyService object to represent the remote service that sent the message.  The client then requests the remote server for a list of its remote resources, their attributes, and their states.  This is used to construct a set of resources that serve as proxies for the resources on that service.  Every resource in this Collection references a RestInterface that is associated with the ProxyService.
 
