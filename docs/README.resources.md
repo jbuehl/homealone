@@ -42,6 +42,15 @@ Interface to the W1 interface that supports 1-wire temperature sensors connected
 ### Sensor and Control resources
 These modules implement Sensors and Controls for more complex functions that build on the Homealone core classes.
 
+#### Time related classes
+These classes are inherited from the core classes and implement time based functions:
+
+- class Schedule(Collection):
+- class Cycle(Object):
+	- class Sequence(Control):
+	- class Task(Control):
+- class SchedTime(Object):
+
 #### Electrical sensors
 Sensors related to electrical devices.
 
