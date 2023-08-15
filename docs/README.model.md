@@ -90,7 +90,7 @@ The base class for all Homealone resources.
 ##### Interface
 Defines the abstract class for interface implementations.
 
-- interface - An Interface that this Interface is accessed through
+- interface - A reference to an Interface that this Interface is accessed through
 - event - An Event object that is set when the state of one or more the Sensors on this Interface changes.
 - start() - Start (activate) the Interface.
 - stop() - Stop (deactivate) the Interface.
@@ -101,7 +101,7 @@ Defines the abstract class for interface implementations.
 ##### Sensor
 Defines the model for the base Homealone sensor.
 
-- interface - The Interface that this sensor is accessed through.
+- interface - A reference to the Interface that this sensor is accessed through.
 - addr - The address of the Sensor on the Interface.
 - event - An Event object that is set when the state of the Sensor changes.
 - label - Human readable name for this Sensor.
@@ -116,7 +116,7 @@ Defines the model for a sensor whose state can be changed.
 - setState(value) - Set the state of the Control to the specified value.
 
 ##### Collection
-Defines an ordered collection of Resources.
+Defines an ordered collection of references to Resources.
 
 - addRes(resource) - Add the specified Resource to the Collection.
 - getRes(name) - Return the Resource specified by the name from the Collection.
