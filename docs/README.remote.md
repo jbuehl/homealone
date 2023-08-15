@@ -44,7 +44,7 @@ sequenceDiagram
 	participant RemoteClient
 	participant RemoteServer
 	loop
-		RemoteServer --> RemoteClient: service resource
+		RemoteServer ->> RemoteClient: service resource
 	end
 ```
 
