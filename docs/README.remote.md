@@ -41,10 +41,10 @@ The message contains a service REST resource and optionally a resources REST res
 
 ```mermaid
 sequenceDiagram
-	box transparent Aqua client
+	box Aqua client
 	participant RemoteClient
 	end
-	box transparent Aqua server
+	box Aqua server
 	participant RemoteServer
 	end
 	loop
