@@ -19,7 +19,7 @@ class Application(object):
         self.name = name
         self.globals = globals                                              # application global variables
         self.event = threading.Event()                                      # state change event
-        self.resources = Collection("resources", event=self.event)          # application resources
+        self.resources = Collection("resources")                            # application resources
         self.globals["resources"] = self.resources
         self.schedule = Schedule("schedule")                                # schedule of tasks to run
         self.startList = []                                                 # resources that need to be started
@@ -35,7 +35,7 @@ class Application(object):
                     self.remoteEvent = threading.Event()
                 else:
                     self.remoteEvent = self.event
-                self.remoteResources = Collection("remoteResources", event=self.remoteEvent)
+                self.remoteResources = Collection("remoteResources")
                 self.globals["remoteResources"] = self.remoteResources
             else:                   # use the same collection for remote and local resources
                 self.remoteResources = self.resources
@@ -45,7 +45,7 @@ class Application(object):
             self.remoteResources = None
         # data logger
         if logger:
-            self.logger = DataLogger("logger", self.name, self.resources)
+            self.logger = DataLogger("logger", self.name, self.resources, event=self.event)
         else:
             self.logger = None
         # system resources

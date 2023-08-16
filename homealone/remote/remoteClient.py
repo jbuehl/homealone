@@ -130,9 +130,7 @@ class RemoteClient(LogThread):
                     serviceStates = service.interface.getStates()
                 else:
                     service.interface.setStates(serviceStates)  # load the interface cache
-                self.resources.setStates(serviceStates)         # update the local resource cache
                 service.stateTimeStamp = stateTimeStamp
-                self.resources.notify()
         except Exception as ex:
             logException(self.name+" updateService", ex)
         service.updating = False

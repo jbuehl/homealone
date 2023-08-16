@@ -36,9 +36,6 @@ class Resource(Object):
     def disable(self):
         if self.enabled:
             self.enabled = False
-            # nullify cached states
-            for collection in list(self.collections.values()):
-                collection.states[self.name] = None
             if self.interface:
                 self.interface.states[self.name] = None
 
@@ -102,58 +99,12 @@ class Interface(Resource):
 
 # Resource collection
 class Collection(Resource, OrderedDict):
-    def __init__(self, name, resources=[], aliases={}, type="collection", event=None, start=False):
+    def __init__(self, name, resources=[], type="collection"):
         Resource.__init__(self, name, type)
         OrderedDict.__init__(self)
         self.lock = threading.Lock()
-        self.states = {}    # cache of current sensor states
         for resource in resources:
             self.addRes(resource)
-        self.aliases = aliases
-        if event:
-            self.event = event
-        else:
-            self.event = threading.Event()
-        if start:
-            self.start()
-
-    def start(self):
-        # thread to periodically poll the state of the resources in the collection
-        def pollStates():
-            resourcePollCounts = {}
-            while True:
-                stateChanged = False
-                with self.lock:
-                    for resource in list(self.values()):
-                        try:
-                            if not resource.event:    # don't poll resources with events
-                                if resource.type not in ["schedule", "collection", "task"]:   # skip resources that don't have a state
-                                    if resource.name not in list(resourcePollCounts.keys()):
-                                        resourcePollCounts[resource.name] = resource.poll
-                                        self.states[resource.name] = resource.getState()
-                                    if resourcePollCounts[resource.name] == 0:          # count has decremented to zero
-                                        resourceState = resource.getState()
-                                        if resourceState != self.states[resource.name]: # save the state if it has changed
-                                            self.states[resource.name] = resourceState
-                                            stateChanged = True
-                                        resourcePollCounts[resource.name] = resource.poll
-                                    else:   # decrement the count
-                                        resourcePollCounts[resource.name] -= 1
-                        except Exception as ex:
-                            logException(self.name+" pollStates", ex)
-                if stateChanged:    # at least one resource state changed
-                    self.event.set()
-                    stateChanged = False
-                time.sleep(1)
-        # initialize the resource state cache
-        for resource in list(self.values()):
-            if resource.type not in ["schedule", "collection"]:   # skip resources that don't have a state
-                try:
-                    self.states[resource.name] = resource.getState()    # load the initial state
-                except Exception as ex:
-                    logException(self.name+" start", ex)
-        pollStatesThread = LogThread(name="pollStatesThread", target=pollStates)
-        pollStatesThread.start()
 
     # Add a list of resources to this collection
     def addRes(self, resources, state=None):
@@ -164,7 +115,6 @@ class Collection(Resource, OrderedDict):
                 try:
                     self.__setitem__(str(resource), resource)
                     resource.addCollection(self)
-                    self.states[resource.name] = state
                 except Exception as ex:
                     logException(self.name+" addRes", ex)
 
@@ -175,7 +125,6 @@ class Collection(Resource, OrderedDict):
         for name in names:
             with self.lock:
                 try:
-                    del self.states[name]
                     self.__getitem__(name).delCollection(self)
                     self.__delitem__(name)
                 except Exception as ex:
@@ -211,27 +160,6 @@ class Collection(Resource, OrderedDict):
             if group in listize(resource.group):
                 resourceList.append(resource)
         return resourceList
-
-    # get the current state of all sensors in the resource collection
-    def getStates(self, wait=False):
-        if self.event and wait:
-            self.event.clear()
-            self.event.wait()
-        return copy.copy(self.states)
-
-    # set the state of the specified sensor in the cache
-    def setState(self, sensor, state):
-        self.states[sensor.name] = state
-
-    # set state values of all sensors into the cache
-    def setStates(self, states):
-        for sensor in list(states.keys()):
-            self.states[sensor] = states[sensor]
-
-    # Trigger the sending of a state change notification
-    def notify(self):
-        if self.event:
-            self.event.set()
 
     # dictionary of pertinent attributes
     def dict(self, expand=False):
@@ -288,8 +216,8 @@ class Sensor(Resource):
     def notify(self, state=None):
         if not state:
             state = self.getState()
-        for collection in list(self.collections.keys()):
-            self.collections[collection].setState(self, state)
+        # for collection in list(self.collections.keys()):
+        #     self.collections[collection].setState(self, state)
         if self.event:
             self.event.set()
 

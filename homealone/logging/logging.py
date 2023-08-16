@@ -8,10 +8,10 @@ import os
 from homealone import *
 
 class DataLogger(object):
-    def __init__(self, name, appName, resources, start=False):
+    def __init__(self, name, appName, resources, event=None, start=False):
         self.name = name
         self.appName = appName
-        self.resources = resources
+        self.states = StateCache("states", resources, event=event)
         self.logDir = dataDir
         os.makedirs(self.logDir, exist_ok=True)
         archiveServers = findService(archiveService)
@@ -24,6 +24,7 @@ class DataLogger(object):
             self.start()
 
     def start(self):
+        self.states.start()
         startThread("loggingThread", self.loggingThread)
 
     def loggingThread(self):
@@ -31,7 +32,7 @@ class DataLogger(object):
         lastDay = ""
         while True:
             # wait for a new set of states
-            states = self.resources.getStates(wait=True)
+            states = self.states.getStates(wait=True)
             today = time.strftime("%Y%m%d")
 
             # log states to a file

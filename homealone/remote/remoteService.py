@@ -33,7 +33,7 @@ def requestHandler(request, response, service, resources):
                     expand = False
                 data = resources.dump(expand)
         elif type == "states":   # resource states
-            data = resources.getStates()
+            data = service.states.getStates()
         elif type == "service":  # service data
             data = service.getServiceData()
         else:
@@ -66,8 +66,9 @@ class RemoteService(object):
         self.block = block
         if event:       # use specified event
             self.event = event
-        else:           # use the event of the resources
-            self.event = self.resources.event
+        else:
+            self.event = threading.Event()
+        self.states = StateCache("states", resources, event=self.event)
         if port:        # use the specified port
             self.ports = [port]
         else:           # use an available port from the pool
@@ -82,7 +83,7 @@ class RemoteService(object):
 
     def start(self):
         # start polling the resource states
-        self.resources.start()
+        self.states.start()
         # start the HTTP server
         debug('debugRemoteService', self.name, "starting RemoteService")
         self.port = 0
@@ -102,44 +103,45 @@ class RemoteService(object):
             if self.label == "":
                 self.label = hostname+":"+str(self.port)
             # start the thread to send the resource states periodically and also when one changes
-            def stateAdvert():
-                debug('debugRemoteService', self.name, "Advert thread started")
-                resources = self.resources.dump()   # don't send expanded resources
-                states = self.resources.getStates()
-                lastStates = states
-                self.stateTimeStamp = int(time.time())
-                self.resourceTimeStamp = int(time.time())
-                while True:
-                    self.sendStateMessage(resources, states)
-                    resources = None
-                    states = None
-                    # wait for either a state to change or the periodic trigger
-                    currentStates = self.resources.getStates(wait=True)
-                    # compare the current states to the previous states
-                    if diffStates(lastStates, currentStates) != {}:
-                        # a state changed
-                        states = currentStates
-                        self.stateTimeStamp = int(time.time())
-                    if sorted(list(currentStates.keys())) != sorted(list(lastStates.keys())):
-                        # a resource was either added or removed
-                        resources = self.resources.dump()   # don't send expanded resources
-                        self.resourceTimeStamp = int(time.time())
-                    lastStates = currentStates
-                debug('debugRemoteService', self.name, "Advert thread ended")
-            startThread(name="stateAdvertThread", target=stateAdvert)
-
+            startThread(name="stateAdvertThread", target=self.stateAdvert)
             # start the thread to trigger the advertisement message periodically
-            def stateTrigger():
-                debug('debugRemoteService', self.name, "Remote state trigger started", remoteAdvertInterval)
-                while True:
-                    debug('debugInterrupt', self.name, "trigger", "set", self.event)
-                    self.event.set()
-                    time.sleep(remoteAdvertInterval)
-                debug('debugRemoteService', self.name, "Remote state trigger ended")
-            startThread(name="stateTriggerThread", target=stateTrigger)
+            startThread(name="stateTriggerThread", target=self.stateTrigger)
         #wait forever
         if self.block:
             block()
+
+    def stateAdvert(self):
+        debug('debugRemoteService', self.name, "Advert thread started")
+        resources = self.resources.dump()   # don't send expanded resources
+        states = self.states.getStates()
+        lastStates = states
+        self.stateTimeStamp = int(time.time())
+        self.resourceTimeStamp = int(time.time())
+        while True:
+            self.sendStateMessage(resources, states)
+            resources = None
+            states = None
+            # wait for either a state to change or the periodic trigger
+            currentStates = self.states.getStates(wait=True)
+            # compare the current states to the previous states
+            if diffStates(lastStates, currentStates) != {}:
+                # a state changed
+                states = currentStates
+                self.stateTimeStamp = int(time.time())
+            if sorted(list(currentStates.keys())) != sorted(list(lastStates.keys())):
+                # a resource was either added or removed
+                resources = self.resources.dump()   # don't send expanded resources
+                self.resourceTimeStamp = int(time.time())
+            lastStates = currentStates
+        debug('debugRemoteService', self.name, "Advert thread ended")
+
+    def stateTrigger(self):
+        debug('debugRemoteService', self.name, "Remote state trigger started", remoteAdvertInterval)
+        while True:
+            debug('debugInterrupt', self.name, "trigger", "set", self.event)
+            self.event.set()
+            time.sleep(remoteAdvertInterval)
+        debug('debugRemoteService', self.name, "Remote state trigger ended")
 
     def openSocket(self):
         msgSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
