@@ -36,15 +36,16 @@ class ThermostatControl(Control):
         #     self.inhibited = False
         self.inhibited = False
         self.persistenceControl = persistenceControl    # persistent storage of the state
+        self.currentState = 0
         self.hysteresis = hysteresis
 
     def start(self):
         if self.persistenceControl:
-            currentState = self.persistenceControl.getState()
-            if currentState == None:
+            self.currentState = self.persistenceControl.getState()
+            if self.currentState == None:
                 self.setState(modeOff)
             else:
-                self.setState(currentState)
+                self.setState(self.currentState)
         else:
             self.setState(modeOff)
 
