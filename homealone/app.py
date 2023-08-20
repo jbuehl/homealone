@@ -11,8 +11,7 @@ from homealone.interfaces.osInterface import *
 class Application(object):
     def __init__(self, name, globals,
                  publish=True, advert=True,                                 # resource publishing parameters
-                 remote=False, watch=[], ignore=[], remoteResources=True,   # remote resource proxy parameters
-                    remoteEvent=False,
+                 remote=False, watch=[], ignore=[], separateRemote=True,    # remote resource proxy parameters
                  logger=True,                                               # data logger
                  system=False,                                              # system resources
                  state=False, shared=False, changeMonitor=True):            # persistent state parameters
@@ -20,32 +19,35 @@ class Application(object):
         self.globals = globals                                              # application global variables
         self.event = threading.Event()                                      # state change event
         self.resources = Collection("resources")                            # application resources
+        self.separateRemote = separateRemote
         self.globals["resources"] = self.resources
+        self.states = StateCache("states", self.resources, self.event)      # resource state cache
+        self.globals["states"] = self.states
         self.schedule = Schedule("schedule")                                # schedule of tasks to run
         self.startList = []                                                 # resources that need to be started
         # publish resources via remote service
         if publish:
-            self.remoteService = RemoteService(self.name, self.resources, event=self.event, label=labelize(self.name), advert=advert)
+            self.remoteService = RemoteService(self.name, self.resources, states=self.states, label=labelize(self.name), advert=advert)
         else:
             self.remoteService = None
         # remote resource proxy
         if remote:
-            if remoteResources:     # separate collection for remote resources
-                if remoteEvent:     # separate event for remote resources
-                    self.remoteEvent = threading.Event()
-                else:
-                    self.remoteEvent = self.event
+            if separateRemote:     # separate collection for remote resources
+                self.remoteEvent = threading.Event()
                 self.remoteResources = Collection("remoteResources")
                 self.globals["remoteResources"] = self.remoteResources
+                self.remoteStates = StateCache("remoteStates", self.remoteResources, self.remoteEvent)      # resource state cache
+                self.globals["remoteStates"] = self.remoteStates
             else:                   # use the same collection for remote and local resources
                 self.remoteResources = self.resources
-            self.remoteClient = RemoteClient("remoteClient", self.remoteResources, watch=watch, ignore=ignore, event=self.event)
+                self.remoteEvent = self.event
+            self.remoteClient = RemoteClient("remoteClient", self.remoteResources, watch=watch, ignore=ignore, event=self.remoteEvent)
         else:
             self.remoteClient = None
             self.remoteResources = None
         # data logger
         if logger:
-            self.logger = DataLogger("logger", self.name, self.resources, event=self.event)
+            self.logger = DataLogger("logger", self.name, self.resources, self.states)
         else:
             self.logger = None
         # system resources
@@ -72,15 +74,18 @@ class Application(object):
     def run(self):
         # wait for the network to be available
         waitForNetwork(localController)
-        if self.remoteClient:                      # remote resource proxy
+        if self.remoteClient:                   # remote resource proxy
             self.remoteClient.start()
+        self.states.start()                     # resource state polling and monitoring
+        if self.separateRemote:
+            self.remoteStates.start()           # remote resource state polling and monitoring
         if self.logger:                         # data logger
             self.logger.start()
         for resource in self.startList:         # other resources
             resource.start()
         if list(self.schedule.keys()) != []:    # task schedule
             self.schedule.start()
-        if self.remoteService:                     # resource publication
+        if self.remoteService:                  # resource publication
             self.remoteService.start()
 
     # define an Interface resource

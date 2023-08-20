@@ -19,19 +19,18 @@ On = 1
 
 # Resource collection state cache
 class StateCache(object):
-    def __init__(self, name, resources, event=None, start=False):
+    def __init__(self, name, resources, event, start=False):
         self.name = name
         self.resources = resources
-        self.states = {}    # cache of current sensor states
-        if event:
-            self.event = event
-        else:
-            self.event = threading.Event()
+        self.resourceEvent = event          # externalresource state change event
+        self.stateEvent = threading.Event() # state change event
+        self.states = {}                    # cache of current sensor states
         if start:
             self.start()
 
     def start(self):
         # initialize the resource state cache
+        debug("debugStateCache", self.name, "starting")
         for resource in list(self.resources.values()):
             if resource.type not in ["schedule", "collection"]:   # skip resources that don't have a state
                 try:
@@ -43,9 +42,11 @@ class StateCache(object):
 
     # thread to periodically poll the state of the resources in the collection
     def pollStatesThread(self):
+        debug("debugStateCache", self.name, "starting pollStatesThread")
         resourcePollCounts = {}
         while True:
             stateChanged = False
+            debug("debugStateCache", self.name, "polling", len(self.resources), "resources")
             with self.resources.lock:
                 for resource in list(self.resources.values()):
                     try:
@@ -63,34 +64,45 @@ class StateCache(object):
                                     resourcePollCounts[resource.name] = resource.poll
                                 else:   # decrement the count
                                     resourcePollCounts[resource.name] -= 1
+                    except KeyError:
+                        log(self.name, "no previous state", resource.name)
                     except Exception as ex:
                         logException(self.name+" pollStates", ex)
             if stateChanged:    # at least one resource state changed
-                self.event.set()
+                self.stateEvent.set()
                 stateChanged = False
             time.sleep(1)
 
-    # thread to watch foor state change events
+    # thread to watch for state change events
     def watchEventsThread(self):
+        debug("debugStateCache", self.name, "starting watchEventsThread")
         while True:
-            self.event.clear()
-            self.event.wait()
+            debug("debugStateCache", self.name, "waiting for", len(self.resources), "resources")
+            self.resourceEvent.clear()
+            self.resourceEvent.wait()
+            debug("debugStateCache", self.name, "state change event")
+            stateChanged = False
             with self.resources.lock:
                 for resource in list(self.resources.values()):
                     try:
-                        if resource.event:                                              # only get resources with events
+                        if resource.event:                                      # only get resources with events
                             resourceState = resource.getState()
-                            if resourceState != self.states[resource.name]:             # save the state if it has changed
+                            if resourceState != self.states[resource.name]:     # save the state if it has changed
                                 self.states[resource.name] = resourceState
                                 stateChanged = True
+                    except KeyError:                                            # resource hasn't been seen before, save the state
+                        self.states[resource.name] = resourceState
                     except Exception as ex:
                         logException(self.name+" watchEvents", ex)
+            if stateChanged:    # at least one resource state changed
+                self.stateEvent.set()
+                stateChanged = False
 
-    # get the current state of all sensors in the resource collection
-    def getStates(self, wait=False):
-        if self.event and wait:
-            self.event.clear()
-            self.event.wait()
+    # wait for a change and return the current state of all sensors in the resource collection
+    def getStates(self, wait=True):
+        if wait:
+            self.stateEvent.clear()
+            self.stateEvent.wait()
         return copy.copy(self.states)
 
     # set the state of the specified sensor in the cache
