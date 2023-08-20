@@ -40,10 +40,25 @@ class RestInterface(Interface):
                 sensor.disable("REST I/O error")
                 break
 
+    # return state values of all sensors on this interface and store them in the cache
+    def getStates(self, path="/states"):
+        debug('debugRemoteClientStates', self.name, "getStates", "path", path)
+        states = self.readRest(path)
+        debug('debugRemoteClientStates', self.name, "getStates", "states", states)
+        self.setStates(states)
+        return states
+
+    # set state values of all sensors into the cache
+    def setStates(self, states):
+        debug('debugRemoteClientStates', self.name, "setStates", "states", states)
+        for sensor in list(states.keys()):
+            self.states[sensor] = states[sensor]
+        self.notify()
+
     # return the state value for the specified sensor address
     # addr is the REST path to the specified resource
     def read(self, addr):
-        debug('debugRestStates', self.name, "read", addr, self.states)
+        debug('debugRemoteClientRead', self.name, "read", addr, self.states)
         if not self.enabled:
             return None
         # return the state from the cache if it is there, otherwise read it from the service
@@ -54,26 +69,9 @@ class RestInterface(Interface):
                 self.states[addr] = None
         return self.states[addr]
 
-    # get state values of all sensors on this interface
-    def getStates(self, path="/states"):
-        debug('debugRestStates', self.name, "getStates", "path", path)
-        states = self.readRest(path)
-        # try:
-        #     states = self.readRest(path)[path.split("/")[-1]]
-        # except KeyError:
-        #     states = {}
-        debug('debugRestStates', self.name, "getStates", "states", states)
-        self.setStates(states)
-        return states
-
-    # set state values of all sensors into the cache
-    def setStates(self, states):
-        for sensor in list(states.keys()):
-            self.states[sensor] = states[sensor]
-
     # read the json data from the specified path and return a dictionary
     def readRest(self, path):
-        debug('debugRestStates', self.name, "readRest", path)
+        debug('debugRemoteClientRead', self.name, "readRest", path)
         try:
             ####################################################################
             url = "http://"+self.serviceAddr+urllib.parse.quote(path)
@@ -115,7 +113,7 @@ class RestInterface(Interface):
     # write the control state to the specified address
     # addr is the REST path to the specified resource
     def write(self, addr, value):
-        debug('debugRestStates', self.name, "write", addr, value)
+        debug('debugRemoteClientWrite', self.name, "write", addr, value)
         if self.enabled:
             if self.cache:
                 if self.writeThrough:
@@ -134,7 +132,7 @@ class RestInterface(Interface):
 
     # write json data to the specified path
     def writeRest(self, path, data):
-        debug('debugRestStates', self.name, "writeRest", path, data)
+        debug('debugRemoteClientWrite', self.name, "writeRest", path, data)
         try:
             ####################################################################
             url = "http://"+self.serviceAddr+urllib.parse.quote(path)
