@@ -23,7 +23,7 @@ class Resource(Object):
         Object.__init__(self)
         try:
             if self.name:   # init has already been called for this object
-                log("Resource", self.name, "already initialized")
+                # log("Resource", self.name, "already initialized")
                 return
         except AttributeError:
             self.name = name
@@ -174,11 +174,6 @@ class Sensor(Resource):
                  factor=1, offset=0, resolution=0,
                  poll=10, persistence=None, interrupt=None,
                  location=None, group="", label=""):
-        # try:
-        #     if self.type:   # init has already been called for this object - FIXME
-        #         log("Sensor", self.name, "already initialized")
-        #         return
-        # except AttributeError:
         if not type:
             type = style
         Resource.__init__(self, name, type, event)
@@ -207,13 +202,6 @@ class Sensor(Resource):
             return round(state * self.factor + self.offset, self.resolution)
         except TypeError:
             return state
-
-    # # Trigger the sending of a state change notification
-    # def notify(self, state=None):
-    #     if not state:
-    #         state = self.getState()
-    #     if self.event:
-    #         self.event.set()
 
     # Define this function for sensors even though it does nothing
     def setState(self, state, wait=False):
