@@ -19,25 +19,34 @@ class Object(object):
 
 # Base class for Resources
 class Resource(Object):
-    def __init__(self, name, type):
+    def __init__(self, name, type, event):
         Object.__init__(self)
         try:
-            if self.name:   # init has already been called for this object - FIXME
+            if self.name:   # init has already been called for this object
+                log("Resource", self.name, "already initialized")
                 return
         except AttributeError:
             self.name = name
             self.type = type
+            self.event = event
             self.enabled = True
             self.collections = {}   # list of collections that include this resource
 
+    # enable the resource
     def enable(self):
         self.enabled = True
 
+    # disable the resource
     def disable(self):
         if self.enabled:
             self.enabled = False
             if self.interface:
                 self.interface.states[self.name] = None
+
+    # trigger the sending of a state change notification
+    def notify(self, state=None):
+        if self.event:
+            self.event.set()
 
     # add this resource to the specified collection
     def addCollection(self, collection):
@@ -57,15 +66,11 @@ class Resource(Object):
 # Base class for Interfaces
 class Interface(Resource):
     def __init__(self, name, interface=None, type="interface", event=None):
-        Resource.__init__(self, name, type)
+        Resource.__init__(self, name, type, event)
         self.interface = interface
-        # sensor state change event
-        if event != None:                   # use the specified one
-            self.event = event
-        elif self.interface:
-            self.event = interface.event    # otherwise inherit event from this interface's interface
-        else:
-            self.event = None
+        if not self.event:
+            if self.interface:
+                self.event = interface.event    # inherit event from this interface's interface
         self.sensors = {}       # sensors using this instance of the interface by name
         self.sensorAddrs = {}   # sensors using this instance of the interface by addr
         self.states = {}        # sensor state cache
@@ -92,15 +97,10 @@ class Interface(Resource):
         self.states[sensor.addr] = None
         sensor.event = self.event
 
-    # Trigger the sending of a state change notification
-    def notify(self):
-        if self.event:
-            self.event.set()
-
 # Resource collection
 class Collection(Resource, OrderedDict):
     def __init__(self, name, resources=[], type="collection"):
-        Resource.__init__(self, name, type)
+        Resource.__init__(self, name, type, None)
         OrderedDict.__init__(self)
         self.lock = threading.Lock()
         for resource in resources:
@@ -171,38 +171,36 @@ class Collection(Resource, OrderedDict):
 # The state is associated with a unique address on an interface.
 # Sensors can also optionally be associated with a group and a physical location.
 class Sensor(Resource):
-    def __init__(self, name, interface=None, addr=None, type=None, style="sensor",
+    def __init__(self, name, interface=None, addr=None, type=None, style="sensor", event=None,
                  factor=1, offset=0, resolution=0,
-                 poll=10, event=None, persistence=None, interrupt=None,
+                 poll=10, persistence=None, interrupt=None,
                  location=None, group="", label=""):
-        try:
-            if self.type:   # init has already been called for this object - FIXME
-                return
-        except AttributeError:
-            if not type:
-                type = style
-            Resource.__init__(self, name, type)
-            self.interface = interface
-            self.addr = addr
+        # try:
+        #     if self.type:   # init has already been called for this object - FIXME
+        #         log("Sensor", self.name, "already initialized")
+        #         return
+        # except AttributeError:
+        if not type:
+            type = style
+        Resource.__init__(self, name, type, event)
+        self.interface = interface
+        self.addr = addr
+        if self.interface:
+            self.interface.addSensor(self)
+        if not self.event:
             if self.interface:
-                self.interface.addSensor(self)
-            self.resolution = resolution
-            self.factor = factor
-            self.offset = offset
-            self.poll = poll
-            if event:
-                self.event = event
-            elif self.interface:       # inherit the event from the interface if not specified
-                self.event = self.interface.event
-            else:
-                self.event = None
-            self.persistence = persistence
-            self.interrupt = interrupt
-            self.location = location
-            self.group = listize(group)
-            self.label = label
-            self.__dict__["state"] = None   # dummy class variable so hasattr() returns True
-            # FIXME - use @property
+                self.event = interface.event    # inherit event from the interface
+        self.resolution = resolution
+        self.factor = factor
+        self.offset = offset
+        self.poll = poll
+        self.persistence = persistence
+        self.interrupt = interrupt
+        self.location = location
+        self.group = listize(group)
+        self.label = label
+        self.__dict__["state"] = None   # dummy class variable so hasattr() returns True
+        # FIXME - use @property
 
     # Return the state of the sensor by reading the value from the address on the interface.
     def getState(self, missing=None):
@@ -212,14 +210,12 @@ class Sensor(Resource):
         except TypeError:
             return state
 
-    # Trigger the sending of a state change notification
-    def notify(self, state=None):
-        if not state:
-            state = self.getState()
-        # for collection in list(self.collections.keys()):
-        #     self.collections[collection].setState(self, state)
-        if self.event:
-            self.event.set()
+    # # Trigger the sending of a state change notification
+    # def notify(self, state=None):
+    #     if not state:
+    #         state = self.getState()
+    #     if self.event:
+    #         self.event.set()
 
     # Define this function for sensors even though it does nothing
     def setState(self, state, wait=False):
