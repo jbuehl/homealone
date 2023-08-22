@@ -68,9 +68,8 @@ class Interface(Resource):
     def __init__(self, name, interface=None, type="interface", event=None):
         Resource.__init__(self, name, type, event)
         self.interface = interface
-        if not self.event:
-            if self.interface:
-                self.event = interface.event    # inherit event from this interface's interface
+        if (self.interface) and (not self.event):
+            self.event = interface.event    # inherit event from this interface's interface
         self.sensors = {}       # sensors using this instance of the interface by name
         self.sensorAddrs = {}   # sensors using this instance of the interface by addr
         self.states = {}        # sensor state cache
@@ -187,9 +186,8 @@ class Sensor(Resource):
         self.addr = addr
         if self.interface:
             self.interface.addSensor(self)
-        if not self.event:
-            if self.interface:
-                self.event = interface.event    # inherit event from the interface
+        if (self.interface) and (not self.event):
+            self.event = interface.event    # inherit event from the interface
         self.resolution = resolution
         self.factor = factor
         self.offset = offset
