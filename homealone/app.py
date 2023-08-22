@@ -54,11 +54,11 @@ class Application(object):
         if system:
             self.osInterface = OSInterface("osInterface")
             self.globals["osInterface"] = self.osInterface
-            self.resource(Sensor(hostname+"CpuTemp", self.osInterface, "cpuTemp", style="tempC"))
-            self.resource(Sensor(hostname+"CpuLoad", self.osInterface, "cpuLoad", style="pct"))
+            self.resource(Sensor(hostname+"CpuTemp", self.osInterface, "cpuTemp", type="tempC"))
+            self.resource(Sensor(hostname+"CpuLoad", self.osInterface, "cpuLoad", type="pct"))
             self.resource(Sensor(hostname+"Uptime", self.osInterface, "uptime"))
             self.resource(Sensor(hostname+"IpAddr", self.osInterface, "ipAddr eth0"))
-            self.resource(Sensor(hostname+"DiskUsage", self.osInterface, "diskUse /", style="pct"))
+            self.resource(Sensor(hostname+"DiskUsage", self.osInterface, "diskUse /", type="pct"))
             self.group("System")
             self.label()
         # persistent state
@@ -120,12 +120,12 @@ class Application(object):
         if publish:
             self.resources.addRes(task)
 
-    # apply a UI style to one or more resources
-    def style(self, style, resources=[]):
+    # apply a UI type to one or more resources
+    def type(self, type, resources=[]):
         if resources == []:     # default is all resources
             resources = list(self.resources.values())
         for resource in listize(resources):
-            resource.type = style
+            resource.type = type
 
     # associate one or more resources with one or more UI groups
     def group(self, group, resources=[]):
