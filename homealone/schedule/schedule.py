@@ -1,6 +1,7 @@
 # Classes related to schedules
 
 from homealone.core import *
+from homealone.env import *
 from homealone.resources.extraResources import *
 from .sunriseset import *
 

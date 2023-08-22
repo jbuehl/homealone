@@ -9,13 +9,8 @@ import json
 import copy
 import subprocess
 from rutifu import *
+from .core import *
 from .env import *
-
-# states
-off = 0
-Off = 0
-on = 1
-On = 1
 
 # Resource collection state cache
 class StateCache(object):
@@ -32,7 +27,7 @@ class StateCache(object):
         # initialize the resource state cache
         debug("debugStateCache", self.name, "starting")
         for resource in list(self.resources.values()):
-            if resource.type not in ["schedule", "collection"]:   # skip resources that don't have a state
+            if isinstance(resource, Sensor):   # skip resources that don't have a state
                 try:
                     self.states[resource.name] = resource.getState()    # load the initial state
                 except Exception as ex:
@@ -50,20 +45,19 @@ class StateCache(object):
             with self.resources.lock:
                 for resource in list(self.resources.values()):
                     try:
-                        if not resource.event:                                              # don't poll resources with events
-                            if resource.type not in ["schedule", "collection", "task"]:     # skip resources that don't have a state
-                                if resource.name not in list(resourcePollCounts.keys()):    # a resource not seen before
-                                    resourcePollCounts[resource.name] = resource.poll
-                                    self.states[resource.name] = resource.getState()
+                        if isinstance(resource, Sensor) and( not resource.event):       # don't poll resources with events
+                            if resource.name not in list(resourcePollCounts.keys()):    # a resource not seen before
+                                resourcePollCounts[resource.name] = resource.poll
+                                self.states[resource.name] = resource.getState()
+                                stateChanged = True
+                            if resourcePollCounts[resource.name] == 0:                  # count has decremented to zero
+                                resourceState = resource.getState()
+                                if resourceState != self.states[resource.name]:         # save the state if it has changed
+                                    self.states[resource.name] = resourceState
                                     stateChanged = True
-                                if resourcePollCounts[resource.name] == 0:                  # count has decremented to zero
-                                    resourceState = resource.getState()
-                                    if resourceState != self.states[resource.name]:         # save the state if it has changed
-                                        self.states[resource.name] = resourceState
-                                        stateChanged = True
-                                    resourcePollCounts[resource.name] = resource.poll
-                                else:   # decrement the count
-                                    resourcePollCounts[resource.name] -= 1
+                                resourcePollCounts[resource.name] = resource.poll
+                            else:   # decrement the count
+                                resourcePollCounts[resource.name] -= 1
                     except KeyError:
                         log(self.name, "no previous state", resource.name)
                     except Exception as ex:
@@ -113,12 +107,6 @@ class StateCache(object):
     def setStates(self, states):
         for sensor in list(states.keys()):
             self.states[sensor] = states[sensor]
-
-# normalize state values from boolean to integers
-def normalState(value):
-    if value == True: return On
-    elif value == False: return Off
-    else: return value
 
 # Compare two state dictionaries and return a dictionary containing the items
 # whose values don't match or aren't in the old dict.

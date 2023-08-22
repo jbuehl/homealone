@@ -147,13 +147,12 @@ class CalcSensor(Sensor):
 
 # Sensor that only reports its state if all the specified resources are in the specified states
 class DependentSensor(Sensor):
-    def __init__(self, name, interface, sensor, conditions, default=off, **kwargs):
+    def __init__(self, name, interface, sensor, conditions, **kwargs):
         Sensor.__init__(self, name, **kwargs)
         type = "sensor"
         self.className = "Sensor"
         self.sensor = sensor
         self.conditions = conditions
-        self.default = default
 
     def getState(self, missing=0.0):
         debug('debugState', self.name, "getState")

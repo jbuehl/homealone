@@ -7,7 +7,19 @@ from collections import OrderedDict
 from rutifu import *
 from .utils import *
 
-# Base class for everything
+# sensor states
+off = 0
+Off = 0
+on = 1
+On = 1
+
+# normalize state values from boolean to integers
+def normalState(value):
+    if value == True: return On
+    elif value == False: return Off
+    else: return value
+
+# Abstract base class for everything
 class Object(object):
     def __init__(self):
         self.className = self.__class__.__name__    # Used to optionally override the real class name in dump()
@@ -17,9 +29,9 @@ class Object(object):
         return {"class": self.className,
                 "args": self.dict(expand)}
 
-# Base class for Resources
+# Abstract base class for Resources
 class Resource(Object):
-    def __init__(self, name, type, event):
+    def __init__(self, name, event):
         Object.__init__(self)
         try:
             if self.name:   # init has already been called for this object
@@ -27,7 +39,6 @@ class Resource(Object):
                 return
         except AttributeError:
             self.name = name
-            self.type = type
             self.event = event
             self.enabled = True
             self.collections = {}   # list of collections that include this resource
@@ -63,10 +74,10 @@ class Resource(Object):
     def __str__(self):
         return self.name
 
-# Base class for Interfaces
+# Abstract base class for Interfaces
 class Interface(Resource):
-    def __init__(self, name, interface=None, type="interface", event=None):
-        Resource.__init__(self, name, type, event)
+    def __init__(self, name, interface=None, event=None):
+        Resource.__init__(self, name, event)
         self.interface = interface
         if (self.interface) and (not self.event):
             self.event = interface.event    # inherit event from this interface's interface
@@ -98,8 +109,8 @@ class Interface(Resource):
 
 # Resource collection
 class Collection(Resource, OrderedDict):
-    def __init__(self, name, resources=[], type="collection"):
-        Resource.__init__(self, name, type, None)
+    def __init__(self, name, resources=[]):
+        Resource.__init__(self, name, None)
         OrderedDict.__init__(self)
         self.lock = threading.Lock()
         for resource in resources:
@@ -163,7 +174,6 @@ class Collection(Resource, OrderedDict):
     # dictionary of pertinent attributes
     def dict(self, expand=False):
         return {"name":self.name,
-                "type": self.type,
                 "resources":([attr.dump(expand) for attr in list(self.values())] if expand else list(self.keys()))}
 
 # A Sensor represents a device that has a state that is represented by a scalar value.
@@ -171,14 +181,14 @@ class Collection(Resource, OrderedDict):
 # Sensors can also optionally be associated with a group and a physical location.
 class Sensor(Resource):
     def __init__(self, name, interface=None, addr=None, type=None, style="sensor", event=None,
-                 factor=1, offset=0, resolution=0,
-                 poll=10, persistence=None, interrupt=None,
-                 location=None, group="", label=""):
-        if not type:
-            type = style
-        Resource.__init__(self, name, type, event)
+                 factor=1, offset=0, resolution=0, poll=10, persistence=None, interrupt=None,
+                 label="", group="", location=None):
+        Resource.__init__(self, name, event)
         self.interface = interface
         self.addr = addr
+        self.type = type
+        if not type:
+            self.type = style
         if self.interface:
             self.interface.addSensor(self)
         if (self.interface) and (not self.event):
