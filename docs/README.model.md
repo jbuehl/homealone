@@ -46,10 +46,11 @@ classDiagram
 	Object: className
 	Object: dump()
 	Resource: name
-	Resource: type
 	Resource: enabled
+	Resource : event
 	Resource: enable()
 	Resource: disable()
+	Resource : notify()
 	Interface : interface
 	Interface : sensors
 	Interface : event
@@ -60,12 +61,11 @@ classDiagram
 	Interface : notify()
 	Sensor : interface
 	Sensor : addr
-	Sensor : event
+	Sensor: type
 	Sensor : label
 	Sensor : group
 	Sensor : location
 	Sensor : getState()
-	Sensor : notify()
 	Control : setState(value)
 	Collection : addRes(resource)
 	Collection : getRes(name)
@@ -82,32 +82,30 @@ The base class for Homealone objects.  It implements the dump() function which i
 The base class for all Homealone resources.
 
 - name - The unique name for the resource.
-- type - The type of Resource.
 - enabled - Indicates whether the Resource is enabled (active) or not.
+- event - An Event object that is set when the state of the Resource changes.
 - enable() - Enable the Resource.
 - disable() - Disable the Resource.
+- notify() - Set the Resource's event to announce a state change.
 
 ##### Interface
 Defines the abstract class for interface implementations.
 
 - interface - A reference to an Interface that this Interface is accessed through
-- event - An Event object that is set when the state of one or more the Sensors on this Interface changes.
 - start() - Start (activate) the Interface.
 - stop() - Stop (deactivate) the Interface.
 - read(addr) - Read the current value from the specified address.
 - write(addr, value) - Write the specified value to the spacified address.
-- notify() - Set the Interface's event to announce a state change of one of more of its Sensors.
 
 ##### Sensor
 Defines the model for the base Homealone sensor.
 
 - interface - A reference to the Interface that this sensor is accessed through.
 - addr - The address of the Sensor on the Interface.
-- event - An Event object that is set when the state of the Sensor changes.
+- type - The type of Sensor.
 - label - Human readable name for this Sensor.
 - group - The list of groups that this Sensor is part of.
 - location - The coordinates of the physical location of this Sensor.
-- notify() - Set the Sensor's event to announce a state change.
 - getState() - Return the current state of the Sensor.
 
 ##### Control
