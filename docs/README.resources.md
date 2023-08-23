@@ -83,6 +83,14 @@ classDiagram
 	Sensor <|-- RemoteSensor
 	RemoteSensor <|-- RemoteControl
 	Sensor <|-- AliasSensor
+	Sensor : interface
+	Sensor : addr
+	Sensor: type
+	Sensor : label
+	Sensor : group
+	Sensor : location
+	Sensor : getState()
+	Control : setState(value)
 	MomentaryControl: timeout()
 ```
 
