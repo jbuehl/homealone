@@ -42,22 +42,6 @@ Interface to the W1 interface that supports 1-wire temperature sensors connected
 ### Sensor and Control resources
 These modules implement Sensors and Controls for more complex functions that build on the Homealone core classes.
 
-#### Time related classes
-These classes are inherited from the core classes and implement time based functions:
-
-- class Schedule(Collection):
-- class Cycle(Object):
-	- class Sequence(Control):
-	- class Task(Control):
-- class SchedTime(Object):
-
-#### Electrical sensors
-Sensors related to electrical devices.
-
-    - class PowerSensor(Sensor):
-    - class EnergySensor(Sensor):
-    - class BatterySensor(Sensor):
-
 #### Extra resources
 A collection of generally useful Sensors and Controls.
 
@@ -94,8 +78,44 @@ classDiagram
 	MomentaryControl: timeout()
 ```
 
-#### Temp control
-A Control that manages a heating or cooling unit.
+#### Time related resources
+These classes are inherited from the core classes and implement time based functions:
 
-#### Thermostat control
-A control that emulates a device for controlling a heating and cooling system.
+```mermaid
+classDiagram
+	Collection <|-- Schedule
+	Object <|-- SensorGroup
+	Control <|-- Sequence
+	Object <|-- Cycle
+	StateControl <|-- Task
+	Object <|-- SchedTime
+```
+
+#### Temperature related resources
+
+```mermaid
+classDiagram
+	Control <|-- TempControl
+	Control <|-- ThermostatControl
+	Sensor <|-- ThermostatUnitSensor
+	Control <|-- ThermostatTempControl
+```
+
+- TempControl - A Control that manages a heating or cooling unit.
+- Thermostat control - A control that emulates a device for controlling a heating and cooling system.
+- ThermostatUnitSensor -
+- ThermostatTempControl -
+
+#### Electrical sensors
+Sensors related to electrical devices.
+
+```mermaid
+classDiagram
+	Sensor <|-- PowerSensor
+	Sensor <|-- EnergySensor
+	Sensor <|-- BatterySensor
+```
+
+- PowerSensor -
+- EnergySensor -
+- BatterySensor - 
