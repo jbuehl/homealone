@@ -78,36 +78,36 @@ A collection of generally useful Sensors and Controls.
 	+ class RemoteSensor(Sensor):
 	 	- class RemoteControl(RemoteSensor):
 
-		```mermaid
-		classDiagram
-			Sensor <|-- SensorGroup
-			SensorGroup <|-- ControlGroup
-			Control <|-- ControlGroup
-			SensorGroup <|-- SensorGroupControl
-			Control <|-- SensorGroupControl
-			Sensor <|-- CalcSensor
-			Sensor <|-- DependentSensor
-			Control <|-- DependentControl
-			Control <|-- MomentaryControl
-			Control <|-- StateControl
-			StateControl <|-- MultiControl
-			StateControl <|-- MinMaxControl
-			Sensor <|-- MinSensor
-			Sensor <|-- MaxSensor
-			Sensor <|-- AccumSensor
-			Sensor <|-- AttributeSensor
-			Sensor <|-- RemoteSensor
-			RemoteSensor <|-- RemoteControl
+```mermaid
+classDiagram
+	Sensor <|-- SensorGroup
+	SensorGroup <|-- ControlGroup
+	Control <|-- ControlGroup
+	SensorGroup <|-- SensorGroupControl
+	Control <|-- SensorGroupControl
+	Sensor <|-- CalcSensor
+	Sensor <|-- DependentSensor
+	Control <|-- DependentControl
+	Control <|-- MomentaryControl
+	Control <|-- StateControl
+	StateControl <|-- MultiControl
+	StateControl <|-- MinMaxControl
+	Sensor <|-- MinSensor
+	Sensor <|-- MaxSensor
+	Sensor <|-- AccumSensor
+	Sensor <|-- AttributeSensor
+	Sensor <|-- RemoteSensor
+	RemoteSensor <|-- RemoteControl
 
-			Sensor : interface
-			Sensor : addr
-			Sensor: type
-			Sensor : label
-			Sensor : group
-			Sensor : location
-			Sensor : getState()
-			Control : setState(value)
-		```
+	Sensor : interface
+	Sensor : addr
+	Sensor: type
+	Sensor : label
+	Sensor : group
+	Sensor : location
+	Sensor : getState()
+	Control : setState(value)
+```
 
 #### Temp control
 A Control that manages a heating or cooling unit.
