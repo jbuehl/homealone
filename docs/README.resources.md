@@ -61,25 +61,9 @@ Sensors related to electrical devices.
 #### Extra resources
 A collection of generally useful Sensors and Controls.
 
-	+ class SensorGroup(Sensor):
-		- class ControlGroup(SensorGroup, Control):
-		- class SensorGroupControl(SensorGroup, Control):
-	- class CalcSensor(Sensor):
-    - class DependentSensor(Sensor):
-    - class DependentControl(Control):
-	- class MomentaryControl(Control):
-    + class StateControl(Control):
-    	- class MultiControl(StateControl):
-    	- class MinMaxControl(StateControl):
-	- class MinSensor(Sensor):
-	- class MaxSensor(Sensor):
-	- class AccumSensor(Sensor):
-	- class AttributeSensor(Sensor):
-	+ class RemoteSensor(Sensor):
-	 	- class RemoteControl(RemoteSensor):
-
 ```mermaid
 classDiagram
+	Sensor <|-- Control
 	Sensor <|-- SensorGroup
 	SensorGroup <|-- ControlGroup
 	Control <|-- ControlGroup
@@ -98,15 +82,8 @@ classDiagram
 	Sensor <|-- AttributeSensor
 	Sensor <|-- RemoteSensor
 	RemoteSensor <|-- RemoteControl
-
-	Sensor : interface
-	Sensor : addr
-	Sensor: type
-	Sensor : label
-	Sensor : group
-	Sensor : location
-	Sensor : getState()
-	Control : setState(value)
+	Sensor <|-- AliasSensor
+	MomentaryControl: timeout()
 ```
 
 #### Temp control
