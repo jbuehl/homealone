@@ -32,7 +32,7 @@ monthTbl = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","D
 
 # return today's and tomorrow's dates
 def todaysDate():
-    today = datetime.datetime.now().replace(tzinfo=tz.tzlocal())
+    today = datetime.datetime.now().replace(tzinfo=tz.tzlocal(), second=0, microsecond=0)
     tomorrow = today + datetime.timedelta(days=1)
     return (today, tomorrow)
 
@@ -181,33 +181,11 @@ class Sequence(Control):
 class Schedule(Collection):
     def __init__(self, name, tasks=[]):
         Collection.__init__(self, name, resources=tasks)
-        self.type = "schedule"
-        self.schedThread = LogThread(name="self.schedThread", target=self.doSchedule)
 
     def start(self):
         self.initControls()
-        self.schedThread.start()
+        startThread("schedThread", self.schedThread)
 
-    def getState(self, missing=None):
-        return 1
-
-    def addRes(self, resource):
-        Collection.addRes(self, resource)
-        if resource.schedTime.event != "":
-            # if an event is specified, add a child task with a specific date and time
-            self.addTask(resource.addChild())
-
-    # add a task to the scheduler list
-    def addTask(self, task):
-        self.addRes(task)
-        debug('debugEvent', self.name, "adding", task.__str__())
-
-    # delete a task from the scheduler list
-    def delTask(self, taskName):
-        self.delRes(taskName)
-        debug('debugEvent', self.name, "deleting", taskName)
-
-    # initialize control states in certain cases
     def initControls(self):
         (now, tomorrow) = todaysDate()
         for taskName in list(self.keys()):
@@ -230,13 +208,13 @@ class Schedule(Collection):
                            self.setControlState(task, task.endState)
 
     # Scheduler thread
-    def doSchedule(self):
-        debug('debugThread', self.name, "started")
+    def schedThread(self):
+        debug('debugSched', self.name, "started")
         while True:
             # wake up every minute on the 00 second
             (now, tomorrow) = todaysDate()
             sleepTime = 60 - now.second
-            debug('debugSched', self.name, "sleeping ", sleepTime)
+            debug('debugSched', self.name, "sleeping for", sleepTime, "seconds")
             time.sleep(sleepTime)
             (now, tomorrow) = todaysDate()
             debug('debugSched', self.name, "waking up",
@@ -245,36 +223,36 @@ class Schedule(Collection):
             # need to handle cases where the schedule could be modified while this is running - FIXME
             for taskName in list(self.keys()):
                 task = self[taskName]
-                debug('debugSched', self.name, "checking ", taskName,
-                        task.schedTime.year, task.schedTime.month, task.schedTime.day,
-                        task.schedTime.hour, task.schedTime.minute, task.schedTime.weekday,
-                        task.schedTime.event, "enabled", task.enabled)
                 if task.enabled:
-                    if self.shouldRun(task.schedTime, now):
+                    if self.shouldRun(taskName, task.schedTime, now):
                         self.setControlState(task, task.controlState)
                     if task.endTime:
-                        if self.shouldRun(task.endTime, now):
+                        if self.shouldRun(taskName, task.endTime, now):
                             self.setControlState(task, task.endState)
+                else:
+                    debug('debugSched', self.name, "disabled", taskName)
                 # determine if this was the last time the task would run
                 if task.schedTime.last:
                     if task.schedTime.last <= now:
                         # delete the task from the schedule if it will never run again
                         self.delTask(taskName)
-                        # reschedule the next occurrence if the task was a child of an event task
-                        if task.parent:
-                            self.addTask(task.parent.addChild())
                         del(task)
 
-    def shouldRun(self, schedTime, now):
+    def shouldRun(self, taskName, schedTime, now):
         # the task should be run if the current date/time matches all specified fields in the SchedTime
-        if (schedTime.event == ""): # don't run tasks that specify an event
-            if (schedTime.year == []) or (now.year in schedTime.year):
-                if (schedTime.month == []) or (now.month in schedTime.month):
-                    if (schedTime.day == []) or (now.day in schedTime.day):
-                        if (schedTime.hour == []) or (now.hour in schedTime.hour):
-                            if (schedTime.minute == []) or (now.minute in schedTime.minute):
-                                if (schedTime.weekday == []) or (now.weekday() in schedTime.weekday):
-                                    return True
+        st = copy.copy(schedTime)
+        st.eventTime()              # determine the exact time if event specified
+        debug('debugSched', self.name, "checking", taskName,
+                st.year, st.month, st.day,
+                st.hour, st.minute, st.weekday,
+                st.event)
+        if (st.year == []) or (now.year in st.year):
+            if (st.month == []) or (now.month in st.month):
+                if (st.day == []) or (now.day in st.day):
+                    if (st.hour == []) or (now.hour in st.hour):
+                        if (st.minute == []) or (now.minute in st.minute):
+                            if (st.weekday == []) or (now.weekday() in st.weekday):
+                                return True
         return False
 
     def setControlState(self, task, state):
@@ -300,8 +278,6 @@ class Task(StateControl):
         self.controlState = controlState    # the state to set the control to
         self.endTime = endTime              # optional end time
         self.endState = endState            # optional state to set the control to at the end time
-        self.parent = parent                # this task's parent if it is a child
-        self.child = None                   # this task's child - there can only be one
         self.enabled = normalState(enabled)
 
     def getState(self, missing=None):
@@ -314,22 +290,10 @@ class Task(StateControl):
         if not self.interface:
             self.enabled = state
             debug("debugTask", self.name, "enabled", self.enabled)
-            if self.child:
-                self.child.enabled = state
-                debug("debugTask", self.child.name, "enabled", self.child.enabled)
             self.notify(state)
             return True
         else:
             return Control.setState(self, state)
-
-    # create a child task for the event on a specific date and time
-    def addChild(self):
-        schedTime = copy.copy(self.schedTime)
-        schedTime.eventTime(latLong)
-        schedTime.event = ""
-        schedTime.lastTime()
-        self.child = Task(self.name+"Event", schedTime, self.control, self.controlState, parent=self, enabled=self.enabled)
-        return self.child
 
     # dictionary of pertinent attributes
     def dict(self, expand=False):
@@ -393,8 +357,8 @@ class SchedTime(Object):
             self.month = [tomorrow.month]
             self.day = [tomorrow.day]
 
+    # offset an event time by a delta time if hours or minutes are specified
     def offsetEventTime(self, eventTime):
-        # offset by delta time if hours or minutes are specified
         deltaMinutes = 0
         if self.hour != []:
             deltaMinutes += self.hour[0]*60
@@ -402,24 +366,22 @@ class SchedTime(Object):
             deltaMinutes += self.minute[0]
         return eventTime + datetime.timedelta(minutes=deltaMinutes)
 
-    # determine the specific time of the next occurrence of an event
-    def eventTime(self, latLong):
-        eventTbl = {"sunrise": sunrise,
-                    "sunset": sunset}
-        (today, tomorrow) = todaysDate()
-        if (self.year != []) and (self.month != []) and (self.day != []):
-            eventTime = self.offsetEventTime(eventTbl[self.event](datetime.date(self.year[0], self.month[0], self.day[0]), latLong))
-        else:
-            # use today's event time
-            eventTime = self.offsetEventTime(eventTbl[self.event](today, latLong))
-            if (eventTime <= today) and (self.day == []):
-                # use tomorrow's time if today's time was in the past
-                eventTime = self.offsetEventTime(eventTbl[self.event](tomorrow, latLong))
-            self.year = [eventTime.year]
-            self.month = [eventTime.month]
-            self.day = [eventTime.day]
-        self.hour = [eventTime.hour]
-        self.minute = [eventTime.minute]
+    # determine the specific time of the next occurrence of an event, if present
+    def eventTime(self):
+        if self.event != "":
+            eventTbl = {"sunrise": sunrise,
+                        "sunset": sunset}
+            (today, tomorrow) = todaysDate()
+            if (self.year != []) and (self.month != []) and (self.day != []):
+                eventTime = self.offsetEventTime(eventTbl[self.event](datetime.date(self.year[0], self.month[0], self.day[0]), latLong))
+            else:
+                # use today's event time
+                eventTime = self.offsetEventTime(eventTbl[self.event](today, latLong))
+                if (eventTime < today) and (self.day == []):
+                    # use tomorrow's time if today's time was in the past
+                    eventTime = self.offsetEventTime(eventTbl[self.event](tomorrow, latLong))
+            self.hour = [eventTime.hour]
+            self.minute = [eventTime.minute]
 
     # dictionary of pertinent attributes
     def dict(self, expand=False):

@@ -113,7 +113,7 @@ class Application(object):
 
     # define a Task resource
     def task(self, task, event=True, publish=True):
-        self.schedule.addTask(task)
+        self.schedule.addRes(task)
         self.globals[task.name] = task
         if event:
             task.event = self.event
