@@ -3,41 +3,29 @@
 ### Interfaces
 These modules have been developed that map a number of number of hardware devices to Homealone Interface objects.  Many of them are dependent on 3rd party libraries.
 
-#### ADS1x15 interface
-Interface to the ADS1x15 family of analog to digital converters.  It includes code from the Adafruit_ADS1x15 library.
+-  ADS1x15Interface - Interface to the ADS1x15 family of analog to digital converters.  It includes code from the Adafruit_ADS1x15 library.
 
-#### File interface
-An interface that provides persistent state.  Key value pairs are maintained as JSON in the OS filesystem.
+-  FileInterface - An interface that provides persistent state.  Key value pairs are maintained as JSON in the OS filesystem.
 
-#### GPIO interface
-Interface to the GPIO pins of the hardware device.  It uses the RPi.GPIO library.
+-  GPIOInterface - Interface to the GPIO pins of the hardware device.  It uses the Python RPi.GPIO library.
 
-#### I2C interface
-Interface to I<sup>2</sup>C devices using the smbus library.
+-  I2CInterface - Interface to I<sup>2</sup>C devices using the Python smbus library.
 
-#### MCP23017 interface
-This interface allows use of the MCP23017 GPIO extender to provide additional GPIO pins.
+-  MCP23017Interface - This interface allows use of the MCP23017 GPIO extender to provide additional GPIO pins.
 
-#### OS interface
-AN interface that provides access to a few key OS metrics.
+-  OSInterface - An interface that provides access to a few key OS metrics.
 
-#### OWFS interface
-Interface to the One Wire File System that supports 1-wire devices connected in a variety of ways such as serial, USB, I<sup>2</sup>C, and GPIO.
+-  OWFSInterface - Interface to the One Wire File System that supports 1-wire devices connected in a variety of ways such as serial, USB, I<sup>2</sup>C, and GPIO.
 
-#### Serial interface
-An interface that provides access to serial devices.
+-  SerialInterface - An interface that provides access to serial devices.
 
-#### TC74 interface
-Interface to the TC74 temperature sensor.
+-  TC74Interface - Interface to the TC74 temperature sensor.
 
-#### Time interface
-Provides an interface for various time functions.
+-  TimeInterface - Provides an interface for various time functions.
 
-#### TPLink interface
-A proxy to TPLink devices using the TP-Link Smart Home Protocol.
+-  TPLinkInterface - A proxy to TPLink devices using the TP-Link Smart Home Protocol.
 
-#### W1 interface
-Interface to the W1 interface that supports 1-wire temperature sensors connected directly to GPIO.  It uses the w1thermsensor interface.
+-  W1Interface - Interface to the W1 interface that supports 1-wire temperature sensors connected directly to GPIO.  It uses the w1thermsensor interface.
 
 ### Sensor and Control resources
 These modules implement Sensors and Controls for more complex functions that build on the Homealone core classes.
@@ -78,18 +66,41 @@ classDiagram
 	MomentaryControl: timeout()
 ```
 
+- SensorGroup -
+- ControlGroup -
+- SensorGroupControl -
+- CalcSensor -
+- DependentSensor -
+- DependentControl -
+- MomentaryControl -
+- StateControl -
+- MultiControl -
+- MinMaxControl -
+- MinSensor -
+- MaxSensor -
+- AccumSensor -
+- AttributeSensor -
+- RemoteSensor -
+- RemoteControl -
+- AliasSensor -
+
 #### Time related resources
 These classes are inherited from the core classes and implement time based functions:
 
 ```mermaid
 classDiagram
 	Collection <|-- Schedule
-	Object <|-- SensorGroup
 	Control <|-- Sequence
 	Object <|-- Cycle
 	StateControl <|-- Task
 	Object <|-- SchedTime
 ```
+
+- Schedule -
+- Task -
+- SchedTime -
+- Sequence -
+- Cycle -
 
 #### Temperature related resources
 
@@ -118,4 +129,4 @@ classDiagram
 
 - PowerSensor -
 - EnergySensor -
-- BatterySensor - 
+- BatterySensor -
