@@ -45,7 +45,8 @@ class StateCache(object):
             with self.resources.lock:
                 for resource in list(self.resources.values()):
                     try:
-                        if isinstance(resource, Sensor) and( not resource.event):       # don't poll resources with events
+                        if isinstance(resource, Sensor) and \
+                                (resource.enabled) and (not resource.event):            # only poll enabled sensors without events
                             if resource.name not in list(resourcePollCounts.keys()):    # a resource not seen before
                                 resourcePollCounts[resource.name] = resource.poll
                                 self.states[resource.name] = resource.getState()
