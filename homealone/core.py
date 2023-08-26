@@ -180,15 +180,13 @@ class Collection(Resource, OrderedDict):
 # The state is associated with a unique address on an interface.
 # Sensors can also optionally be associated with a group and a physical location.
 class Sensor(Resource):
-    def __init__(self, name, interface=None, addr=None, type=None, style="sensor", event=None,
+    def __init__(self, name, interface=None, addr=None, type="sensor", event=None,
                  factor=1, offset=0, resolution=0, poll=10, persistence=None, interrupt=None,
                  label="", group="", location=None):
         Resource.__init__(self, name, event)
         self.interface = interface
         self.addr = addr
         self.type = type
-        if not type:
-            self.type = style
         if self.interface:
             self.interface.addSensor(self)
         if (self.interface) and (not self.event):
@@ -247,8 +245,8 @@ class Sensor(Resource):
 
 # A Control is a Sensor whose state can be set
 class Control(Sensor):
-    def __init__(self, name, interface=None, addr=None, type=None, style="control", stateSet=None, **kwargs):
-        Sensor.__init__(self, name, interface=interface, addr=addr, type=type, style=style, **kwargs)
+    def __init__(self, name, interface=None, addr=None, type="control", stateSet=None, **kwargs):
+        Sensor.__init__(self, name, interface=interface, addr=addr, type=type, **kwargs)
         self.stateSet = stateSet  # optional callback when state is set
 
     # Set the state of the control by writing the value to the address on the interface.

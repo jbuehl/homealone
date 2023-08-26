@@ -32,8 +32,8 @@ class SensorGroup(Sensor):
 
 # A set of Controls whose state can be changed together
 class ControlGroup(SensorGroup, Control):
-    def __init__(self, name, controlList, stateList=[], stateMode=False, wait=False, style="controlGroup", **kwargs):
-        SensorGroup.__init__(self, name, controlList, style=style, **kwargs)
+    def __init__(self, name, controlList, stateList=[], stateMode=False, wait=False, type="controlGroup", **kwargs):
+        SensorGroup.__init__(self, name, controlList, type=type, **kwargs)
         Control.__init__(self, name, **kwargs)
         self.stateMode = stateMode  # which state to return: False = SensorGroup, True = groupState
         self.wait = wait
