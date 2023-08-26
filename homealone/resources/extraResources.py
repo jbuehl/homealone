@@ -34,7 +34,7 @@ class SensorGroup(Sensor):
 class ControlGroup(SensorGroup, Control):
     def __init__(self, name, controlList, stateList=[], stateMode=False, wait=False, type="controlGroup", **kwargs):
         SensorGroup.__init__(self, name, controlList, type=type, **kwargs)
-        Control.__init__(self, name, **kwargs)
+        Control.__init__(self, name, type=type, **kwargs)
         self.stateMode = stateMode  # which state to return: False = SensorGroup, True = groupState
         self.wait = wait
         self.groupState = 0
@@ -60,23 +60,23 @@ class ControlGroup(SensorGroup, Control):
         else:
             debug('debugState', self.name, "setState ", state)
             self.groupState = state # int(state)  # use Cycle - FIXME
-            # Run it asynchronously in a separate thread.
-            def setGroup():
-                debug('debugThread', self.name, "started")
-                for controlIdx in range(len(self.sensorList)):
-                    control = self.sensorList[controlIdx]
-                    debug("debugControlGroup", self.name, "control:", control.name, "state:", self.groupState)
-                    if isinstance(self.groupState, int):
-                        control.setState(self.stateList[controlIdx][self.groupState])
-                    else:
-                        control.setState(self.groupState)
-                debug('debugThread', self.name, "finished")
-            if self.wait:
-                setGroup()
-            else:
-                startThread(name="setGroupThread", target=setGroup)
+            if self.wait:           # wait for it to run
+                self.setGroup()
+            else:                   # Run it asynchronously in a separate thread.
+                startThread(name="setGroupThread", target=self.setGroup)
             self.notify(state)
             return True
+
+    def setGroup(self):
+        debug('debugThread', self.name, "started")
+        for controlIdx in range(len(self.sensorList)):
+            control = self.sensorList[controlIdx]
+            debug("debugControlGroup", self.name, "control:", control.name, "state:", self.groupState)
+            if isinstance(self.groupState, int):
+                control.setState(self.stateList[controlIdx][self.groupState])
+            else:
+                control.setState(self.groupState)
+        debug('debugThread', self.name, "finished")
 
     # dictionary of pertinent attributes
     def dict(self, expand=False):
