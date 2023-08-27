@@ -13,17 +13,19 @@ class DataLogger(object):
         self.appName = appName
         self.states = states
         self.logDir = dataDir
+        if start:
+            self.start()
+
+    def start(self):
+        # create the log directory if it doesn't exist
         os.makedirs(self.logDir, exist_ok=True)
+        # locate the archive server
         archiveServers = findService(archiveService)
         if archiveServers == []:
             self.archiveServer = None
             log("no archive server found")
         else:
             self.archiveServer = archiveServers[0][0]
-        if start:
-            self.start()
-
-    def start(self):
         startThread("loggingThread", self.loggingThread)
 
     def loggingThread(self):
