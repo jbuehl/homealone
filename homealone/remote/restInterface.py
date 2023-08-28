@@ -82,7 +82,7 @@ class RestInterface(Interface):
                 debug('debugRestGet', self.name, "response", response.json())
                 return response.json()
             else:
-                log(self.name, "read status", response.status_code)
+                log(self.name, "read status", response.status_code, url)
                 return {}
         except requests.exceptions.Timeout:
             log(self.name, "read state timeout", self.serviceAddr, path)
@@ -144,7 +144,7 @@ class RestInterface(Interface):
             if response.status_code == 200:
                 return True
             else:
-                log(self.name, "write status", response.status_code)
+                log(self.name, "write status", response.status_code, url)
                 return False
             ####################################################################
             # debug('debugRestPut', self.name, "PUT", self.serviceAddr+path, "data:", data)
