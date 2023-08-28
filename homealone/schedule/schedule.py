@@ -13,7 +13,7 @@ Thu = 3
 Fri = 4
 Sat = 5
 Sun = 6
-weekdayTbl = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+weekdayTbl = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 # month identifiers
 Jan = 1
@@ -28,11 +28,11 @@ Sep = 9
 Oct = 10
 Nov = 11
 Dec = 12
-monthTbl = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+monthTbl = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-# return today's and tomorrow's dates
+# return today's and tomorrow's dates with the current time
 def todaysDate():
-    today = datetime.datetime.now().replace(tzinfo=tz.tzlocal(), second=0, microsecond=0)
+    today = datetime.datetime.now().replace(tzinfo=tz.tzlocal())
     tomorrow = today + datetime.timedelta(days=1)
     return (today, tomorrow)
 
@@ -47,6 +47,38 @@ class Cycle(Object):
         self.delay = delay
         self.startState = normalState(startState)
         self.endState = normalState(endState)
+        self.running = False
+
+    # Run the Cycle
+    def run(self):
+        self.running = True
+        if self.delay > 0:                              # delay if specified
+            debug('debugSequence', self.control.name, "delaying", self.delay)
+            self.wait(self.delay)
+            if not self.running:
+                return
+        if self.duration == None:                       # just set the state
+            self.control.setState(self.startState)
+        else:
+            if isinstance(self.duration, int):          # duration is specified directly
+                duration = self.duration
+            elif isinstance(self.duration, Sensor):     # duration is the state of a sensor
+                duration = self.duration.getState()
+            if duration > 0:
+                debug('debugSequence', self.control.name, "started for", duration, "seconds")
+                self.control.setState(self.startState)
+                self.wait(duration)
+                self.control.setState(self.endState)
+        debug('debugSequence', self.control.name, "finished")
+        self.running = False
+
+    # wait the specified number of seconds
+    # break immediately if the sequence is stopped
+    def wait(self, duration):
+        for seconds in range(0, duration):
+            if not self.running:
+                break
+            time.sleep(1)
 
     # dictionary of pertinent attributes
     def dict(self, expand=False):
@@ -70,18 +102,18 @@ class Sequence(Control):
     def __init__(self, name, cycleList=[], **kwargs):
         Control.__init__(self, name, **kwargs)
         self.cycleList = cycleList
-        self.cycleList = self.getCycles()   # convert possible Sequences to Cycles
+        # self.cycleList = self.getCycles()   # convert possible Sequences to Cycles
         self.running = False
 
-    # if the list of Cycles contains Sequences, convert to Cycles
-    def getCycles(self):
-        cycleList = []
-        for obj in self.cycleList:
-            if isinstance(obj, Cycle):
-                cycleList.append(obj)
-            elif isinstance(obj, Sequence):
-                cycleList += obj.getCycles()
-        return cycleList
+    # # if the list of Cycles contains Sequences, convert to Cycles
+    # def getCycles(self):
+    #     cycleList = []
+    #     for obj in self.cycleList:
+    #         if isinstance(obj, Cycle):
+    #             cycleList.append(obj)
+    #         elif isinstance(obj, Sequence):
+    #             cycleList += obj.getCycles()
+    #     return cycleList
 
     def getState(self, missing=None):
         if not self.interface:
@@ -91,7 +123,7 @@ class Sequence(Control):
 
     def setState(self, state, wait=False):
         if not self.interface:
-            debug('debugState', self.name, "setState ", state, wait)
+            debug('debugSequence', self.name, "setState ", state, wait)
             if state and not(self.running):
                 self.runCycles(wait)
             elif (not state) and self.running:
@@ -102,73 +134,46 @@ class Sequence(Control):
 
     # Run the Cycles in the list
     def runCycles(self, wait=False):
-        debug('debugState', self.name, "runCycles", wait)
-        # thread that runs the cycles
-        def runCycles():
-            debug('debugThread', self.name, "started")
-            self.running = True
-            for cycle in self.cycleList:
-                if not self.running:
-                    break
-                self.runCycle(cycle)
-            self.running = False
-            self.notify()
-            debug('debugThread', self.name, "finished")
+        debug('debugSequence', self.name, "runCycles", wait)
         if wait:    # Run it synchronously
-            runCycles()
+            self.cycleThread()
         else:       # Run it asynchronously in a separate thread
-            self.cycleThread = LogThread(name="self.cycleThread", target=runCycles)
-            self.cycleThread.start()
+            startThread("cycleThread", self.cycleThread)
+
+    # thread that runs the cycles
+    def cycleThread(self):
+        debug('debugSequence', self.name, "cycleThread started")
+        self.running = True
+        for cycle in self.cycleList:              # may be a list of cycles and/or sequences
+            if not self.running:
+                break
+            if isinstance(cycle, Cycle):          # run the cycle
+                cycle.run()
+            elif isinstance(cycle, Sequence):     # run the sequence
+                cycle.setState(1, wait=True)
+        self.running = False
+        # self.notify()
+        debug('debugSequence', self.name, "cycleThread finished")
 
     # Stop all Cycles in the list
     def stopCycles(self):
         self.running = False
         for cycle in self.cycleList:
             cycle.control.setState(cycle.endState)
-        self.notify()
-        debug('debugThread', self.name, "stopped")
+        # self.notify()
+        debug('debugSequence', self.name, "stopped")
 
-    # state change notification to all control events since the sequence doesn't have an event
-    def notify(self, state=None):
-        time.sleep(2)   # short delay to ensure the state change event for the sequence isn't missed
-        for cycle in self.cycleList:
-            if isinstance(cycle.control, Sensor):
-                cycle.control.notify()
-
-    # Run the specified Cycle
-    def runCycle(self, cycle):
-        if cycle.delay > 0:
-            debug('debugThread', self.name, cycle.control.name, "delaying", cycle.delay)
-            self.wait(cycle.delay)
-            if not self.running:
-                return
-        if cycle.duration == None:    # just set the state
-            debug('debugThread', self.name, cycle.control.name, "started")
-            cycle.control.setState(cycle.startState)
-        else:
-            if isinstance(cycle.duration, int):         # duration is specified directly
-                duration = cycle.duration
-            elif isinstance(cycle.duration, Sensor):    # duration is a sensor
-                duration = cycle.duration.getState()
-            if duration > 0:
-                debug('debugThread', self.name, cycle.control.name, "started for", duration, "seconds")
-                cycle.control.setState(cycle.startState)
-                self.wait(duration)
-                cycle.control.setState(cycle.endState)
-                debug('debugThread', self.name, cycle.control.name, "finished")
-
-    # wait the specified number of seconds
-    # break immediately if the sequence is stopped
-    def wait(self, duration):
-        for seconds in range(0, duration):
-            if not self.running:
-                break
-            time.sleep(1)
+    # # state change notification to all control events since the sequence doesn't have an event
+    # def notify(self, state=None):
+    #     time.sleep(2)   # short delay to ensure the state change event for the sequence isn't missed
+    #     for cycle in self.cycleList:
+    #         if isinstance(cycle.control, Sensor):
+    #             cycle.control.notify()
 
     # dictionary of pertinent attributes
     def dict(self, expand=False):
         attrs = Sensor.dict(self)
-        attrs.update({"cycleList": [cycle.dump() for cycle in self.cycleList]})
+        attrs.update({"cycleList": [(cycle.dump() if isinstance(cycle, Cycle) else cycle.name) for cycle in self.cycleList]})
         return attrs
 
     def __repr__(self):
@@ -177,72 +182,135 @@ class Sequence(Control):
             msg += cycle.__str__()+"\n"
         return msg.rstrip("\n")
 
+# # A transition defines a time at which the state of a control should change
+# class Transition(Object):
+#     def __init__(self, schedTime, state):
+#         self.schedTime = schedTime
+#         self.state = state
+
+# A Schedule defines a set of state transitions and times for a specified Control
+# Transitions are assumed to occur daily
+class Schedule(Control):
+    def __init__(self, name, control=None, transitions=[], interface=None, **kwargs):
+        Control.__init__(self, name, interface=interface, **kwargs)
+        self.type = "schedule"
+        self.className = "Schedule"
+        self.control = control
+        self.transitions = transitions
+
+    def getState(self, missing=None):
+        if not self.interface:
+            return self.enabled
+        else:
+            return Control.getState(self)
+
+    # dictionary of pertinent attributes
+    def dict(self, expand=False):
+        attrs = Control.dict(self)
+        attrs.update({"control": str(self.control),
+                      "transitions": [transition for transition in self.transitions]})
+        return attrs
+
+    def __repr__(self):
+        msg = str(self.control)+"\n"
+        for transition in self.transitions:
+            msg += transition.__str__()+"\n"
+        return msg.rstrip("\n")
+
 # the Scheduler manages a list of Tasks and runs them at the times specified
-class Schedule(Collection):
-    def __init__(self, name, tasks=[]):
+class Scheduler(Collection):
+    def __init__(self, name, tasks=[], schedules=[]):
         Collection.__init__(self, name, resources=tasks)
+        self.schedules = schedules
 
     def start(self):
-        self.initControls()
-        startThread("schedThread", self.schedThread)
+        self.initSchedules()
+        startThread("scheduleThread", self.scheduleThread)
 
-    def initControls(self):
+    def addSchedule(self, schedule):
+        self.schedules.append(schedule)
+
+    # convert Schedules into Tasks and set current Control states
+    def initSchedules(self):
         (now, tomorrow) = todaysDate()
-        for taskName in list(self.keys()):
-            task = self[taskName]
-            # task must have an end time
-            if task.endTime:
-                # task must recur daily at a specific time
-                if (task.schedTime.year == []) and \
-                   (task.schedTime.month == []) and \
-                   (task.schedTime.day == []) and \
-                   (task.schedTime.weekday == []) and \
-                   (task.schedTime.event == ""):
-                   # task must start and end within the same day
-                   if task.schedTime.hour < task.endTime.hour:
-                       # set the expected state of the control at the present time
-                       # assume it runs once a day, ignore minutes
-                       if (now.hour >= task.schedTime.hour[0]) and (now.hour < task.endTime.hour[0]):
-                           self.setControlState(task, task.controlState)
-                       else:
-                           self.setControlState(task, task.endState)
+        for schedule in self.schedules:
+            debug('debugSchedule', self.name, "adding schedule", schedule.name)
+            try:
+                controlState = Off              # default state is off
+                for transition in schedule.transitions:
+                    taskHour = transition[0][0]
+                    taskMinute = transition[0][1]
+                    taskName = schedule.control.name+"%02d%02d"%(taskHour, taskMinute)+"Task"
+                    taskTime = SchedTime(hour=taskHour, minute=taskMinute)
+                    taskState = transition[1]
+                    debug('debugSchedule', self.name, "adding task", taskName)
+                    self.addRes(Task(taskName, taskTime, schedule.control, taskState))
+                    # determine the state the control should be set to at the current time
+                    if now.hour*60+now.minute >= taskHour*60+taskMinute:
+                        controlState = taskState
+                debug('debugSchedule', self.name, "setting", schedule.control.name, "state", controlState)
+                schedule.control.setState(controlState)
+            except Exception as ex:
+                logException(self.name+" exception adding schedule "+schedule.name, ex)
+
+    # # set the current states of Controls
+    # def setControl(self, tasks):
+    #     (now, tomorrow) = todaysDate()
+    #     for taskName in list(self.keys()):
+    #         task = self[taskName]
+    #         # task must have an end time
+    #         if task.endTime:
+    #             # task must recur daily at a specific time
+    #             if (task.schedTime.year == []) and \
+    #                (task.schedTime.month == []) and \
+    #                (task.schedTime.day == []) and \
+    #                (task.schedTime.weekday == []) and \
+    #                (task.schedTime.event == ""):
+    #                # task must start and end within the same day
+    #                if task.schedTime.hour < task.endTime.hour:
+    #                    # set the expected state of the control at the present time
+    #                    # assume it runs once a day, ignore minutes
+    #                    if (now.hour >= task.schedTime.hour[0]) and (now.hour < task.endTime.hour[0]):
+    #                        self.setControlState(task, task.controlState)
+    #                    else:
+    #                        self.setControlState(task, task.endState)
 
     # Scheduler thread
-    def schedThread(self):
-        debug('debugSched', self.name, "started")
+    def scheduleThread(self):
+        debug('debugSchedule', self.name, "started")
         while True:
             # wake up every minute on the 00 second
             (now, tomorrow) = todaysDate()
             sleepTime = 60 - now.second
-            debug('debugSched', self.name, "sleeping for", sleepTime, "seconds")
+            debug('debugSchedule', self.name, "sleeping for", sleepTime, "seconds")
             time.sleep(sleepTime)
             (now, tomorrow) = todaysDate()
-            debug('debugSched', self.name, "waking up",
+            debug('debugSchedule', self.name, "waking up",
                     now.year, now.month, now.day, now.hour, now.minute, now.weekday())
             # run through the schedule and check if any tasks should be run
             # need to handle cases where the schedule could be modified while this is running - FIXME
             for taskName in list(self.keys()):
                 task = self[taskName]
-                if task.enabled:
+                if task.getState():
                     if self.shouldRun(taskName, task.schedTime, now):
                         self.setControlState(task, task.controlState)
                     if task.endTime:
                         if self.shouldRun(taskName, task.endTime, now):
                             self.setControlState(task, task.endState)
                 else:
-                    debug('debugSched', self.name, "disabled", taskName)
+                    debug('debugSchedule', self.name, "disabled", taskName)
                 # determine if this was the last time the task would run
                 if task.schedTime.last:
                     if task.schedTime.last <= now:
                         # delete the task from the schedule if it will never run again
-                        self.delTask(taskName)
+                        self.delRes(taskName)
                         del(task)
 
     def shouldRun(self, taskName, schedTime, now):
         # the task should be run if the current date/time matches all specified fields in the SchedTime
         st = copy.copy(schedTime)
         st.eventTime()              # determine the exact time if event specified
-        debug('debugSched', self.name, "checking", taskName,
+        debug('debugSchedule', self.name, "checking", taskName,
                 st.year, st.month, st.day,
                 st.hour, st.minute, st.weekday,
                 st.event)
@@ -257,10 +325,10 @@ class Schedule(Collection):
 
     def setControlState(self, task, state):
         # run the task
-        debug('debugEvent', self.name, "task", task.name)
+        debug('debugSchedule', self.name, "task", task.name)
         control = task.control
         if control:
-            debug('debugEvent', self.name, "setting", control.name, "state", state)
+            debug('debugSchedule', self.name, "setting", control.name, "state", state)
             try:
                 control.setState(state)
             except Exception as ex:
@@ -280,20 +348,20 @@ class Task(StateControl):
         self.endState = endState            # optional state to set the control to at the end time
         self.enabled = normalState(enabled)
 
-    def getState(self, missing=None):
-        if not self.interface:
-            return self.enabled
-        else:
-            return Control.getState(self)
-
-    def setState(self, state):
-        if not self.interface:
-            self.enabled = state
-            debug("debugTask", self.name, "enabled", self.enabled)
-            self.notify(state)
-            return True
-        else:
-            return Control.setState(self, state)
+    # def getState(self, missing=None):
+    #     if not self.interface:
+    #         return self.enabled
+    #     else:
+    #         return Control.getState(self)
+    #
+    # def setState(self, state):
+    #     if not self.interface:
+    #         self.enabled = state
+    #         debug("debugTask", self.name, "enabled", self.enabled)
+    #         self.notify(state)
+    #         return True
+    #     else:
+    #         return Control.setState(self, state)
 
     # dictionary of pertinent attributes
     def dict(self, expand=False):
@@ -377,7 +445,7 @@ class SchedTime(Object):
             else:
                 # use today's event time
                 eventTime = self.offsetEventTime(eventTbl[self.event](today, latLong))
-                if (eventTime < today) and (self.day == []):
+                if (eventTime < today.replace(second=0, microsecond=0)) and (self.day == []):
                     # use tomorrow's time if today's time was in the past
                     eventTime = self.offsetEventTime(eventTbl[self.event](tomorrow, latLong))
             self.hour = [eventTime.hour]
