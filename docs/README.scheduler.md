@@ -17,7 +17,8 @@ classDiagram
 	Scheduler: addSchedule()
 	Scheduler: delSchedule()
 	Schedule: name
-	Schedule: schedTimeJobs
+    Schedule: schedTimeJobs
+    Schedule: expectedState
 	Schedule: setState()
 	Job: name
 	Job: tasks
@@ -42,9 +43,9 @@ scheduler.addSchedule(schedule) - Add a schedule to the scheduler's list
 scheduler.delSchedule(scheduleName) - Delete a schedule from the scheduler's list
 ```
 #### Schedule
-A list of one or more Jobs and times at which they are to be run.  Because it inherits from StateControl, the state (enabled or disabled) is persistent.
+A list of one or more Jobs and times at which they are to be run.  Because it inherits from StateControl, the state of a Schedule (enabled or disabled) is persistent.  If the expectedState attribute is set to True, all of the Controls referenced in the Schedule will be set to the expected state at the time the Scheduler is started, based on the Schedule.
 ```
-schedule = Schedule(name, [(schedTime, job),...]) - Instantiate a Schedule.
+schedule = Schedule(name, [(schedTime, job),...], expectedState=False) - Instantiate a Schedule.
 schedule.setState(state) - Enable or disable the schedule.
 ```
 #### Job
@@ -59,7 +60,9 @@ A Task references a Control and a state to which the Control is to be set.
 task = Task(control, state) - Instantiate a Task.
 ```
 #### SchedTime
-A SchedTime defines a set of dates and times to run a Job. Year, month, day, hour, minute, and weekday may be specified as a list of zero or more values. If a list contains zero values it is interpreted to mean the Job should be run every day, hour, minute, etc.  Events such as "sunrise" or "sunset" may also be specified. The exact time will be computed for the location and current day.  If an event and a time (hours, minutes) are both specified, the time is considered to be a delta from the event and may contain negative values.
+A SchedTime defines a set of dates and times to run a Job. Year, month, day, hour, minute, and weekday may be specified as a list of zero or more values. If a list contains zero values it is interpreted to mean the Job should be run every day, hour, minute, etc.  
+
+All values, except for event, are stored as lists of integers.  Month values are 1-12, beginning in January.  Weekdays are 0-6, beginning on Monday. Events such as "sunrise" or "sunset" may also be specified. The exact time will be computed for the location and current day.  If an event and a time (hours, minutes) are both specified, the time is considered to be a delta from the event and may contain negative values.
 ```
 schedTime = SchedTime(schedString) - Instantiate a SchedTime.
 ```
@@ -82,27 +85,28 @@ Job("backLawnJob", [Task(backLawnValve, On),
 3. Run all sprinklers three days a week at 5PM during the months of April through October.
 ```
 Job("weeklySprinklersJob", [backLawnJob, backBedsJob,
-							frontLawnJob, gardenJob])
+                            frontLawnJob, gardenJob])
 Schedule("sprinklerSchedule", [("Apr-Oct Mon,Wed,Fri 17:00",
-								weeklySprinklersJob)])
+                                weeklySprinklersJob)])
 ```
-4. Turn on the hot water recirculating pump every day at 6AM and off at 11PM.
+4. Turn on the hot water recirculating pump Control every day at 6AM and off at 11PM.  Set the Control to the expected state it should be in when the Scheduler is started.
 ```
 Job("recircPumpOnJob", [Task(recircPump, On)])
 Job("recircPumpOffJob", [Task(recircPump, Off)])
 Schedule("recircPumpSchedule", [("6:00", recircPumpOnJob),
-							   ("23:00", recircPumpOffJob)])
+                                ("23:00", recircPumpOffJob)],
+                                expectedState=True)
 ```
-5. Scheduled times represented as human readable strings.
+5. Scheduled times represented as human readable strings.  These examples show a string, its interpretation, and how it is stored internally in the SchedTime object.
 ```
-"17:00" - at 5pm every day
-":00,:10,:20,:30,:40,:50" - every 10 minutes
-"sunrise" - at sunrise every day
-"sunset -:20" - 20 minutes before sunset every day
-"Dec 25 6:00" - December 25 at 6am every year
-"Apr-Oct 13:00" - every day April through October at 1pm
-"May,Aug sunset" - every day in May and August at sunset
-"Mon,Wed,Fri 18:00" - every Monday, Wednesday, and Friday at 6pm
-"Mon-Fri 12:00" - every weekday at noon
-"2023 Sep 24" - every minute on the day September 24 2023
+"17:00" - at 5pm every day - [],[],[],[17],[0],[],[]
+":00,:10,:20,:30,:40,:50" - every 10 minutes - [],[],[],[],[0,10,20,30,40,50],[],[]
+"sunrise" - at sunrise every day - [],[],[],[],[],[],["sunrise"]
+"sunset -:20" - 20 minutes before sunset every day- [],[],[],[],[-20],[],["sunset"]
+"Dec 25 6:00" - on December 25 at 6am every  - [],[12],[25],[],[],[],[]
+"Apr-Sep 13:00" - every day April through September at  - [],[4,5,6,7,8,9],[13],[0],[],[]
+"May,Aug sunset" - every day in May and August at sunset - [],[5,8],[],[],[],[],["sunset"]
+"Mon,Wed,Fri 18:00" - every Monday, Wednesday, and Friday at 6pm - [],[],[],[18],[0],[0,2,4],[]
+"Mon-Fri 12:00" - every weekday at noon - [],[],[],[12],[0],[0,1,2,3,4],[]
+"2023 Sep 24" - every minute on the day September 24 2023 - [2023],[9],[24],[],[],[],[]
 ```
