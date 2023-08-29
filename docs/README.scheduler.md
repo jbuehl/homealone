@@ -3,13 +3,14 @@
 The Scheduler allows for the states of Homealone Controls to be set at various times.
 
 ### Scheduler classes
-These classes are inherited from the core classes to implement functions of the Scheduler.
+These classes are inherited from the core and extra resource classes to implement functions of the Scheduler.
 
 ```mermaid
 classDiagram
 	Object <|-- Scheduler
 	StateControl <|-- Schedule
-	Control <|-- Job
+    Control <|-- StateControl
+    Control <|-- Job
 	Object <|-- Task
 	Object <|-- SchedTime
 	Scheduler: schedules
@@ -63,7 +64,7 @@ task = Task(control, state) - Instantiate a Task.
 #### SchedTime
 A SchedTime defines a set of dates and times to run a Job. Year, month, day, hour, minute, and weekday may be specified as a list of zero or more values. If a list contains zero values it is interpreted to mean the Job should be run every day, hour, minute, etc.  
 
-All values, except for event, are stored as lists of integers.  Month values are 1-12, beginning in January.  Weekdays are 0-6, beginning on Monday. Events such as "sunrise" or "sunset" may also be specified. The exact time will be computed for the location and current day.  If an event and a time (hours, minutes) are both specified, the time is considered to be a delta from the event and may contain negative values.
+All values, except for event, are stored internally in the SchedTime object as lists of integers.  Month values are 1-12, beginning in January.  Weekdays are 0-6, beginning on Monday. Events such as "sunrise" or "sunset" may also be specified. The exact time will be computed for the location and current day.  If an event and a time (hours, minutes) are both specified, the time is considered to be a delta from the event and may contain negative values.
 ```
 schedTime = SchedTime(schedString) - Instantiate a SchedTime.
 ```
@@ -90,7 +91,7 @@ Job("weeklySprinklersJob", [backLawnJob, backBedsJob,
 Schedule("sprinklerSchedule", [("Apr-Oct Mon,Wed,Fri 17:00",
                                 weeklySprinklersJob)])
 ```
-4. Turn on the hot water recirculating pump Control every day at 6AM and off at 11PM.  Set the Control to the expected state it should be in when the Scheduler is started.
+4. Turn on the hot water recirculating pump Control every day at 6AM and off at 11PM.  Set the Control to the expected state it should be in when the Scheduler is started, e.g. if the Scheduler starts at 8am, the Control will be set on, if the Scheduler starts at 11:30pm the Control will not be set on.
 ```
 Job("recircPumpOnJob", [Task(recircPumpControl, On)])
 Job("recircPumpOffJob", [Task(recircPumpControl, Off)])
