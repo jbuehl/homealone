@@ -53,6 +53,7 @@ A list of one or more Tasks and/or Jobs that are run sequentially. It may be run
 ```
 job = Job(name, [task|job,...]) - Instantiate a Job.
 job.setState(On) - Run the job.
+job.setState(Off) - Immediately stop the job if it is running.
 ```
 #### Task
 A Task references a Control and a state to which the Control is to be set.
@@ -76,13 +77,13 @@ Job("porchLightsOnJob", [
 Schedule("porchLightsOnSunset", [
         ("sunset", porchLightsOnJob)])
 ```
-2. Run the back lawn sprinklers for 20 minutes. It will run when called by another Job or manually run.
+2. Run the back lawn sprinklers for 20 minutes. The sprinkler valve Control is turned on, then a Control that delays for 20 minutes is enabled, and finally the sprinkler valve Control is turned off.  It will run when called by another Job or manually run.
 ```
 Job("backLawnJob", [Task(backLawnValve, On),
                     Task(delayControl, 20),
                     Task(backLawnValve, Off)])
 ```
-3. Run all sprinklers three days a week at 5PM during the months of April through October.
+3. Run all sprinklers three days a week at 5PM during the months of April through October.  Assume that Jobs similar to the previous example have been defined for all sprinkler valves.
 ```
 Job("weeklySprinklersJob", [backLawnJob, backBedsJob,
                             frontLawnJob, gardenJob])
@@ -91,8 +92,8 @@ Schedule("sprinklerSchedule", [("Apr-Oct Mon,Wed,Fri 17:00",
 ```
 4. Turn on the hot water recirculating pump Control every day at 6AM and off at 11PM.  Set the Control to the expected state it should be in when the Scheduler is started.
 ```
-Job("recircPumpOnJob", [Task(recircPump, On)])
-Job("recircPumpOffJob", [Task(recircPump, Off)])
+Job("recircPumpOnJob", [Task(recircPumpControl, On)])
+Job("recircPumpOffJob", [Task(recircPumpControl, Off)])
 Schedule("recircPumpSchedule", [("6:00", recircPumpOnJob),
                                 ("23:00", recircPumpOffJob)],
                                 expectedState=True)
@@ -103,8 +104,8 @@ Schedule("recircPumpSchedule", [("6:00", recircPumpOnJob),
 ":00,:10,:20,:30,:40,:50" - every 10 minutes - [],[],[],[],[0,10,20,30,40,50],[],[]
 "sunrise" - at sunrise every day - [],[],[],[],[],[],["sunrise"]
 "sunset -:20" - 20 minutes before sunset every day- [],[],[],[],[-20],[],["sunset"]
-"Dec 25 6:00" - on December 25 at 6am every  - [],[12],[25],[],[],[],[]
-"Apr-Sep 13:00" - every day April through September at  - [],[4,5,6,7,8,9],[13],[0],[],[]
+"Dec 25 6:00" - on December 25 at 6am every  - [],[12],[25],[6],[0],[],[]
+"Apr-Sep 13:00" - every day April through September at 1pm - [],[4,5,6,7,8,9],[13],[0],[],[]
 "May,Aug sunset" - every day in May and August at sunset - [],[5,8],[],[],[],[],["sunset"]
 "Mon,Wed,Fri 18:00" - every Monday, Wednesday, and Friday at 6pm - [],[],[],[18],[0],[0,2,4],[]
 "Mon-Fri 12:00" - every weekday at noon - [],[],[],[12],[0],[0,1,2,3,4],[]
