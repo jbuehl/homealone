@@ -34,6 +34,7 @@ More detailed documentation and examples may be found in these files.
 - [Object Model](docs/README.model.md)
 - [Resource naming and attributes](docs/README.naming.md)
 - [Remote resources](docs/README.remote.md)
+- [Scheduler](docs/README.scheduler.md)
 - [Applications](docs/README.apps.md)
 - [Services](docs/README.services.md)
 - [Specific hardware support](docs/README.resources.md)
