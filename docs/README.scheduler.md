@@ -33,7 +33,7 @@ classDiagram
 	SchedTime: event
 ```
 
-- Scheduler - The schedule manager.  Executes Jobs referenced by Schedules at their specified times.  Granularity is one minute.
+- Scheduler - The schedule manager.  Runs Jobs referenced by Schedules at their specified times.  Granularity is one minute.
 - Schedule - A list of one or more Jobs and times at which they are to be run.
 - Job - A list of one or more Tasks and/or Jobs that are run sequentially. It may be run at a specified time by the scheduler or it may be run when called by another Job or manually activated.
 - Task - A Task references a Control and a state to which the Control is to be set.
@@ -42,52 +42,57 @@ classDiagram
 ### Class definitions
 
 #### Scheduler
-Scheduler([schedule,...])
-
+```
+	Scheduler([schedule,...])
+```
 #### Schedule
-Schedule(name, [(schedTime, job),...])
-
+```
+	Schedule(name, [(schedTime, job),...])
+```
 #### Job
-Job(name, [task|job,...])
-
+```
+	Job(name, [task|job,...])
+```
 #### Task
-Task(control, state)
-
+```
+	Task(control, state)
+```
 #### SchedTime
-SchedTime([year,...], [month,...], [day,...], [hour,...], [minute,...], [weekday,...], [event])
-
+```
+	SchedTime([year,...], [month,...], [day,...], [hour,...], [minute,...], [weekday,...], [event])
+```
 ### Examples
 
 1. Turn on porch lights every day at sunset.
-
+```
 	Job("porchLightsOnJob", [
 		Task(frontPorchLight, On),
 		Task(backPorchLight, On)])
 	Schedule("porchLightsOnSunset", [
 			("sunset", porchLightsOnJob)])
-
+```
 2. Run the back lawn sprinklers for 20 minutes. It will run when called by another Job or manually run.
-
+```
 	Job("backLawnJob", [Task(backLawnValve, On),
 						Task(delayControl, 20),
 						Task(backLawnValve, Off)])
-
+```
 3. Run all sprinklers three days a week at 5PM during the months of April through October.
-
+```
 	Job("weeklySprinklersJob", [backLawnJob, backBedsJob,
 								frontLawnJob, gardenJob])
 	Schedule("sprinklerSchedule", [("Apr-Oct Mon,Wed,Fri 17:00",
 									weeklySprinklersJob)])
-
+```
 4. Turn on the hot water recirculating pump every day at 6AM and off at 11PM.
-
+```
 	Job("recircPumpOnJob", [Task(recircPump, On)])
 	Job("recircPumpOffJob", [Task(recircPump, Off)])
 	Schedule("recircPumpSchedule", [("6:00", recircPumpOnJob),
 								   ("23:00", recircPumpOffJob)])
-
+```
 5. Scheduled times represented as human readable strings.
-
+```
 	"17:00" - at 5pm every day
 	":00,:10,:20,:30,:40,:50" - every 10 minutes
 	"sunrise" - at sunrise every day
@@ -98,3 +103,4 @@ SchedTime([year,...], [month,...], [day,...], [hour,...], [minute,...], [weekday
 	"Mon,Wed,Fri 18:00" - every Monday, Wednesday, and Friday at 6pm
 	"Mon-Fri 12:00" - every weekday at noon
 	"2023 Sep 24" - every minute on the day September 24 2023
+```
