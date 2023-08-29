@@ -23,7 +23,7 @@ class Application(object):
         self.globals["resources"] = self.resources
         self.states = StateCache("states", self.resources, self.event)      # resource state cache
         self.globals["states"] = self.states
-        self.schedule = schedule("schedule")                             # schedule manager
+        self.schedule = Schedule("schedule")                                # schedule manager
         self.startList = []                                                 # resources that need to be started
         # publish resources via remote service
         if publish:
@@ -119,15 +119,6 @@ class Application(object):
             task.event = self.event
         if publish:
             self.resources.addRes(task)
-
-    # # define a schedule resource
-    # def schedule(self, schedule, event=True, publish=True):
-    #     self.scheduler.addSchedule(schedule)
-    #     self.globals[schedule.name] = schedule
-    #     if event:
-    #         schedule.event = self.event
-    #     if publish:
-    #         self.resources.addRes(schedule)
 
     # apply a UI type to one or more resources
     def type(self, type, resources=[]):
