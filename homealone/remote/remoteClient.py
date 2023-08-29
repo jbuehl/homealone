@@ -143,7 +143,8 @@ class RemoteClient(LogThread):
         self.resources.addRes(service.missedSeqSensor)          # missed messages
         self.resources.addRes(service.missedSeqPctSensor)       # percent of missed messages
         for resource in list(service.resources.values()):       # resources from the service
-            debug('debugRemoteClientUpdate', self.name, "updating resources", service.name, "adding", resource.name)
-            self.resources.addRes(resource)
+            if resource.enabled:
+                debug('debugRemoteClientUpdate', self.name, "updating resources", service.name, "adding", resource.name)
+                self.resources.addRes(resource)
         self.event.set()
         debug('debugInterrupt', self.name, "event set")

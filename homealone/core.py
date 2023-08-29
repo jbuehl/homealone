@@ -205,11 +205,14 @@ class Sensor(Resource):
 
     # Return the state of the sensor by reading the value from the address on the interface.
     def getState(self, missing=None):
-        state = (normalState(self.interface.read(self.addr)) if self.interface else None)
-        try:
-            return round(state * self.factor + self.offset, self.resolution)
-        except TypeError:
-            return state
+        if self.enabled:
+            state = (normalState(self.interface.read(self.addr)) if self.interface else None)
+            try:
+                return round(state * self.factor + self.offset, self.resolution)
+            except TypeError:
+                return state
+        else:
+            return None
 
     # Define this function for sensors even though it does nothing
     def setState(self, state, wait=False):
