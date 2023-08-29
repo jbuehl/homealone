@@ -23,7 +23,7 @@ class Application(object):
         self.globals["resources"] = self.resources
         self.states = StateCache("states", self.resources, self.event)      # resource state cache
         self.globals["states"] = self.states
-        self.scheduler = Scheduler("scheduler")                             # schedule manager
+        self.schedule = schedule("schedule")                             # schedule manager
         self.startList = []                                                 # resources that need to be started
         # publish resources via remote service
         if publish:
@@ -83,8 +83,8 @@ class Application(object):
             self.logger.start()
         for resource in self.startList:         # other resources
             resource.start()
-        if list(self.scheduler.keys()) != []:    # task scheduler
-            self.scheduler.start()
+        if list(self.schedule.keys()) != []:    # task scheduler
+            self.schedule.start()
         if self.remoteService:                  # resource publication
             self.remoteService.start()
 
@@ -113,21 +113,21 @@ class Application(object):
 
     # define a Task resource
     def task(self, task, event=True, publish=True):
-        self.scheduler.addRes(task)
+        self.schedule.addRes(task)
         self.globals[task.name] = task
         if event:
             task.event = self.event
         if publish:
             self.resources.addRes(task)
 
-    # define a schedule resource
-    def schedule(self, schedule, event=True, publish=True):
-        self.scheduler.addSchedule(schedule)
-        self.globals[schedule.name] = schedule
-        if event:
-            schedule.event = self.event
-        if publish:
-            self.resources.addRes(schedule)
+    # # define a schedule resource
+    # def schedule(self, schedule, event=True, publish=True):
+    #     self.scheduler.addSchedule(schedule)
+    #     self.globals[schedule.name] = schedule
+    #     if event:
+    #         schedule.event = self.event
+    #     if publish:
+    #         self.resources.addRes(schedule)
 
     # apply a UI type to one or more resources
     def type(self, type, resources=[]):

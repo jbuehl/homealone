@@ -182,98 +182,63 @@ class Sequence(Control):
             msg += cycle.__str__()+"\n"
         return msg.rstrip("\n")
 
-# # A transition defines a time at which the state of a control should change
-# class Transition(Object):
-#     def __init__(self, schedTime, state):
-#         self.schedTime = schedTime
-#         self.state = state
-
-# A Schedule defines a set of state transitions and times for a specified Control
-# Transitions are assumed to occur daily
-class Schedule(Control):
-    def __init__(self, name, control=None, transitions=[], interface=None, **kwargs):
-        Control.__init__(self, name, interface=interface, **kwargs)
-        self.type = "schedule"
-        self.className = "Schedule"
-        self.control = control
-        self.transitions = transitions
-
-    def getState(self, missing=None):
-        if not self.interface:
-            return self.enabled
-        else:
-            return Control.getState(self)
-
-    # dictionary of pertinent attributes
-    def dict(self, expand=False):
-        attrs = Control.dict(self)
-        attrs.update({"control": str(self.control),
-                      "transitions": [transition for transition in self.transitions]})
-        return attrs
-
-    def __repr__(self):
-        msg = str(self.control)+"\n"
-        for transition in self.transitions:
-            msg += transition.__str__()+"\n"
-        return msg.rstrip("\n")
-
-# the Scheduler manages a list of Tasks and runs them at the times specified
-class Scheduler(Collection):
-    def __init__(self, name, tasks=[], schedules=[]):
+# the Schedule manages a list of Tasks and runs them at the times specified
+class Schedule(Collection):
+    def __init__(self, name, tasks=[]):
         Collection.__init__(self, name, resources=tasks)
-        self.schedules = schedules
+        # self.schedules = schedules
 
     def start(self):
-        self.initSchedules()
+        # self.initSchedules()
         startThread("scheduleThread", self.scheduleThread)
 
-    def addSchedule(self, schedule):
-        self.schedules.append(schedule)
-
-    # convert Schedules into Tasks and set current Control states
-    def initSchedules(self):
-        (now, tomorrow) = todaysDate()
-        for schedule in self.schedules:
-            debug('debugSchedule', self.name, "adding schedule", schedule.name)
-            try:
-                controlState = Off              # default state is off
-                for transition in schedule.transitions:
-                    taskHour = transition[0][0]
-                    taskMinute = transition[0][1]
-                    taskName = schedule.control.name+"%02d%02d"%(taskHour, taskMinute)+"Task"
-                    taskTime = SchedTime(hour=taskHour, minute=taskMinute)
-                    taskState = transition[1]
-                    debug('debugSchedule', self.name, "adding task", taskName)
-                    self.addRes(Task(taskName, taskTime, schedule.control, taskState))
-                    # determine the state the control should be set to at the current time
-                    if now.hour*60+now.minute >= taskHour*60+taskMinute:
-                        controlState = taskState
-                debug('debugSchedule', self.name, "setting", schedule.control.name, "state", controlState)
-                schedule.control.setState(controlState)
-            except Exception as ex:
-                logException(self.name+" exception adding schedule "+schedule.name, ex)
-
-    # # set the current states of Controls
-    # def setControl(self, tasks):
+    # def addSchedule(self, schedule):
+    #     self.schedules.append(schedule)
+    #
+    # # convert Schedules into Tasks and set current Control states
+    # def initSchedules(self):
     #     (now, tomorrow) = todaysDate()
-    #     for taskName in list(self.keys()):
-    #         task = self[taskName]
-    #         # task must have an end time
-    #         if task.endTime:
-    #             # task must recur daily at a specific time
-    #             if (task.schedTime.year == []) and \
-    #                (task.schedTime.month == []) and \
-    #                (task.schedTime.day == []) and \
-    #                (task.schedTime.weekday == []) and \
-    #                (task.schedTime.event == ""):
-    #                # task must start and end within the same day
-    #                if task.schedTime.hour < task.endTime.hour:
-    #                    # set the expected state of the control at the present time
-    #                    # assume it runs once a day, ignore minutes
-    #                    if (now.hour >= task.schedTime.hour[0]) and (now.hour < task.endTime.hour[0]):
-    #                        self.setControlState(task, task.controlState)
-    #                    else:
-    #                        self.setControlState(task, task.endState)
+    #     for schedule in self.schedules:
+    #         debug('debugSchedule', self.name, "adding schedule", schedule.name)
+    #         try:
+    #             controlState = Off              # default state is off
+    #             for transition in schedule.transitions:
+    #                 taskHour = transition[0][0]
+    #                 taskMinute = transition[0][1]
+    #                 taskName = schedule.control.name+"%02d%02d"%(taskHour, taskMinute)+"Task"
+    #                 taskTime = SchedTime(hour=taskHour, minute=taskMinute)
+    #                 taskState = transition[1]
+    #                 debug('debugSchedule', self.name, "adding task", taskName)
+    #                 self.addRes(Task(taskName, taskTime, schedule.control, taskState))
+    #                 # determine the state the control should be set to at the current time
+    #                 if now.hour*60+now.minute >= taskHour*60+taskMinute:
+    #                     controlState = taskState
+    #             debug('debugSchedule', self.name, "setting", schedule.control.name, "state", controlState)
+    #             schedule.control.setState(controlState)
+    #         except Exception as ex:
+    #             logException(self.name+" exception adding schedule "+schedule.name, ex)
+
+    # set the current states of Controls
+    def setControl(self, tasks):
+        (now, tomorrow) = todaysDate()
+        for taskName in list(self.keys()):
+            task = self[taskName]
+            # task must have an end time
+            if task.endTime:
+                # task must recur daily at a specific time
+                if (task.schedTime.year == []) and \
+                   (task.schedTime.month == []) and \
+                   (task.schedTime.day == []) and \
+                   (task.schedTime.weekday == []) and \
+                   (task.schedTime.event == ""):
+                   # task must start and end within the same day
+                   if task.schedTime.hour < task.endTime.hour:
+                       # set the expected state of the control at the present time
+                       # assume it runs once a day, ignore minutes
+                       if (now.hour >= task.schedTime.hour[0]) and (now.hour < task.endTime.hour[0]):
+                           self.setControlState(task, task.controlState)
+                       else:
+                           self.setControlState(task, task.endState)
 
     # Scheduler thread
     def scheduleThread(self):
@@ -334,10 +299,46 @@ class Scheduler(Collection):
             except Exception as ex:
                 log(self.name, "exception running task", task.name, type(ex).__name__, str(ex))
 
+# # A transition defines a time at which the state of a control should change
+# class Transition(Object):
+#     def __init__(self, schedTime, state):
+#         self.schedTime = schedTime
+#         self.state = state
+
+# # A Schedule defines a set of state transitions and times for a specified Control
+# # Transitions are assumed to occur daily
+# class Schedule(StateControl):
+#     def __init__(self, name, control=None, transitions=[],
+#                  enabled=True, interface=None, **kwargs):
+#         StateControl.__init__(self, name, interface=interface, initial=normalState(enabled), **kwargs)
+#         self.type = "schedule"
+#         self.className = "Schedule"
+#         self.control = control
+#         self.transitions = transitions
+#
+#     # def getState(self, missing=None):
+#     #     if not self.interface:
+#     #         return self.enabled
+#     #     else:
+#     #         return Control.getState(self)
+#
+#     # dictionary of pertinent attributes
+#     def dict(self, expand=False):
+#         attrs = Control.dict(self)
+#         attrs.update({"control": str(self.control),
+#                       "transitions": [transition for transition in self.transitions]})
+#         return attrs
+#
+#     def __repr__(self):
+#         msg = str(self.control)+"\n"
+#         for transition in self.transitions:
+#             msg += transition.__str__()+"\n"
+#         return msg.rstrip("\n")
+
 # a Task specifies a control to be set to a specified state at a specified time
 class Task(StateControl):
     def __init__(self, name, schedTime=None, control=None, controlState=1, endTime=None, endState=0,
-                 parent=None, enabled=True, interface=None, **kwargs):
+                 enabled=True, interface=None, **kwargs):
         StateControl.__init__(self, name, interface=interface, initial=normalState(enabled), **kwargs)
         self.type = "task"
         self.className = "Task"
