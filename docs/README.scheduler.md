@@ -72,32 +72,30 @@ schedTime = SchedTime(schedString) - Instantiate a SchedTime.
 
 1. Turn on porch lights every day at sunset.
 ```
-Job("porchLightsOnJob", [
-    Task(frontPorchLight, On),
-    Task(backPorchLight, On)])
-Schedule("porchLightsOnSunset", [
-        ("sunset", porchLightsOnJob)])
+porchLightsOnJob = Job("porchLightsOnJob", [Task(frontPorchLight, On),
+                                            Task(backPorchLight, On)])
+porchLightsOnSunset = Schedule("porchLightsOnSunset", [("sunset", porchLightsOnJob)])
 ```
 2. Run the back lawn sprinklers for 20 minutes. The sprinkler valve Control is turned on, then a Control that delays for 20 minutes is enabled, and finally the sprinkler valve Control is turned off.  It will run when called by another Job or manually run.
 ```
-Job("backLawnJob", [Task(backLawnValve, On),
-                    Task(delayControl, 20),
-                    Task(backLawnValve, Off)])
+backLawnJob = Job("backLawnJob", [Task(backLawnValve, On),
+                                  Task(delayControl, 20),
+                                  Task(backLawnValve, Off)])
 ```
 3. Run all sprinklers three days a week at 5PM during the months of April through October.  Assume that Jobs similar to the previous example have been defined for all sprinkler valves.
 ```
-Job("weeklySprinklersJob", [backLawnJob, backBedsJob,
-                            frontLawnJob, gardenJob])
-Schedule("sprinklerSchedule", [("Apr-Oct Mon,Wed,Fri 17:00",
-                                weeklySprinklersJob)])
+weeklySprinklersJob = Job("weeklySprinklersJob", [backLawnJob, backBedsJob,
+                                                  frontLawnJob, gardenJob])
+sprinklerSchedule = Schedule("sprinklerSchedule", [("Apr-Oct Mon,Wed,Fri 17:00",
+                                                    weeklySprinklersJob)])
 ```
-4. Turn on the hot water recirculating pump Control every day at 6AM and off at 11PM.  Set the Control to the expected state it should be in when the Scheduler is started, e.g. if the Scheduler starts at 8am, the Control will be set on, if the Scheduler starts at 11:30pm the Control will not be set on.
+4. Turn on the hot water recirculating pump Control every day at 6AM and off at 11PM.  Set the Control to the expected state it should be in when the Scheduler is started, e.g. if the Scheduler starts between 6am and 11pm, the Control will be set on, if the Scheduler starts after 11pm the Control will be set off.  If the Scheduler starts before 6am the state of the Control whatever the initial state is that is defined by the Control object.
 ```
-Job("recircPumpOnJob", [Task(recircPumpControl, On)])
-Job("recircPumpOffJob", [Task(recircPumpControl, Off)])
-Schedule("recircPumpSchedule", [("6:00", recircPumpOnJob),
-                                ("23:00", recircPumpOffJob)],
-                                expectedState=True)
+recircPumpOnJob = Job("recircPumpOnJob", [Task(recircPumpControl, On)])
+recircPumpOffJob = Job("recircPumpOffJob", [Task(recircPumpControl, Off)])
+recircPumpSchedule = Schedule("recircPumpSchedule", [("6:00", recircPumpOnJob),
+                                                     ("23:00", recircPumpOffJob)],
+                                                     expectedState=True)
 ```
 5. Scheduled times represented as human readable strings.  These examples show a string, its interpretation, and how it is stored internally in the SchedTime object.
 ```
