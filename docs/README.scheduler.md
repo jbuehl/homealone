@@ -8,8 +8,8 @@ These classes are inherited from the core classes to implement functions of the 
 ```mermaid
 classDiagram
 	Object <|-- Scheduler
-	StateControl <|-- Job
 	StateControl <|-- Schedule
+	Control <|-- Job
 	Object <|-- Task
 	Object <|-- SchedTime
 	Scheduler: schedules
@@ -33,15 +33,8 @@ classDiagram
 	SchedTime: event
 ```
 
-- Scheduler - The schedule manager.  Runs Jobs referenced by Schedules at their specified times.  Granularity is one minute.
-- Schedule - A list of one or more Jobs and times at which they are to be run.
-- Job - A list of one or more Tasks and/or Jobs that are run sequentially. It may be run at a specified time by the scheduler or it may be run when called by another Job or manually activated.
-- Task - A Task references a Control and a state to which the Control is to be set.
-- SchedTime - A SchedTime defines a set of dates and times to run a Job. Year, month, day, hour, minute, and weekday may be specified as a list of zero or more values. If a list contains zero values it is interpreted to mean the Job should be run every day, hour, minute, etc.  Events such as "sunrise" or "sunset" may also be specified. The exact time will be computed for the location and current day.  If an event and a time (hours, minutes) are both specified, the time is considered to be a delta from the event and may contain negative values.
-
-### Class definitions
-
 #### Scheduler
+The schedule manager.  Runs Jobs referenced by Schedules at their specified times.  Granularity is one minute.
 ```
 scheduler = Scheduler([schedule,...]) - Instantiate a Scheduler.
 scheduler.start() - Start the scheduler.
@@ -49,38 +42,42 @@ scheduler.addSchedule(schedule) - Add a schedule to the scheduler's list
 scheduler.delSchedule(scheduleName) - Delete a schedule from the scheduler's list
 ```
 #### Schedule
+A list of one or more Jobs and times at which they are to be run.  Because it inherits from StateControl, the state (enabled or disabled) is persistent.
 ```
 schedule = Schedule(name, [(schedTime, job),...]) - Instantiate a Schedule.
 schedule.setState(state) - Enable or disable the schedule.
 ```
 #### Job
+A list of one or more Tasks and/or Jobs that are run sequentially. It may be run at a specified time by the scheduler or it may be run when called by another Job or manually activated.  Setting the state to On immediately runs the Job.
 ```
 job = Job(name, [task|job,...]) - Instantiate a Job.
 job.setState(On) - Run the job.
 ```
 #### Task
+A Task references a Control and a state to which the Control is to be set.
 ```
 task = Task(control, state) - Instantiate a Task.
 ```
 #### SchedTime
+A SchedTime defines a set of dates and times to run a Job. Year, month, day, hour, minute, and weekday may be specified as a list of zero or more values. If a list contains zero values it is interpreted to mean the Job should be run every day, hour, minute, etc.  Events such as "sunrise" or "sunset" may also be specified. The exact time will be computed for the location and current day.  If an event and a time (hours, minutes) are both specified, the time is considered to be a delta from the event and may contain negative values.
 ```
-SchedTime(schedString) - Instantiate a SchedTime.
+schedTime = SchedTime(schedString) - Instantiate a SchedTime.
 ```
 ### Examples
 
 1. Turn on porch lights every day at sunset.
 ```
 Job("porchLightsOnJob", [
-	Task(frontPorchLight, On),
-	Task(backPorchLight, On)])
+    Task(frontPorchLight, On),
+    Task(backPorchLight, On)])
 Schedule("porchLightsOnSunset", [
-		("sunset", porchLightsOnJob)])
+        ("sunset", porchLightsOnJob)])
 ```
 2. Run the back lawn sprinklers for 20 minutes. It will run when called by another Job or manually run.
 ```
 Job("backLawnJob", [Task(backLawnValve, On),
-					Task(delayControl, 20),
-					Task(backLawnValve, Off)])
+                    Task(delayControl, 20),
+                    Task(backLawnValve, Off)])
 ```
 3. Run all sprinklers three days a week at 5PM during the months of April through October.
 ```
