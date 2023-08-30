@@ -4,10 +4,11 @@ The Scheduler manages the states of Homealone Controls based on times.
 
 ### Terminology
 
-Task - Sets the state of a specified Control object to a specified value
-Job - A list of one or more Tasks that are executed in a specific order
-Schedule - A list of one or more Jobs that are run at specified dates and times
-Scheduler - The object that is responsible for managing and running Schedules
+- Task - Sets the state of a specified Control object to a specified value
+- Job - A list of one or more Tasks that are executed in a specific order
+- Schedule - A list of one or more Jobs that are run at specified dates and times
+- SchedTime - Specification of a date and time to run a Job
+- Scheduler - The object that is responsible for managing and running Schedules
 
 ### Scheduler classes
 These classes are inherited from the core classes to implement functions of the Scheduler.  The StateControl class is defined in the extra classes.
