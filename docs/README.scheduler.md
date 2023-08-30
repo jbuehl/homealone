@@ -1,6 +1,6 @@
 # Homealone scheduler
 
-The Scheduler allows for the states of Homealone Controls to be set at various times.
+The Scheduler manages the states of Homealone Controls based on times.
 
 ### Scheduler classes
 These classes are inherited from the core and extra resource classes to implement functions of the Scheduler.
@@ -50,11 +50,11 @@ schedule = Schedule(name, [(schedTime, job),...], expectedState=False) - Instant
 schedule.setState(state) - Enable or disable the schedule.
 ```
 #### Job
-A list of one or more Tasks and/or Jobs that are run sequentially. It may be run at a specified time by the scheduler or it may be run when called by another Job or manually activated.  Setting the state to On immediately runs the Job.
+A list of one or more Tasks and/or Jobs that are run sequentially. It may be run at a specified time by the scheduler or it may be run when called by another Job or manually activated.  Setting the state to On immediately runs the Job. Setting the state to Off immediately stops the job if it is running.
 ```
 job = Job(name, [task|job,...]) - Instantiate a Job.
 job.setState(On) - Run the job.
-job.setState(Off) - Immediately stop the job if it is running.
+job.setState(Off) - Stop the job if it is running.
 ```
 #### Task
 A Task references a Control and a state to which the Control is to be set.
@@ -65,8 +65,11 @@ task = Task(control, state) - Instantiate a Task.
 A SchedTime defines a set of dates and times to run a Job. Year, month, day, hour, minute, and weekday may be specified as a list of zero or more values. If a list contains zero values it is interpreted to mean the Job should be run every day, hour, minute, etc.  
 
 All values, except for event, are stored internally in the SchedTime object as lists of integers.  Month values are 1-12, beginning in January.  Weekdays are 0-6, beginning on Monday. Events such as "sunrise" or "sunset" may also be specified. The exact time will be computed for the location and current day.  If an event and a time (hours, minutes) are both specified, the time is considered to be a delta from the event and may contain negative values.
+
+A SchedTime may be instantiated by specifying the date and time parameters directly, or it may be instantiated by specifying a human readable string that is parsed into the values.
 ```
-schedTime = SchedTime(schedString) - Instantiate a SchedTime.
+schedTime = SchedTime(years, months, days, hours, minutes, weekdays, event) - Instantiate a SchedTime specifying the date and time values.
+schedTime = SchedTime(schedString) - Instantiate a SchedTime based on a human readable string.
 ```
 ### Examples
 
@@ -101,12 +104,16 @@ recircPumpSchedule = Schedule("recircPumpSchedule", [("6:00", recircPumpOnJob),
 ```
 "17:00" - at 5pm every day - [],[],[],[17],[0],[],[]
 ":00,:10,:20,:30,:40,:50" - every 10 minutes - [],[],[],[],[0,10,20,30,40,50],[],[]
+"" - Every minute - [],[],[],[],[],[],[]
 "sunrise" - at sunrise every day - [],[],[],[],[],[],["sunrise"]
 "sunset -:20" - 20 minutes before sunset every day- [],[],[],[],[-20],[],["sunset"]
-"Dec 25 6:00" - on December 25 at 6am every  - [],[12],[25],[6],[0],[],[]
+"Dec 25 6:00" - on December 25 at 6am every year - [],[12],[25],[6],[0],[],[]
+"Dec 21 sunrise" - at sunrise on December 21 every year - [],[12],[21],[],[],[],["sunrise"]
 "Apr-Sep 13:00" - every day April through September at 1pm - [],[4,5,6,7,8,9],[13],[0],[],[]
 "May,Aug sunset" - every day in May and August at sunset - [],[5,8],[],[],[],[],["sunset"]
 "Mon,Wed,Fri 18:00" - every Monday, Wednesday, and Friday at 6pm - [],[],[],[18],[0],[0,2,4],[]
 "Mon-Fri 12:00" - every weekday at noon - [],[],[],[12],[0],[0,1,2,3,4],[]
 "2023 Sep 24" - every minute on the day September 24 2023 - [2023],[9],[24],[],[],[],[]
+"1 9:00" - on the first of every month at 9am - [],[],[1],[9],[0],[],[]
+"30 12:00" - at noon on the 30th of every month except February - [],[],[30],[12],[0],[],[]
 ```
