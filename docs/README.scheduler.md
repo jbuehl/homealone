@@ -2,6 +2,13 @@
 
 The Scheduler manages the states of Homealone Controls based on times.
 
+### Terminology
+
+Task - Sets the state of a specified Control object to a specified value
+Job - A list of one or more Tasks that are executed in a specific order
+Schedule - A list of one or more Jobs that are run at specified dates and times
+Scheduler - The object that is responsible for managing and running Schedules
+
 ### Scheduler classes
 These classes are inherited from the core classes to implement functions of the Scheduler.  The StateControl class is defined in the extra classes.
 
@@ -83,7 +90,7 @@ porchLightsOnSunset = Schedule("porchLightsOnSunset", [("sunset", porchLightsOnJ
 2. Run the back lawn sprinklers for 20 minutes. The sprinkler valve Control is turned on, then a Control that delays for 20 minutes is enabled, and finally the sprinkler valve Control is turned off.  It will run when called by another Job or manually run.
 ```
 backLawnJob = Job("backLawnJob", [Task(backLawnValve, On),
-                                  Task(delayControl, 20),
+                                  Task(DelayControl(20), On),
                                   Task(backLawnValve, Off)])
 ```
 3. Run all sprinklers three days a week at 5PM during the months of April through October.  Assume that Jobs similar to the previous example have been defined for all sprinkler valves.
