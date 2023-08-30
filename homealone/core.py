@@ -7,7 +7,7 @@ from collections import OrderedDict
 from rutifu import *
 from .utils import *
 
-# sensor states
+# names for sensor states
 off = 0
 Off = 0
 on = 1
@@ -35,7 +35,6 @@ class Resource(Object):
         Object.__init__(self)
         try:
             if self.name:   # init has already been called for this object
-                # log("Resource", self.name, "already initialized")
                 return
         except AttributeError:
             self.name = name
@@ -171,7 +170,7 @@ class Collection(Resource, OrderedDict):
                 resourceList.append(resource)
         return resourceList
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     def dict(self, expand=False):
         return {"name":self.name,
                 "resources":([attr.dump(expand) for attr in list(self.values())] if expand else list(self.keys()))}
@@ -233,7 +232,7 @@ class Sensor(Resource):
         else:
             Resource.__setattr__(self, attr, value)
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     def dict(self, expand=False):
         return {"name":self.name,
                 "interface":(self.interface.name if self.interface else None),

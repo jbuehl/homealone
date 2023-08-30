@@ -52,6 +52,7 @@ class ProxyService(Sensor):
             self.disable("set")
         return True
 
+    # string representation of the object for display in a UI
     def __repr__(self):
         return "server: "+self.interface.serviceAddr+"\n"+ \
                "version: "+str(self.version)+"\n"+ \

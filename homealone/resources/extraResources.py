@@ -21,12 +21,13 @@ class SensorGroup(Sensor):
             debug("debugSensorGroup", self.name, "groupState:", groupState)
             return groupState
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     def dict(self, expand=False):
         attrs = Sensor.dict(self)
         attrs.update({"sensorList": [sensor.__str__() for sensor in self.sensorList]})
         return attrs
 
+    # string representation of the object for display in a UI
     def __repr__(self):
         return "\n".join([sensor.__str__() for sensor in self.sensorList])
 
@@ -78,7 +79,7 @@ class ControlGroup(SensorGroup, Control):
                 control.setState(self.groupState)
         debug('debugThread', self.name, "finished")
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     def dict(self, expand=False):
         attrs = Control.dict(self)
         attrs.update({"controlList": [sensor.__str__() for sensor in self.sensorList]})
@@ -112,7 +113,7 @@ class SensorGroupControl(SensorGroup, Control):
             debug("debugSensorGroupControl", self.name, "control:", self.control.name, "state:", state, "controlState:", controlState)
             self.control.setState(controlState)
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     def dict(self, expand=False):
         attrs = Control.dict(self)
         attrs.update({"sensorList": [sensor.__str__() for sensor in self.sensorList],
@@ -267,7 +268,7 @@ class MultiControl(StateControl):
         else:
             return False
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     def dict(self, expand=False):
         attrs = Control.dict(self)
         attrs.update({"values": self.values})
@@ -326,7 +327,7 @@ class MinSensor(Sensor):
         if self.interface:
             self.interface.write(self.addr, self.minState)
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     # def dict(self, expand=False):
     #     attrs = Control.dict(self)
     #     attrs.update({"sensor": str(self.sensor)})
@@ -363,7 +364,7 @@ class MaxSensor(Sensor):
         if self.interface:
             self.interface.write(self.addr, self.maxState)
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     # def dict(self, expand=False):
     #     attrs = Control.dict(self)
     #     attrs.update({"sensor": str(self.sensor)})
@@ -405,7 +406,7 @@ class AttributeSensor(Sensor):
     def getState(self, missing=None):
         return getattr(self.sensor, self.attr)
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     def dict(self, expand=False):
         attrs = Sensor.dict(self)
         attrs.update({"sensor": str(self.sensor),

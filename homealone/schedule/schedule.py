@@ -80,7 +80,7 @@ class Cycle(Object):
                 break
             time.sleep(1)
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     def dict(self, expand=False):
         return {"control": self.control.name,
                 "duration": self.duration.getState() if isinstance(self.duration, Sensor) else self.duration,
@@ -88,6 +88,7 @@ class Cycle(Object):
                 "startState": self.startState,
                 "endState": self.endState}
 
+    # string representation of the object for display in a UI
     def __repr__(self):
         return self.control.__str__()+","+self.duration.__str__()+","+self.delay.__str__()+","+self.startState.__str__()+","+self.endState.__str__()
 
@@ -160,12 +161,13 @@ class Sequence(Control):
     #         if isinstance(cycle.control, Sensor):
     #             cycle.control.notify()
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     def dict(self, expand=False):
         attrs = Sensor.dict(self)
         attrs.update({"cycleList": [(cycle.dump() if isinstance(cycle, Cycle) else cycle.name) for cycle in self.cycleList]})
         return attrs
 
+    # string representation of the object for display in a UI
     def __repr__(self):
         msg = ""
         for cycle in self.cycleList:
@@ -276,7 +278,7 @@ class Task(StateControl):
         self.endState = endState            # optional state to set the control to at the end time
         self.enabled = normalState(enabled)
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     def dict(self, expand=False):
         attrs = Control.dict(self)
         attrs.update({"control": str(self.control),
@@ -287,6 +289,7 @@ class Task(StateControl):
                           "endTime": self.endTime.dump()})
         return attrs
 
+    # string representation of the object for display in a UI
     def __repr__(self, views=None):
         msg = str(self.control)+": "+str(self.controlState)+","+self.schedTime.__str__()
         if self.endTime:
@@ -364,7 +367,7 @@ class SchedTime(Object):
             self.hour = [eventTime.hour]
             self.minute = [eventTime.minute]
 
-    # dictionary of pertinent attributes
+    # attributes to include in the serialized object
     def dict(self, expand=False):
         return {"year":self.year,
                 "month":self.month,
@@ -414,6 +417,7 @@ class SchedTime(Object):
                     newEvents += [event+delim+format%elem]
         return newEvents
 
+    # string representation of the object for display in a UI
     def __repr__(self):
         events = self.enumTimes()
         msg = ""
