@@ -11,7 +11,7 @@ The Scheduler manages the states of Homealone Controls based on times.
 - Scheduler - The object that is responsible for managing and running Schedules
 
 ### Scheduler classes
-These classes are inherited from the core classes to implement functions of the Scheduler.  The StateControl class is defined in the extra classes.
+These classes are inherited from the Homealone core classes to implement functions of the Scheduler.  The StateControl class is defined in the extra classes.
 
 ```mermaid
 classDiagram
