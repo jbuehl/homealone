@@ -70,14 +70,12 @@ A Task references a Control object and a state to which the Control is to be set
 task = Task(control, state) - Instantiate a Task.
 ```
 #### SchedTime
-A SchedTime defines a set of dates and times to run a Job. The time reference is always the local time of the server.  Year, month, day, hour, minute, and weekday may be specified as a list of zero or more values. If a list contains zero values it is interpreted to mean the Job should be run every day, hour, minute, etc.  
+A SchedTime defines a set of dates and times to run a Job. The time reference is always the local time of the server.  Year, month, day, hour, minute, and weekday may be specified as ranges or as a list of zero or more values. If no value is specified it is interpreted to mean the Job should be run every day, hour, minute, etc.  
 
 All values, except for event, are stored internally in the SchedTime object as lists of integers.  Month values are 1-12, beginning in January.  Weekdays are 0-6, beginning on Monday. Events such as "sunrise" or "sunset" may also be specified. The exact time will be computed for the location and current day.  If an event and a time (hours, minutes) are both specified, the time is considered to be a delta from the event and may contain negative values.
 
-A SchedTime may be instantiated by specifying the date and time parameters directly, or it may be instantiated by specifying a human readable string that is parsed into the values.
+A SchedTime is instantiated by specifying a human readable string that is parsed into the internal values.
 ```
-schedTime = SchedTime(years, months, days, hours, minutes, weekdays, event) -
-            Instantiate a SchedTime specifying the date and time values.
 schedTime = SchedTime(schedString) - Instantiate a SchedTime based on a human readable string.
 ```
 ### Examples
@@ -115,7 +113,7 @@ recircPumpSchedule = Schedule("recircPumpSchedule", [("6:00", recircPumpOnJob),
 ":00,:10,:20,:30,:40,:50" - every 10 minutes - [],[],[],[],[0,10,20,30,40,50],[],[]
 "" - every minute - [],[],[],[],[],[],[]
 "sunrise" - at sunrise every day - [],[],[],[],[],[],["sunrise"]
-"sunset -:20" - 20 minutes before sunset every day- [],[],[],[],[-20],[],["sunset"]
+"sunset -:20" - 20 minutes before sunset every day - [],[],[],[],[-20],[],["sunset"]
 "Dec 25 6:00" - on December 25 at 6am every year - [],[12],[25],[6],[0],[],[]
 "Jun 21 sunrise" - at sunrise on June 21 every year - [],[12],[21],[],[],[],["sunrise"]
 "Apr-Sep 13:00" - every day April through September at 1pm - [],[4,5,6,7,8,9],[13],[0],[],[]
