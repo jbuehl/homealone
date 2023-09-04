@@ -1,3 +1,5 @@
+<!-- http://mermaid.js.org/ -->
+
 # Homealone scheduler
 
 The Scheduler manages the states of Homealone Controls based on times.
