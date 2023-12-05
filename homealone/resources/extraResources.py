@@ -33,11 +33,16 @@ class SensorGroup(Sensor):
 
 # A set of Controls whose state can be changed together
 class ControlGroup(SensorGroup, Control):
-    def __init__(self, name, controlList, stateList=[], stateMode=False, wait=False, type="controlGroup", **kwargs):
+    def __init__(self, name, controlList, stateList=[], stateMode=False, wait=False, follow=False,
+                type="controlGroup", **kwargs):
         SensorGroup.__init__(self, name, controlList, type=type, **kwargs)
         Control.__init__(self, name, type=type, **kwargs)
         self.stateMode = stateMode  # which state to return: False = SensorGroup, True = groupState
         self.wait = wait
+        self.follow = follow
+        if follow:                  # state of all controls follows any change
+            for sensor in self.sensorList:
+                sensor.stateSet = self.stateWasSet
         self.groupState = 0
         if stateList == []:
             self.stateList = [[0,1]]*(len(self.sensorList))
@@ -72,12 +77,18 @@ class ControlGroup(SensorGroup, Control):
         debug('debugThread', self.name, "started")
         for controlIdx in range(len(self.sensorList)):
             control = self.sensorList[controlIdx]
-            debug("debugControlGroup", self.name, "control:", control.name, "state:", self.groupState)
+            debug("debugControlGroup", "setGroup", self.name, "control:", control.name, "state:", self.groupState)
             if isinstance(self.groupState, int):
                 control.setState(self.stateList[controlIdx][self.groupState])
             else:
                 control.setState(self.groupState)
         debug('debugThread', self.name, "finished")
+
+    def stateWasSet(self, control, state):
+        debug('debugState', "stateWasSet", control.name, "state:", state)
+        for sensor in self.sensorList:
+            if sensor != control:
+                sensor.setState(state, notify=False)
 
     # attributes to include in the serialized object
     def dict(self, expand=False):

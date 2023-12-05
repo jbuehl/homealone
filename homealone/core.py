@@ -252,14 +252,20 @@ class Control(Sensor):
         self.stateSet = stateSet  # optional callback when state is set
 
     # Set the state of the control by writing the value to the address on the interface.
-    def setState(self, state, wait=False):
-        debug('debugState', "Control", self.name, "setState ", state)
-        debug("debugState", self.interface.name, self.addr)
+    def setState(self, state, wait=False, notify=True):
+        debug('debugState', "setState", self.name, "state:", state, "notify:", notify)
         if self.enabled:
             self.interface.write(self.addr, state)
-            self.notify(state)
-            if self.stateSet:
-                self.stateSet(self, state)
+            if notify:
+                Resource.notify(self, state)
+                if self.stateSet:
+                    self.stateSet(self, state)
             return True
         else:
             return False
+
+    def notify(self, state=None):
+        debug('debugState', "notify", self.name, "state:", state)
+        Resource.notify(self, state)
+        if self.stateSet:
+            self.stateSet(self, state)
