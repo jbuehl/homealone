@@ -65,7 +65,7 @@ class TplinkInterface(Interface):
                                 sensorState = self.sysInfo[sensor.addr]
                             if sensorState != self.states[sensor.addr]: # state has changed
                                 self.states[sensor.addr] = sensorState
-                                sensor.notify()
+                                sensor.notify(sensorState)
                 except Exception as ex:
                     log("tplink state exception", self.sensorAddrs[ipAddr].name, ipAddr)
                     logException(self.name, ex)
@@ -133,7 +133,7 @@ class TplinkInterface(Interface):
                 if status == 0:
                     # update the cached state
                     self.states[addr] = state
-                    self.sensorAddrs[addr].notify()
+                    # self.sensorAddrs[addr].notify(state)
                     return state
                 else:
                     return None
