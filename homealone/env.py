@@ -1,13 +1,16 @@
-# initialize the global variables that define the environment
+# Initialize the global variables that define the environment
+# This module defines the default values for these variables
+# They can be overridden either in the application or site specific configurations
+
 import os
 import socket
 import sys
 import inspect
 
 # network
-hostname = socket.gethostname()
-localController = "localhost"
-externalUrl = "example.com"
+hostname = socket.gethostname() # hostname running this application
+localController = "localhost"   # hostname running homealone services
+externalUrl = "example.com"     # external url for accessing homealone
 
 # directory structure
 # directory containing this application
