@@ -15,7 +15,6 @@ appDir = sys.path[0]
 # site configuration directory - add to path so config can be imported
 siteDir = "/etc/homealone/site"
 sys.path.append(siteDir)
-keyDir = siteDir+"/keys/"       # external credentials
 stateDir = appDir+"/state/"     # app specific states
 dataDir = appDir+"/data/"       # data logging
 
@@ -57,6 +56,9 @@ restRetryInterval = 10
 # Alerts and events
 alertConfig = {}
 eventConfig = {}
+
+# Authentication keys
+authKeys = {}
 
 # optionally import site configuration
 try:
