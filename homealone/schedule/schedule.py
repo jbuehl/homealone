@@ -250,15 +250,18 @@ class Schedule(Collection):
                     if (st.hour == []) or (now.hour in st.hour):
                         if (st.minute == []) or (now.minute in st.minute):
                             if (st.weekday == []) or (now.weekday() in st.weekday):
+                                debug('debugTaskRun', self.name, "shouldRun", st.year, st.month, st.day,
+                                                                            st.hour, st.minute, st.weekday,
+                                                                            st.event)
                                 return True
         return False
 
     def setControlState(self, task, state):
         # run the task
-        debug('debugSchedule', self.name, "task", task.name)
+        debug('debugTaskRun', self.name, "task", task.name)
         control = task.control
         if control:
-            debug('debugSchedule', self.name, "setting", control.name, "state", state)
+            debug('debugTaskRun', self.name, "setting", control.name, "state", state)
             try:
                 control.setState(state)
             except Exception as ex:
@@ -356,14 +359,11 @@ class SchedTime(Object):
             eventTbl = {"sunrise": sunrise,
                         "sunset": sunset}
             (today, tomorrow) = todaysDate()
-            if (self.year != []) and (self.month != []) and (self.day != []):
+            if (self.year != []) and (self.month != []) and (self.day != []):   # date is specified
                 eventTime = self.offsetEventTime(eventTbl[self.event](datetime.date(self.year[0], self.month[0], self.day[0]), latLong))
             else:
                 # use today's event time
                 eventTime = self.offsetEventTime(eventTbl[self.event](today, latLong))
-                if (eventTime < today.replace(second=0, microsecond=0)) and (self.day == []):
-                    # use tomorrow's time if today's time was in the past
-                    eventTime = self.offsetEventTime(eventTbl[self.event](tomorrow, latLong))
             self.hour = [eventTime.hour]
             self.minute = [eventTime.minute]
 
