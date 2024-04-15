@@ -16,12 +16,20 @@ There is no centralized component involved in publishing and discovery.  Because
 Every object derived from the Sensor class contains the following attributes.
 
 #### state
-Every Sensor has an associated state.  A Sensor state is a single integer or floating point number, or a string.  True, False, and None are not valid states. A state value of None indicates an undefined state. A state may not be a list, tuple, dict, or other object.
+Every Sensor has an associated state.  A Sensor state is a single integer, floating point number, or string.  True, False, and None are not valid states. A state value of None indicates an undefined state. A state may not be a list, tuple, dict, or other object.
+
+A state value may be an arbitrary integer or floating point number, such as a temperature or voltage.  State values may also be numbers or strings that are within a set of enumerated values.  A common example is a control for a light switch that can have a state of 0 (off) or 1 (on).
 
 If a hardware device has multiple attributes or controls, it should be represented as multiple Sensor or Control objects.  The state of a Sensor is obtained by an explicit call.  A Sensor may implement an event that is set when its state changes that can be used for notification.
 
 #### type
-This attribute indicates the behavior of the device that is represented by the resource, and how its states should be interpreted and displayed in a UI.  For example, a door sensor and a light switch control both may have valid states of 0 and 1, but the interpretation of the states of the light switch would be "off" and "on", and the door would be "closed" and "open".
+This attribute indicates the behavior of the device that is represented by the resource, and how its states should be interpreted and displayed in a UI.  For example, a light switch control and a door sensor both may have valid states of 0 and 1, but the interpretation of the states of the light switch would be "off" and "on", and the door would be "closed" and "open".  A type is needed to describe what a state value that is numeric should represent, such as temperature, voltage, wind velocity, air pressure, etc.
+
+The default type is boolean with two valid values "off" and "on" which are represented internally by the numeric values 0 and 1.
+
+A Sensor that has a numeric value for its state must have a type that designates the units that the state represents.  It may also optionally contain minimum or maximum values.
+
+A Sensor with two or more enumerated values contains a dictionary that associates valid state names to state values. A Control with enumerated values also contains another dictionary that associates names of states that can be directly set with their values.  These dictionaries may be different if the Control may have states that are not directly settable.
 
 #### label
 Label is an optional attribute that defines a human readable name associated with a resource that is used in a UI.  In addition to letters and numbers, labels may contain spaces and special characters.  If a label is not defined for a resource a UI may assign one, or it may override a defined label.

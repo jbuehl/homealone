@@ -17,12 +17,12 @@ Homealone applications can expose their resources via a network interface that i
 * hostname - the unique name for a server on the local network
 * Homealone service - the implementation of the Homealone remote interface on a server
 * Homealone resource - a Homealone object implemented within a Homealone application
-* REST resource - an identifier used in the HTTP path in the REST interface that  describes a Homealone resource
+* REST resource - an identifier used in the HTTP path in the REST interface that describes a Homealone resource
 
 ### Interface
 The interface consists of two parts:  A UDP message that is periodically broadcast by the server, and an HTTP server that supports a REST interface over TCP.  The UDP message performs the functions of advertising the availability of the server on the network, notifying clients of changes in the configuration or states of the server's Homealone resources, and letting clients know that the server is active.  The REST server allows clients to query details about Homealone resource configuration and states, and to direct a server to change the states of Control resources.
 
-While a service publishes its resources for discovery on the network, this interface does not define a subscription model for clients.  A service is not aware of the clients that may be following it.  Clients maintain state for each service they are following, but services are stateless in regards to awareness of clients.  The only time a service is aware of a client is for the duration of the TCP connection for a REST request which is closed at the end of each request.
+While a service publishes its resources for discovery on the network, this interface does not define a subscription model for clients.  A service is not aware of the clients that may be following it.  Services use a push model to broadcast states to any client that is listening.  Clients maintain a cache of states for each service they are following, but services are stateless in regards to awareness of clients.  A client can request current state information from a service or direct the service to change the state of one of its devices at any time.  The only time a service is aware of a client is for the duration of the TCP connection for a REST request which is closed at the end of each request.
 
 ### Implementation
 
@@ -45,7 +45,7 @@ sequenceDiagram
 	participant RemoteClient
 	end
 	box server
-	participant RemoteServer
+	participant RemoteService
 	end
 	loop
 		RemoteServer ->> RemoteClient: advert

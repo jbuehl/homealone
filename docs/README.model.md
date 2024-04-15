@@ -47,29 +47,34 @@ classDiagram
 	Object: dump()
 	Resource: name
 	Resource: enabled
-	Resource : event
+	Resource: event
 	Resource: enable()
 	Resource: disable()
-	Resource : notify()
-	Interface : interface
-	Interface : sensors
-	Interface : event
-	Interface : start()
-	Interface : stop()
-	Interface : read(addr)
-	Interface : write(addr, value)
-	Interface : notify()
-	Sensor : interface
-	Sensor : addr
+	Resource: notify()
+	Interface: interface
+	Interface: sensors
+	Interface: event
+	Interface: start()
+	Interface: stop()
+	Interface: read(addr)
+	Interface: write(addr, value)
+	Interface: notify()
+	Sensor: interface
+	Sensor: addr
 	Sensor: type
-	Sensor : label
-	Sensor : group
-	Sensor : location
-	Sensor : getState()
-	Control : setState(value)
-	Collection : addRes(resource)
-	Collection : getRes(name)
-	Collection : delRes(name)
+    Sensor: factor
+    Sensor: offset
+    Sensor: resolution
+    Sensor: values
+	Sensor: label
+	Sensor: group
+	Sensor: location
+	Sensor: getState()
+    Control: setValues
+	Control: setState(value)
+	Collection: addRes(resource)
+	Collection: getRes(name)
+	Collection: delRes(name)
 ```
 
 ##### Object
@@ -95,7 +100,7 @@ Defines the abstract class for interface implementations.
 - start() - Start (activate) the Interface.
 - stop() - Stop (deactivate) the Interface.
 - read(addr) - Read the current value from the specified address.
-- write(addr, value) - Write the specified value to the spacified address.
+- write(addr, value) - Write the specified value to the specified address.
 
 ##### Sensor
 Defines the model for the base Homealone sensor.
@@ -103,6 +108,8 @@ Defines the model for the base Homealone sensor.
 - interface - A reference to the Interface that this sensor is accessed through.
 - addr - The address of the Sensor on the Interface.
 - type - The type of Sensor.
+- factor, offset, resolution -
+- values -
 - label - Human readable name for this Sensor.
 - group - The list of groups that this Sensor is part of.
 - location - The coordinates of the physical location of this Sensor.
@@ -111,6 +118,7 @@ Defines the model for the base Homealone sensor.
 ##### Control
 Defines the model for a sensor whose state can be changed.
 
+- setValues -
 - setState(value) - Set the state of the Control to the specified value.
 
 ##### Collection
