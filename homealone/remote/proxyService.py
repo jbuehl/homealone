@@ -10,8 +10,11 @@ def loadResource(classDict, globalDict):
         argStr = ""
         for arg in list(args.keys()):
             argStr += arg+"="
-            if isinstance(args[arg], dict):     # argument is a class
-                argStr += parseClass(args[arg])+", "
+            if isinstance(args[arg], dict):
+                if "class" in args[arg]:        # arg is a class
+                    argStr += parseClass(args[arg])+", "
+                else:                           # arg is just a dict
+                    argStr += str(args[arg])+", "
             elif isinstance(args[arg], str):    # arg is a string
                 argStr += "'"+args[arg]+"', "
             elif not arg:                       # arg is None
