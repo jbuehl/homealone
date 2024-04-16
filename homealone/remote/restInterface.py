@@ -5,6 +5,16 @@ import sys
 from homealone import *
 # from picohttp.httpClient import *
 
+# Custom hook to convert keys to integers
+def numericKeys2Int(pairs):
+    result = {}
+    for key, value in pairs:
+        try:
+            result[int(key)] = value
+        except ValueError:
+            result[key] = value
+    return result
+
 class RestInterface(Interface):
     def __init__(self, name, interface=None, event=None, serviceAddr="", cache=True, writeThrough=True):
         Interface.__init__(self, name, interface=interface, event=event)
@@ -80,7 +90,7 @@ class RestInterface(Interface):
             debug('debugRestGet', self.name, "status", response.status_code)
             if response.status_code == 200:
                 debug('debugRestGet', self.name, "response", response.json())
-                return response.json()
+                return json.loads(response.text, object_pairs_hook=numericKeys2Int)
             else:
                 log(self.name, "read status", response.status_code, url)
                 return {}
