@@ -9,9 +9,9 @@ from homealone import *
 def numericKeys2Int(pairs):
     result = {}
     for key, value in pairs:
-        try:
+        if key.isnumeric():
             result[int(key)] = value
-        except ValueError:
+        else:
             result[key] = value
     return result
 
