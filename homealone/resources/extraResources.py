@@ -394,7 +394,7 @@ class AccumSensor(Sensor):
         except:
             self.accumValue = 0
 
-    def getState(selfmissing=0):
+    def getState(self, missing=0):
         self.accumValue = self.sensor.getState() * self.multiplier
         if self.interface:
             self.interface.write(self.name, self.accumValue)
