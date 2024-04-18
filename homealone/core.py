@@ -83,6 +83,7 @@ class Interface(Resource):
         self.sensors = {}       # sensors using this instance of the interface by name
         self.sensorAddrs = {}   # sensors using this instance of the interface by addr
         self.states = {}        # sensor state cache
+        self.lock = threading.Lock()
 
     def start(self):
         return True
@@ -180,7 +181,8 @@ class Collection(Resource, OrderedDict):
 # Sensors can also optionally be associated with a group and a physical location.
 class Sensor(Resource):
     def __init__(self, name, interface=None, addr=None, type="sensor", event=None,
-                 factor=1, offset=0, resolution=0, poll=10, persistence=None, interrupt=None,
+                 factor=1, offset=0, resolution=0, states=None,
+                 poll=10, persistence=None, interrupt=None,
                  label="", group="", location=None):
         Resource.__init__(self, name, event)
         self.interface = interface
@@ -193,6 +195,7 @@ class Sensor(Resource):
         self.resolution = resolution
         self.factor = factor
         self.offset = offset
+        self.states = states
         self.poll = poll
         self.persistence = persistence
         self.interrupt = interrupt
@@ -239,16 +242,19 @@ class Sensor(Resource):
                 "addr":self.addr,
                 "type":self.type,
                 "resolution": self.resolution,
+                **({"states": self.states} if self.states else {}),
                 "poll": self.poll,
                 "persistence": str(self.persistence),
-                "location":self.location,
+                **({"location": self.location} if self.location else {}),
                 "group":self.group,
                 "label":self.label}
 
 # A Control is a Sensor whose state can be set
 class Control(Sensor):
-    def __init__(self, name, interface=None, addr=None, type="control", stateSet=None, **kwargs):
+    def __init__(self, name, interface=None, addr=None, setStates=None,
+                 type="control", stateSet=None, **kwargs):
         Sensor.__init__(self, name, interface=interface, addr=addr, type=type, **kwargs)
+        self.setStates = setStates
         self.stateSet = stateSet  # optional callback when state is set
 
     # Set the state of the control by writing the value to the address on the interface.
@@ -269,3 +275,10 @@ class Control(Sensor):
         Resource.notify(self, state)
         if self.stateSet:
             self.stateSet(self, state)
+
+    # attributes to include in the serialized object
+    def dict(self, expand=False):
+        attrs = Sensor.dict(self)
+        if self.setStates:
+            attrs.update({"setStates": self.setStates})
+        return attrs
