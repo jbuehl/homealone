@@ -38,11 +38,11 @@ Physical devices are represented by members of an model that is defined within a
 ```mermaid
 classDiagram
 	Object <|-- Resource
-	Resource <|--Interface
-	Resource <|--Sensor
+	Resource <|-- Interface
+	Resource <|-- Sensor
 	Sensor <|-- Control
-	Resource <|--Collection
-	OrderedDict <|--Collection
+	Resource <|-- Collection
+	OrderedDict <|-- Collection
 	Object: className
 	Object: dump()
 	Resource: name
@@ -59,18 +59,20 @@ classDiagram
 	Interface: read(addr)
 	Interface: write(addr, value)
 	Interface: notify()
-	Sensor: interface
-	Sensor: addr
+    Sensor: state
+    Sensor: interface
+    Sensor: addr
+    Sensor: poll
 	Sensor: type
     Sensor: factor
     Sensor: offset
     Sensor: resolution
-    Sensor: values
+    Sensor: states
 	Sensor: label
 	Sensor: group
 	Sensor: location
 	Sensor: getState()
-    Control: setValues
+    Control: setStates
 	Control: setState(value)
 	Collection: addRes(resource)
 	Collection: getRes(name)
@@ -88,7 +90,7 @@ The base class for all Homealone resources.
 
 - name - The unique name for the resource.
 - enabled - Indicates whether the Resource is enabled (active) or not.
-- event - An Event object that is set when the state of the Resource changes.
+- event - A threading.Event object that is set when the state of the Resource changes.
 - enable() - Enable the Resource.
 - disable() - Disable the Resource.
 - notify() - Set the Resource's event to announce a state change.
@@ -105,11 +107,14 @@ Defines the abstract class for interface implementations.
 ##### Sensor
 Defines the model for the base Homealone sensor.
 
+- state - The current state of the Sensor
+- dataType - The data type of the state (enum, int, float)
 - interface - A reference to the Interface that this sensor is accessed through.
 - addr - The address of the Sensor on the Interface.
+- poll - The polling interval in seconds
 - type - The type of Sensor.
-- factor, offset, resolution -
-- values -
+- factor, offset, resolution - Parameters used to calculate the value of a numeric state.
+- states - A dictionary of valid values for data type enum
 - label - Human readable name for this Sensor.
 - group - The list of groups that this Sensor is part of.
 - location - The coordinates of the physical location of this Sensor.
@@ -118,7 +123,7 @@ Defines the model for the base Homealone sensor.
 ##### Control
 Defines the model for a sensor whose state can be changed.
 
-- setValues -
+- setStates -
 - setState(value) - Set the state of the Control to the specified value.
 
 ##### Collection
@@ -136,7 +141,7 @@ Another example is a sprinkler valve.  The state of the valve is either open or 
 ```mermaid
 classDiagram
 	Interface <|-- I2CInterface
-	Interface <|--GPIOInterface
-	I2CInterface <--Sensor
+	Interface <|-- GPIOInterface
+	I2CInterface <-- Sensor
 	GPIOInterface <-- Control
 ```

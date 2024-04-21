@@ -24,6 +24,7 @@ class TempControl(Control):
         self.hysteresis = hysteresis                # how much to overshoot or undershoot the temp target [-low, +high]
         self.controlState = off                     # state of this control
         self.inhibited = False                      # this control is inhibited
+        states = {0:"Off", 1:"Ena"}
 
     def getState(self, wait=False, missing=None):
         debug('debugState', self.name, "getState ", self.controlState)

@@ -29,7 +29,8 @@ def loadResource(classDict, globalDict):
 # proxy for a remote service
 class ProxyService(Sensor):
     def __init__(self, name, interface, addr=None, version=0, stateTimeStamp=-1, resourceTimeStamp=-1, remoteClient=None, type="service", **kwargs):
-        Sensor.__init__(self, name, interface, addr=addr, type=type, **kwargs)
+        Sensor.__init__(self, name, interface, addr=addr, type=type,
+                        states={0:"Down", 1:"Up"}, **kwargs)
         debug('debugProxyService', "ProxyService", name, "created")
         self.version = version
         self.stateTimeStamp = stateTimeStamp      # the last time the states were updated

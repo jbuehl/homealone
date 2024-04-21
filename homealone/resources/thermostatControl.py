@@ -38,6 +38,7 @@ class ThermostatControl(Control):
         self.persistenceControl = persistenceControl    # persistent storage of the state
         self.currentState = 0
         self.hysteresis = hysteresis
+        self.states = {0:"Off", 1:"Heat", 2:"Cool", 3:"Fan", 4:"Auto"}
 
     def start(self):
         if self.persistenceControl:
@@ -148,6 +149,7 @@ class ThermostatUnitSensor(Sensor):
         Sensor.__init__(self, name, **kwargs)
         self.className = "Sensor"
         self.thermostatControl = thermostatControl
+        self.states = {0:"Off", 1:"Heating", 2:"Cooling", 3:"Fan", 5:"Hold"}
 
     def getState(self, missing=None):
         # assume only one of them is on

@@ -2,10 +2,30 @@
 
 from homealone.core import *
 
+class LightControl(Control):
+    def __init__(self, name, interface, addr, type="light", **kwargs):
+        Control.__init__(self, name, interface, addr,
+                         type=type, states={0: "Off", 1: "On"}, **kwargs)
+        self.className = "Control"
+
+class PlugControl(Control):
+    def __init__(self, name, interface, addr, type="plug", **kwargs):
+        Control.__init__(self, name, interface, addr,
+                         type=type, states={0: "Off", 1: "On"}, **kwargs)
+        self.className = "Control"
+
+class DoorSensor(Sensor):
+    def __init__(self, name, interface, addr, type="door", **kwargs):
+        Sensor.__init__(self, name, interface, addr,
+                        type=type, states={0: "Closed", 1: "Open"}, **kwargs)
+        self.className = "Sensor"
+
 # A collection of sensors whose state is on if any one of them is on
 class SensorGroup(Sensor):
-    def __init__(self, name, sensorList, **kwargs):
-        Sensor.__init__(self, name, **kwargs)
+    def __init__(self, name, sensorList, states=None, **kwargs):
+        if states is None:
+            states = sensorList[0].states   # inherit states from sensors
+        Sensor.__init__(self, name, states=states, **kwargs)
         self.sensorList = sensorList
 
     def getState(self, missing=None):
@@ -34,9 +54,9 @@ class SensorGroup(Sensor):
 # A set of Controls whose state can be changed together
 class ControlGroup(SensorGroup, Control):
     def __init__(self, name, controlList, stateList=[], stateMode=False, wait=False, follow=False,
-                 setStates=None, type="controlGroup", **kwargs):
-        SensorGroup.__init__(self, name, controlList, type=type, **kwargs)
-        Control.__init__(self, name, type=type, setStates=setStates, **kwargs)
+                 states=None, setStates=None, type="controlGroup", **kwargs):
+        SensorGroup.__init__(self, name, controlList, type=type, states=states, **kwargs)
+        Control.__init__(self, name, type=type, states=states, setStates=setStates, **kwargs)
         self.stateMode = stateMode  # which state to return: False = SensorGroup, True = groupState
         self.wait = wait
         self.follow = follow
@@ -426,8 +446,8 @@ class AttributeSensor(Sensor):
 
 # a remote sensor that is located on another server
 class RemoteSensor(Sensor):
-    def __init__(self, name, resources=None, **kwargs):
-        Sensor.__init__(self, name, **kwargs)
+    def __init__(self, name, resources=None, states=None, **kwargs):
+        Sensor.__init__(self, name, states=states, **kwargs)
         self.resources = resources
 
     def getState(self, missing=None):
@@ -441,9 +461,10 @@ class RemoteSensor(Sensor):
 
 # a remote control that is on another another server
 class RemoteControl(RemoteSensor):
-    def __init__(self, name, resources=None, **kwargs):
-        RemoteSensor.__init__(self, name, resources, **kwargs)
+    def __init__(self, name, resources=None, states=None, setStates=None, **kwargs):
+        RemoteSensor.__init__(self, name, resources, states=states, **kwargs)
         self.resources = resources
+        self.setStates = setStates
 
     def setState(self, value, **kwargs):
         try:

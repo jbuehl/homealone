@@ -102,8 +102,10 @@ sequenceRunning = 1
 class Sequence(Control):
     def __init__(self, name, cycleList=[], **kwargs):
         Control.__init__(self, name, **kwargs)
+        self.type = "sequence"
         self.cycleList = cycleList
-        # self.cycleList = self.getCycles()   # convert possible Sequences to Cycles
+        self.states = {0:"Stopped", 1:"Running"}
+        self.setStates = {0:"Stop", 1:"Run"}
         self.running = False
 
     def getState(self, missing=None):
@@ -163,7 +165,7 @@ class Sequence(Control):
 
     # attributes to include in the serialized object
     def dict(self, expand=False):
-        attrs = Sensor.dict(self)
+        attrs = Control.dict(self)
         attrs.update({"cycleList": [(cycle.dump() if isinstance(cycle, Cycle) else cycle.name) for cycle in self.cycleList]})
         return attrs
 
@@ -280,6 +282,8 @@ class Task(StateControl):
         self.endTime = endTime              # optional end time
         self.endState = endState            # optional state to set the control to at the end time
         self.enabled = normalState(enabled)
+        self.states = {0: "Disabled", 1: "Enabled"}
+        self.setStates = {0: "Dis", 1: "Ena"}
 
     # attributes to include in the serialized object
     def dict(self, expand=False):
