@@ -253,8 +253,8 @@ class Sensor(Resource):
 class Control(Sensor):
     def __init__(self, name, interface=None, addr=None, states=None, setStates=None,
                  type="control", stateSet=None, **kwargs):
-        if states is None:     # default is enum type
-            states = {0:"Off", 1:"On"}
+        # if states is None:     # default is enum type
+        #     states = {0:"Off", 1:"On"}
         Sensor.__init__(self, name, interface=interface, addr=addr, type=type, states=states, **kwargs)
         self.setStates = setStates
         self.stateSet = stateSet  # optional callback when state is set

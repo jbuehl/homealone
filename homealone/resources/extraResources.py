@@ -14,6 +14,12 @@ class PlugControl(Control):
                          type=type, states={0: "Off", 1: "On"}, **kwargs)
         self.className = "Control"
 
+class DeviceControl(Control):
+    def __init__(self, name, interface, addr, type="control", **kwargs):
+        Control.__init__(self, name, interface, addr,
+                         type=type, states={0: "Off", 1: "On"}, **kwargs)
+        self.className = "Control"
+
 class DoorSensor(Sensor):
     def __init__(self, name, interface, addr, type="door", **kwargs):
         Sensor.__init__(self, name, interface, addr,
@@ -24,13 +30,16 @@ class DoorSensor(Sensor):
 class SensorGroup(Sensor):
     def __init__(self, name, sensorList, states=None, **kwargs):
         if states is None:
-            states = sensorList[0].states   # inherit states from sensors
+            try:
+                states = sensorList[0].states   # inherit states from sensors
+            except AttributeError:
+                pass        # this is a remote resource, ignore it
         Sensor.__init__(self, name, states=states, **kwargs)
         self.sensorList = sensorList
 
     def getState(self, missing=None):
         if self.interface:
-            # This is a cached resource
+            # This is a remote resource
             return Sensor.getState(self)
         else:
             groupState = 0
@@ -52,12 +61,17 @@ class SensorGroup(Sensor):
         return "\n".join([sensor.__str__() for sensor in self.sensorList])
 
 # A set of Controls whose state can be changed together
-class ControlGroup(SensorGroup, Control):
+class ControlGroup(SensorGroup):
     def __init__(self, name, controlList, stateList=[], stateMode=False, wait=False, follow=False,
                  states=None, setStates=None, type="controlGroup", **kwargs):
         SensorGroup.__init__(self, name, controlList, type=type, states=states, **kwargs)
-        Control.__init__(self, name, type=type, states=states, setStates=setStates, **kwargs)
         self.stateMode = stateMode  # which state to return: False = SensorGroup, True = groupState
+        self.setStates = setStates
+        if self.setStates is None:
+            try:
+                self.setStates = controlList[0].setStates   # inherit setStates from controls
+            except AttributeError:
+                pass        # this is a remote resource, ignore it
         self.wait = wait
         self.follow = follow
         if follow:                  # state of all controls follows any change
@@ -71,7 +85,7 @@ class ControlGroup(SensorGroup, Control):
 
     def getState(self, missing=None):
         if self.interface:
-            # This is a cached resource
+            # This is a remote resource
             return Sensor.getState(self)
         else:
             if self.stateMode:
@@ -81,7 +95,7 @@ class ControlGroup(SensorGroup, Control):
 
     def setState(self, state, wait=False):
         if self.interface:
-            # This is a cached resource
+            # This is a remote resource
             return Control.setState(self, state)
         else:
             debug('debugState', self.name, "setState ", state)
@@ -110,6 +124,10 @@ class ControlGroup(SensorGroup, Control):
             if sensor != control:
                 sensor.setState(state, notify=False)
 
+    def notify(self, state=None):
+        debug('debugState', "notify", self.name, "state:", state)
+        Control.notify(self, state)
+
     # attributes to include in the serialized object
     def dict(self, expand=False):
         attrs = Control.dict(self)
@@ -117,16 +135,17 @@ class ControlGroup(SensorGroup, Control):
         return attrs
 
 # A Control whose state depends on the states of a group of Sensors
-class SensorGroupControl(SensorGroup, Control):
-    def __init__(self, name, sensorList, control, setStates=None, **kwargs):
-        Control.__init__(self, name, setStates=setStates, **kwargs)
-        SensorGroup.__init__(self, name, sensorList, **kwargs)
+class SensorGroupControl(SensorGroup):
+    def __init__(self, name, sensorList, control,
+                states=None, setStates=None, **kwargs):
+        SensorGroup.__init__(self, name, sensorList, states=states, **kwargs)
         self.type = "sensorGroupControl"
         self.control = control
+        self.setStates = setStates
 
     def getState(self, missing=None):
         if self.interface:
-            # This is a cached resource
+            # This is a remote resource
             return Sensor.getState(self)
         else:
             return self.control.getState()
@@ -138,7 +157,7 @@ class SensorGroupControl(SensorGroup, Control):
         for sensor in self.sensorList:
             controlState = controlState or sensor.getState()
         if self.interface:
-            # This is a cached resource
+            # This is a remote resource
             return Control.setState(self, controlState)
         else:
             debug("debugSensorGroupControl", self.name, "control:", self.control.name, "state:", state, "controlState:", controlState)
@@ -205,8 +224,10 @@ class DependentSensor(Sensor):
 
 # Control that can only be turned on if all the specified resources are in the specified states
 class DependentControl(Control):
-    def __init__(self, name, interface, control, conditions, **kwargs):
-        Control.__init__(self, name, **kwargs)
+    def __init__(self, name, interface, control, conditions, states=None, setStates=None, **kwargs):
+        if states is None:
+            states = {0:"Off", 1:"On"}
+        Control.__init__(self, name, states=states, setStates=setStates, **kwargs)
         type = "control"
         self.className = "Control"
         self.control = control
@@ -231,8 +252,10 @@ class DependentControl(Control):
 
 # Control that can be set on but reverts to off after a specified time
 class MomentaryControl(Control):
-    def __init__(self, name, interface, addr=None, duration=1, **kwargs):
-        Control.__init__(self, name, interface, addr, **kwargs)
+    def __init__(self, name, interface, addr=None, duration=1, states=None, setStates=None, **kwargs):
+        if states is None:
+            states = {0:"Off", 1:"On"}
+        Control.__init__(self, name, interface, addr, states=states, setStates=setStates, **kwargs)
         type="control"
         self.className = "Control"
         self.duration = duration
@@ -444,7 +467,7 @@ class AttributeSensor(Sensor):
                       "attr": self.attr})
         return attrs
 
-# a remote sensor that is located on another server
+# a sensor that is located on another server
 class RemoteSensor(Sensor):
     def __init__(self, name, resources=None, states=None, **kwargs):
         Sensor.__init__(self, name, states=states, **kwargs)
@@ -459,7 +482,7 @@ class RemoteSensor(Sensor):
             self.disable()
             return missing
 
-# a remote control that is on another another server
+# a control that is on another another server
 class RemoteControl(RemoteSensor):
     def __init__(self, name, resources=None, states=None, setStates=None, **kwargs):
         RemoteSensor.__init__(self, name, resources, states=states, **kwargs)

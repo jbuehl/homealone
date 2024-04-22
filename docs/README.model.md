@@ -108,13 +108,12 @@ Defines the abstract class for interface implementations.
 Defines the model for the base Homealone sensor.
 
 - state - The current state of the Sensor
-- dataType - The data type of the state (enum, int, float)
 - interface - A reference to the Interface that this sensor is accessed through.
 - addr - The address of the Sensor on the Interface.
 - poll - The polling interval in seconds
 - type - The type of Sensor.
 - factor, offset, resolution - Parameters used to calculate the value of a numeric state.
-- states - A dictionary of valid values for data type enum
+- states - A dictionary of valid values for state type enum
 - label - Human readable name for this Sensor.
 - group - The list of groups that this Sensor is part of.
 - location - The coordinates of the physical location of this Sensor.
@@ -123,7 +122,7 @@ Defines the model for the base Homealone sensor.
 ##### Control
 Defines the model for a sensor whose state can be changed.
 
-- setStates -
+- setStates - A dictionary of values for state type enum that may be explicitly set.
 - setState(value) - Set the state of the Control to the specified value.
 
 ##### Collection
@@ -134,9 +133,9 @@ Defines an ordered collection of references to Resources.
 - delRes(name) - Remove the Resource specified by the name from the Collection.
 
 ### Example
-A simple example is a temperature sensor that may be in a room, outside the house, or immersed in a swimming pool.  All it does is to report the ambient temperature of the air or water it is in.  Let's consider a digital temperature sensor that uses the I<sup>2</sup>C hardware interface.  When a read command is sent to the address of the device it returns a byte that represents the temperature in degrees Celsius.  Two software objects defined by this project are required: a Sensor and an Interface.  The Sensor can be just the base object because all it needs to do is to implement the get state function that reads the state of the sensor from the interface it is associated with.  The Interface object must be specific to the I<sup>2</sup>C interface so it is a I2CInterface object that is derived from the base Interface object.  It can use the Python SMBus library that performs all the low level I<sup>2</sup>C protocol functions to read a byte and implement the read function.
+A simple example is a temperature sensor that may be in a room, outside the house, or immersed in a swimming pool.  All it does is to report the ambient temperature of the air or water it is in.  Let's consider a digital temperature sensor that uses the I<sup>2</sup>C hardware interface.  When a read command is sent to the address of the device it returns a byte that represents the temperature in degrees Celsius.  Two software objects defined by this project are required: a Sensor and an Interface.  The Sensor can be just the base object because all it needs to do is to implement the `getState()` function that reads the state of the sensor from the interface it is associated with.  The Interface object must be specific to the I<sup>2</sup>C interface so it is a I2CInterface object that is derived from the base Interface object.  It can use the Python SMBus library that performs all the low level I<sup>2</sup>C protocol functions to read a byte and implement the read function.
 
-Another example is a sprinkler valve.  The state of the valve is either open or closed, and it is operated remotely from the network.  The voltage to the valve is switched using a relay or semiconductor that is controlled by a GPIO pin on the controller.  A Control object and an Interface object are needed to implement this.  The Control object inherits the get state function from the Sensor object, but it also defines a set state function that changes the state of the device.  The GPIOInterface object implements the read and write functions that get and set a GPIO pin.
+Another example is a sprinkler valve.  The state of the valve is either open or closed, and it is operated remotely from the network.  The voltage to the valve is switched using a relay or semiconductor that is controlled by a GPIO pin on the controller.  A Control object and an Interface object are needed to implement this.  The Control object inherits the `getState()` function from the Sensor object, but it also defines a `setState()` function that changes the state of the device.  The GPIOInterface object implements the read and write functions that get and set a GPIO pin.
 
 ```mermaid
 classDiagram
