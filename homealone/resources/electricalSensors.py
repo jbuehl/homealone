@@ -66,7 +66,8 @@ class BatterySensor(Sensor):
 # Accumulate the energy of a power measurement over time
 class EnergySensor(Sensor):
     def __init__(self, name, interface=None, addr=None, powerSensor=None, poll=10, persistence=None, initial=0.0, **kwargs):
-        Sensor.__init__(self, name, interface, addr, poll=poll, **kwargs)
+        # Because the value can be reset, it's really a Control
+        Control.__init__(self, name, interface, addr, poll=poll, **kwargs)
         self.className = "Sensor"
         self.powerSensor = powerSensor
         self.persistence = persistence  # FileInterface for state persistence
