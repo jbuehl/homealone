@@ -102,7 +102,6 @@ classDiagram
 Devices that are on a different server that are accessed remotely.
 ```mermaid
 classDiagram
-	Sensor <|-- Control
 	Sensor <|-- RemoteSensor
 	RemoteSensor <|-- RemoteControl
 ```
