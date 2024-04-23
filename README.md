@@ -2,17 +2,17 @@
 
 ### Overview
 
-This project defines a platform and application framework that enables sensing and control of various devices in a home.
+Home automation involves connecting and remotely controlling various devices in a home. This project offers a software platform and framework for managing home devices. It allows any electronically controllable or sensor-equipped device to be linked to a system, enabling remote control and monitoring. Examples of such devices include lights, sprinklers, temperature sensors, and door sensors.
 
-Any device in the home whose state can be sensed or controlled electronically can be connected to a system that can manage that device and allow remote access. Examples of devices include such things as light fixtures, sprinkler valves, temperature sensors, door sensors, etc.  This project does not define specific hardware for these devices, but rather defines the software that allows any device to be interfaced to the system.
+The project focuses on software, defining how devices can be connected and controlled. It establishes a template for abstracting hardware interfaces to a common API, enabling the software on a server to connect to devices using various hardware interfaces like GPIO pins, serial ports, or network adapters. An object model further abstracts device functions, and network protocols are defined to allow the server to advertise itself on the network and provide access to connected devices. Other servers can implement interfaces, like a web server, for human interaction.
 
-At the lowest level, a template is defined that allows a hardware interface to be abstracted to a common API.  The server on which the software is running may physically connect to the device using any hardware interface such as GPIO pins, a serial port, or a network adapter.  An object model is defined that is implemented with an application running on that server that further abstracts the specific functions of the device.  Network protocols are defined that enable the server to advertise itself on the network and allow access to the devices that it is connected to. Other servers may implement human interfaces such as a web server.
+Unlike typical open-source home automation projects, such as Home Assistant, OpenHAB, or Domoticz, which offer a ready-to-use system, HomeAlone is designed for hardware and software developers. It provides a platform for developing custom hardware devices and integrating them into a system. While it offers an application framework for developing user interfaces, it does not provide a specific user interface out of the box.
 
 ### Design goals
 
 The design of the project targets the following goals.
 
--  Distributed - Functions are distributed across devices in the system.
+-  Distributed - Functions are distributed across the system.
 -  Devices are autonomous - Whenever possible, devices can run independently of the system.  There is no requirement for a centralized controller.
 -  Devices are dynamically discoverable - Devices can be added or removed from the system without requiring changes to a system configuration.
 -  Connected to the local home network - Devices are connected to the system via the local wired or wireless home network.
@@ -31,10 +31,11 @@ The design of the project targets the following goals.
 
 More detailed documentation and examples may be found in these files.
 
-- [Object Model](docs/README.model.md)
+- [Core Object Model](docs/README.model.md)
 - [Resource naming and attributes](docs/README.naming.md)
 - [Remote resources](docs/README.remote.md)
 - [Scheduler](docs/README.scheduler.md)
+- [Interfaces and Resources](docs/README.resources.md)
 - [Applications](docs/README.apps.md)
 - [Services](docs/README.services.md)
 - [Specific hardware support](docs/README.resources.md)
