@@ -2,29 +2,44 @@
 
 from homealone.core import *
 
-class LightControl(Control):
-    def __init__(self, name, interface, addr, type="light", **kwargs):
-        Control.__init__(self, name, interface, addr,
-                         type=type, states={0: "Off", 1: "On"}, **kwargs)
-        self.className = "Control"
+# Typical devices #############################################################
 
-class PlugControl(Control):
-    def __init__(self, name, interface, addr, type="plug", **kwargs):
-        Control.__init__(self, name, interface, addr,
-                         type=type, states={0: "Off", 1: "On"}, **kwargs)
-        self.className = "Control"
-
+# A control for a generic device with two states.
 class DeviceControl(Control):
     def __init__(self, name, interface, addr, type="control", **kwargs):
         Control.__init__(self, name, interface, addr,
                          type=type, states={0: "Off", 1: "On"}, **kwargs)
         self.className = "Control"
 
+# A Control for a light switch
+class LightControl(Control):
+    def __init__(self, name, interface, addr, type="light", **kwargs):
+        Control.__init__(self, name, interface, addr,
+                         type=type, states={0: "Off", 1: "On"}, **kwargs)
+        self.className = "Control"
+
+# A Control for an electrical outlet
+class OutletControl(Control):
+    def __init__(self, name, interface, addr, type="outlet", **kwargs):
+        Control.__init__(self, name, interface, addr,
+                         type=type, states={0: "Off", 1: "On"}, **kwargs)
+        self.className = "Control"
+
+# A Sensor for a door
 class DoorSensor(Sensor):
     def __init__(self, name, interface, addr, type="door", **kwargs):
         Sensor.__init__(self, name, interface, addr,
                         type=type, states={0: "Closed", 1: "Open"}, **kwargs)
         self.className = "Sensor"
+
+# A Sensor for a window
+class WindowSensor(Sensor):
+    def __init__(self, name, interface, addr, type="window", **kwargs):
+        Sensor.__init__(self, name, interface, addr,
+                        type=type, states={0: "Closed", 1: "Open"}, **kwargs)
+        self.className = "Sensor"
+
+# Collections of devices ######################################################
 
 # A collection of sensors whose state is on if any one of them is on
 class SensorGroup(Sensor):
@@ -67,6 +82,7 @@ class ControlGroup(SensorGroup):
         SensorGroup.__init__(self, name, controlList, type=type, states=states, **kwargs)
         self.stateMode = stateMode  # which state to return: False = SensorGroup, True = groupState
         self.setStates = setStates
+        self.stateSet = None
         if self.setStates is None:
             try:
                 self.setStates = controlList[0].setStates   # inherit setStates from controls
@@ -142,6 +158,7 @@ class SensorGroupControl(SensorGroup):
         self.type = "sensorGroupControl"
         self.control = control
         self.setStates = setStates
+        self.stateSet = None
 
     def getState(self, missing=None):
         if self.interface:
@@ -170,33 +187,7 @@ class SensorGroupControl(SensorGroup):
                       "control": self.control.__str__()})
         return attrs
 
-# Calculate a function of a list of sensor states
-class CalcSensor(Sensor):
-    def __init__(self, name, sensors=[], function="", **kwargs):
-        Sensor.__init__(self, name, **kwargs)
-        type = "sensor"
-        self.sensors = sensors
-        self.function = function.lower()
-        self.className = "Sensor"
-
-    def getState(self, missing=0):
-        value = 0
-        try:
-            if self.function in ["sum", "avg", "+"]:
-                for sensor in self.sensors:
-                    value += sensor.getState(missing=0)
-                if self.function == "avg":
-                    value /+ len(self.sensors)
-            elif self.function in ["*"]:
-                for sensor in self.sensors:
-                    value *= sensor.getState(missing=0)
-            elif self.function in ["diff", "-"]:
-                value = self.sensors[0].getState(missing=0) - self.sensors[1].getState(missing=0)
-        except Exception as ex:
-            logException(self.name, ex)
-        return value
-
-# Sensor that only reports its state if all the specified resources are in the specified states
+# A Sensor that only reports its state if all the specified resources are in the specified states
 class DependentSensor(Sensor):
     def __init__(self, name, interface, sensor, conditions, **kwargs):
         Sensor.__init__(self, name, **kwargs)
@@ -222,7 +213,7 @@ class DependentSensor(Sensor):
                 log(self.name, "exception evaluating condition", str(ex))
                 return missing
 
-# Control that can only be turned on if all the specified resources are in the specified states
+# A Control that can only be turned on if all the specified resources are in the specified states
 class DependentControl(Control):
     def __init__(self, name, interface, control, conditions, states=None, setStates=None, **kwargs):
         if states is None:
@@ -250,104 +241,35 @@ class DependentControl(Control):
             except Exception as ex:
                 log(self.name, "exception evaluating condition", str(ex))
 
-# Control that can be set on but reverts to off after a specified time
-class MomentaryControl(Control):
-    def __init__(self, name, interface, addr=None, duration=1, states=None, setStates=None, **kwargs):
-        if states is None:
-            states = {0:"Off", 1:"On"}
-        Control.__init__(self, name, interface, addr, states=states, setStates=setStates, **kwargs)
-        type="control"
-        self.className = "Control"
-        self.duration = duration
-        self.timedState = 0
-        self.timer = None
+# Special devices #############################################################
 
-    def setState(self, state, wait=False):
-        # timeout is the length of time the control will stay on
-        debug("debugState", "MomentaryControl", self.name, "setState", state)
-        if not self.timedState:
-            self.timedState = state
-            if self.interface:
-                self.interface.write(self.addr, self.timedState)
-            self.timer = threading.Timer(self.duration, self.timeout)
-            self.timer.start()
-            debug("debugState", "MomentaryControl", self.name, "timer", self.timedState)
-            self.notify()
+# Devices that involve math ###################################################
 
-    def timeout(self):
-        self.timedState = 0
-        debug("debugState", "MomentaryControl", self.name, "timeout", self.duration)
-        debug("debugState", "MomentaryControl", self.name, "setState", self.timedState)
-        if self.interface:
-            self.interface.write(self.addr, self.timedState)
-        self.notify()
+# A Sensor that calculates a specified function using a list of sensor states
+class CalcSensor(Sensor):
+    def __init__(self, name, sensors=[], function="", **kwargs):
+        Sensor.__init__(self, name, **kwargs)
+        type = "sensor"
+        self.sensors = sensors
+        self.function = function.lower()
+        self.className = "Sensor"
 
-    def getState(self, missing=None):
-        return self.timedState
-
-# a control that has a persistent state
-# the interface must be one that supports persistence such as FileInterface
-class StateControl(Control):
-    def __init__(self, name, interface, addr=None, initial=0, **kwargs):
-        Control.__init__(self, name, interface, addr, **kwargs)
-        self.className = "Control"
-        if not self.addr:
-            self.addr = self.name
-        self.initial = initial
-
-    def getState(self, **kwargs):
-        state = Control.getState(self, **kwargs)
-        if state != None:
-            return state
-        else:
-            Control.setState(self, self.initial)
-            return self.initial
-
-    def setState(self, value, **kwargs):
-        Control.setState(self, value)
-
-# Control that has a specified list of values it can be set to
-# the interface must be one that supports persistence such as FileInterface
-class MultiControl(StateControl):
-    def __init__(self, name, interface, addr=None, values=[], **kwargs):
-        StateControl.__init__(self, name, interface, addr, **kwargs)
-        type = "control"
-        self.className = "MultiControl"
-        self.values = values
-
-    def setState(self, state, wait=False):
-        debug("debugState", "MultiControl", self.name, "setState", state, self.values)
-        if state in self.values:
-            return Control.setState(self, state)
-        else:
-            return False
-
-    # attributes to include in the serialized object
-    def dict(self, expand=False):
-        attrs = Control.dict(self)
-        attrs.update({"values": self.values})
-        return attrs
-
-# Control that has specified numeric limits on the values it can be set to
-# the interface must be one that supports persistence such as FileInterface
-class MinMaxControl(StateControl):
-    def __init__(self, name, interface, addr=None, min=0, max=1, **kwargs):
-        StateControl.__init__(self, name, interface, addr, **kwargs)
-        type = "control"
-        self.className = "Control"
-        self.min = min
-        self.max = max
-
-    def setState(self, state, wait=False):
-        state = int(state)
-        debug("debugState", "MinMaxControl", self.name, "setState", state, self.min, self.max)
-        if state < self.min:
-            value = self.min
-        elif state > self.max:
-            value = self.max
-        else:
-            value = state
-        Control.setState(self, value)
+    def getState(self, missing=0):
+        value = 0
+        try:
+            if self.function in ["sum", "avg", "+"]:
+                for sensor in self.sensors:
+                    value += sensor.getState(missing=0)
+                if self.function == "avg":
+                    value /+ len(self.sensors)
+            elif self.function in ["*"]:
+                for sensor in self.sensors:
+                    value *= sensor.getState(missing=0)
+            elif self.function in ["diff", "-"]:
+                value = self.sensors[0].getState(missing=0) - self.sensors[1].getState(missing=0)
+        except Exception as ex:
+            logException(self.name, ex)
+        return value
 
 # Sensor that captures the minimum state value of the specified sensor
 class MinSensor(Sensor):
@@ -449,6 +371,105 @@ class AccumSensor(Sensor):
         if self.interface:
             self.interface.write(self.name, self.accumValue)
 
+# Control that can be set on but reverts to off after a specified time
+class MomentaryControl(Control):
+    def __init__(self, name, interface, addr=None, duration=1, states=None, setStates=None, **kwargs):
+        if states is None:
+            states = {0:"Off", 1:"On"}
+        Control.__init__(self, name, interface, addr, states=states, setStates=setStates, **kwargs)
+        type="control"
+        self.className = "Control"
+        self.duration = duration
+        self.timedState = 0
+        self.timer = None
+
+    def setState(self, state, wait=False):
+        # timeout is the length of time the control will stay on
+        debug("debugState", "MomentaryControl", self.name, "setState", state)
+        if not self.timedState:
+            self.timedState = state
+            if self.interface:
+                self.interface.write(self.addr, self.timedState)
+            self.timer = threading.Timer(self.duration, self.timeout)
+            self.timer.start()
+            debug("debugState", "MomentaryControl", self.name, "timer", self.timedState)
+            self.notify()
+
+    def timeout(self):
+        self.timedState = 0
+        debug("debugState", "MomentaryControl", self.name, "timeout", self.duration)
+        debug("debugState", "MomentaryControl", self.name, "setState", self.timedState)
+        if self.interface:
+            self.interface.write(self.addr, self.timedState)
+        self.notify()
+
+    def getState(self, missing=None):
+        return self.timedState
+
+# a control that has a persistent state
+# the interface must be one that supports persistence such as FileInterface
+class StateControl(Control):
+    def __init__(self, name, interface, addr=None, initial=0, **kwargs):
+        Control.__init__(self, name, interface, addr, **kwargs)
+        self.className = "Control"
+        if not self.addr:
+            self.addr = self.name
+        self.initial = initial
+
+    def getState(self, **kwargs):
+        state = Control.getState(self, **kwargs)
+        if state != None:
+            return state
+        else:
+            Control.setState(self, self.initial)
+            return self.initial
+
+    def setState(self, value, **kwargs):
+        Control.setState(self, value)
+
+# A Control that has specified numeric limits on the values it can be set to
+# the interface must be one that supports persistence such as FileInterface
+class MinMaxControl(StateControl):
+    def __init__(self, name, interface, addr=None, min=0, max=1, **kwargs):
+        StateControl.__init__(self, name, interface, addr, **kwargs)
+        type = "control"
+        self.className = "Control"
+        self.min = min
+        self.max = max
+
+    def setState(self, state, wait=False):
+        state = int(state)
+        debug("debugState", "MinMaxControl", self.name, "setState", state, self.min, self.max)
+        if state < self.min:
+            value = self.min
+        elif state > self.max:
+            value = self.max
+        else:
+            value = state
+        Control.setState(self, value)
+
+# Control that has a specified list of values it can be set to
+# the interface must be one that supports persistence such as FileInterface
+class MultiControl(StateControl):
+    def __init__(self, name, interface, addr=None, values=[], **kwargs):
+        StateControl.__init__(self, name, interface, addr, **kwargs)
+        type = "control"
+        self.className = "MultiControl"
+        self.values = values
+
+    def setState(self, state, wait=False):
+        debug("debugState", "MultiControl", self.name, "setState", state, self.values)
+        if state in self.values:
+            return Control.setState(self, state)
+        else:
+            return False
+
+    # attributes to include in the serialized object
+    def dict(self, expand=False):
+        attrs = Control.dict(self)
+        attrs.update({"values": self.values})
+        return attrs
+
 # sensor that returns the value of an attribute of a specified sensor
 class AttributeSensor(Sensor):
     def __init__(self, name, interface, addr, sensor, attr, **kwargs):
@@ -466,6 +487,19 @@ class AttributeSensor(Sensor):
         attrs.update({"sensor": str(self.sensor),
                       "attr": self.attr})
         return attrs
+
+# sensor that is an alias for another sensor
+class AliasSensor(Sensor):
+    def __init__(self, name, interface, addr, sensor, **kwargs):
+        Sensor.__init__(self, name, interface, addr, **kwargs)
+        type = "sensor"
+        self.className = "Sensor"
+        self.sensor = sensor
+
+    def getState(self, missing=None):
+        return self.sensor.getState()
+
+# Remote devices ##############################################################
 
 # a sensor that is located on another server
 class RemoteSensor(Sensor):
@@ -494,14 +528,3 @@ class RemoteControl(RemoteSensor):
             return self.resources[self.name].setState(value, **kwargs)
         except KeyError:
             return False
-
-# sensor that is an alias for another sensor
-class AliasSensor(Sensor):
-    def __init__(self, name, interface, addr, sensor, **kwargs):
-        Sensor.__init__(self, name, interface, addr, **kwargs)
-        type = "sensor"
-        self.className = "Sensor"
-        self.sensor = sensor
-
-    def getState(self, missing=None):
-        return self.sensor.getState()

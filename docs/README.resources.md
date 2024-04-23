@@ -30,85 +30,106 @@ These modules have been developed that map a number of number of hardware device
 ### Sensor and Control resources
 These modules implement Sensors and Controls for more complex functions that build on the Homealone core classes.
 
-#### Extra resources
-A collection of generally useful Sensors and Controls.
-
+#### Typical devices
+These Resources represent typical home automation devices that are likely to exist.
 ```mermaid
 classDiagram
 	Sensor <|-- Control
-	Sensor <|-- SensorGroup
-	SensorGroup <|-- ControlGroup
-	Control <|-- ControlGroup
-	SensorGroup <|-- SensorGroupControl
-	Control <|-- SensorGroupControl
-	Sensor <|-- CalcSensor
-	Sensor <|-- DependentSensor
-	Control <|-- DependentControl
-	Control <|-- MomentaryControl
-	Control <|-- StateControl
-	StateControl <|-- MultiControl
-	StateControl <|-- MinMaxControl
-	Sensor <|-- MinSensor
-	Sensor <|-- MaxSensor
-	Sensor <|-- AccumSensor
-	Sensor <|-- AttributeSensor
-	Sensor <|-- RemoteSensor
-	RemoteSensor <|-- RemoteControl
-	Sensor <|-- AliasSensor
-	Sensor : interface
-	Sensor : addr
-	Sensor: type
-	Sensor : label
-	Sensor : group
-	Sensor : location
-	Sensor : getState()
-	Control : setState(value)
-	MomentaryControl: timeout()
+    Control <|-- DeviceControl
+    Control <|-- LightControl
+    Control <|-- OutletControl
+    Sensor <|-- DoorSensor
+    Sensor <|-- WindowSensor
 ```
+- DeviceControl - A Control for a generic device with two enumerated states.
+- LightControl - A Control for a light switch.
+- OutletControl - A Control for an electrical outlet.
+- DoorSensor - A Sensor for a door.
+- WindowSensor - A Sensor for a window.
 
-- SensorGroup -
-- ControlGroup -
-- SensorGroupControl -
-- CalcSensor -
-- DependentSensor -
-- DependentControl -
-- MomentaryControl -
-- StateControl -
-- MultiControl -
-- MinMaxControl -
-- MinSensor -
-- MaxSensor -
-- AccumSensor -
-- AttributeSensor -
-- RemoteSensor -
-- RemoteControl -
-- AliasSensor -
-
-#### Temperature related resources
-
+#### Collections of devices
+These implement virtual Resources that relate to multiple Sensors or Controls.
 ```mermaid
 classDiagram
-	Control <|-- TempControl
-	Control <|-- ThermostatControl
-	Sensor <|-- ThermostatUnitSensor
-	Control <|-- ThermostatTempControl
+	Sensor <|-- Control
+    Sensor <|-- SensorGroup
+	SensorGroup <|-- ControlGroup
+	SensorGroup <|-- SensorGroupControl
+	Sensor <|-- DependentSensor
+	Control <|-- DependentControl
 ```
+- SensorGroup - A collection of sensors whose state is on if any one of them is on.
+- ControlGroup - A set of Controls whose state can be changed together.
+- SensorGroupControl - A Control whose state depends on the states of a group of Sensors.
+- DependentSensor - A Sensor that only reports its state if all the specified resources are in the specified states.
+- DependentControl - A Control that can only be turned on if all the specified resources are in the specified states.
 
+#### Math related resources
+These Sensors do not correspond directly to hardware devices, but their numeric state is derived from the state(s) of other Sensors that have numeric states.
+```mermaid
+classDiagram
+    Sensor <|-- Control
+    Sensor <|-- CalcSensor
+    Control <|-- MinSensor
+    Control <|-- MaxSensor
+    Control <|-- AccumSensor
+```
+- CalcSensor - A Sensor that calculates a specified function using a list of sensor states.
+- MinSensor - A Sensor that captures the minimum state value of the specified sensor.
+- MaxSensor - Sensor that captures the maximum state value of the specified sensor.
+- AccumSensor - A Sensor that captures the accumulated state values of the specified sensor.
+
+#### Special resources
+These Resources have specialized functionality.
+```mermaid
+classDiagram
+	Sensor <|-- Control
+    Control <|-- StateControl
+    StateControl <|-- MinMaxControl
+	StateControl <|-- MultiControl
+    Control <|-- MomentaryControl
+	Sensor <|-- AttributeSensor
+    Sensor <|-- AliasSensor
+```
+- StateControl - A Control that has a persistent state.
+- MinMaxControl - A Control that has specified numeric limits on the values it can be set to.
+- MultiControl - A Control that has a specified list of values it can be set to.
+- MomentaryControl - A Control that can be set on but reverts to off after a specified time.
+- AttributeSensor - A sensor that returns the value of an attribute of a specified sensor.
+- AliasSensor - A Sensor that is an alias for another sensor.
+
+#### Remote devices
+Devices that are on a different server that are accessed remotely.
+```mermaid
+classDiagram
+	Sensor <|-- Control
+	Sensor <|-- RemoteSensor
+	RemoteSensor <|-- RemoteControl
+```
+- RemoteSensor - A Sensor that is located on another server.
+- RemoteControl - A Control that is located on another server.
+
+#### Temperature related resources
+```mermaid
+classDiagram
+    Sensor <|-- Control
+    Control <|-- TempControl
+    Control <|-- ThermostatControl
+    Sensor <|-- ThermostatUnitSensor
+    Control <|-- ThermostatTempControl
+```
 - TempControl - A Control that manages a heating or cooling unit.
 - Thermostat control - A control that emulates a device for controlling a heating and cooling system.
-- ThermostatUnitSensor -
-- ThermostatTempControl -
+- ThermostatUnitSensor - A Sensor that returns the thermostat unit control that is currently running.
+- ThermostatTempControl - A Control that sets the target temperature of the active unit control.
 
 #### Electrical sensors
 Sensors related to electrical devices.
-
 ```mermaid
 classDiagram
-	Sensor <|-- PowerSensor
-	Sensor <|-- EnergySensor
-	Sensor <|-- BatterySensor
+    Sensor <|-- Control
+    Sensor <|-- PowerSensor
+    Control <|-- EnergySensor
 ```
-
-- PowerSensor -
-- EnergySensor -
-- BatterySensor -
+- PowerSensor - A Sensor that calculates the power given a voltage, current, and optional power factor.
+- EnergySensor - A Sensor that accumulates energy over time.
