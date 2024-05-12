@@ -12,6 +12,7 @@ class Application(object):
     def __init__(self, name, globals,
                  publish=True, advert=True,                                 # resource publishing parameters
                  remote=False, watch=[], ignore=[], separateRemote=True,    # remote resource proxy parameters
+                    resourceChanged=None,
                  logger=True,                                               # data logger
                  system=False,                                              # system resources
                  state=False, shared=False, changeMonitor=True):            # persistent state parameters
@@ -41,7 +42,8 @@ class Application(object):
             else:                   # use the same collection for remote and local resources
                 self.remoteResources = self.resources
                 self.remoteEvent = self.event
-            self.remoteClient = RemoteClient("remoteClient", self.remoteResources, watch=watch, ignore=ignore, event=self.remoteEvent)
+            self.remoteClient = RemoteClient("remoteClient", self.remoteResources, watch=watch, ignore=ignore,
+                    resourceChanged=resourceChanged, event=self.remoteEvent)
         else:
             self.remoteClient = None
             self.remoteResources = None

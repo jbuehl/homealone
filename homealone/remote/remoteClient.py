@@ -41,16 +41,17 @@ def parseServiceData(data, addr):
         return ("", "", "", 0, 0, 0, 0, {}, [])
 
 class RemoteClient(LogThread):
-    def __init__(self, name, resources, watch=[], ignore=[], event=None, cache=True):
+    def __init__(self, name, resources, watch=[], ignore=[], event=None, cache=True, resourceChanged=None):
         debug('debugRemoteClient', name, "starting", name)
         LogThread.__init__(self, target=self.restProxyThread)
         self.name = name
         self.services = {}                      # proxied services
         self.resources = resources              # local resources
-        self.event = event
-        self.cache = cache
         self.watch = watch                      # services to watch for
         self.ignore = ignore                    # services to ignore
+        self.event = event
+        self.cache = cache
+        self.resourceChanged = resourceChanged  # callback when resources on a remote service change
         debug('debugRemoteClient', name, "watching", self.watch)    # watch == [] means watch all services
         debug('debugRemoteClient', name, "ignoring", self.ignore)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -123,6 +124,8 @@ class RemoteClient(LogThread):
                 service.load(serviceResources)
                 service.resourceTimeStamp = resourceTimeStamp
                 self.addLocalResources(service)
+                if self.resourceChanged:                # resource change callback
+                    self.resourceChanged(service.name)
             if (stateTimeStamp > service.stateTimeStamp) or serviceStates:
                 debug('debugRemoteClientStates', self.name, "updating states", service.name, stateTimeStamp)
                 if not serviceStates:
