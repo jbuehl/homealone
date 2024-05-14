@@ -9,7 +9,7 @@ from .interfaces.fileInterface import *
 from homealone.interfaces.osInterface import *
 
 class Application(object):
-    def __init__(self, name, globals,
+    def __init__(self, name, globals, block=True,
                  publish=True, advert=True,                                 # resource publishing parameters
                  remote=False, watch=[], ignore=[], separateRemote=True,    # remote resource proxy parameters
                     resourceChanged=None,
@@ -18,6 +18,7 @@ class Application(object):
                  state=False, shared=False, changeMonitor=True):            # persistent state parameters
         self.name = name
         self.globals = globals                                              # application global variables
+        self.block = block
         self.event = threading.Event()                                      # state change event
         self.resources = Collection("resources")                            # application resources
         self.separateRemote = separateRemote
@@ -88,7 +89,10 @@ class Application(object):
         if list(self.schedule.keys()) != []:    # task scheduler
             self.schedule.start()
         if self.remoteService:                  # resource publication
-            self.remoteService.start()
+            self.remoteService.start(block=self.block)
+        else:
+            if self.block:
+                block()
 
     # define an Interface resource
     def interface(self, interface, event=False, start=False):
