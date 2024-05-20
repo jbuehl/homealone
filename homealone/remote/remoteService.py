@@ -58,7 +58,7 @@ def requestHandler(request, response, service, resources):
 
 # Remote service interface
 class RemoteService(object):
-    def __init__(self, name, resources, states, port=None, advert=True, block=True, label=""):
+    def __init__(self, name, resources, states, port=None, advert=True, label=""):
         debug('debugRemoteService', name, "creating RemoteService", "advert:", advert)
         self.name = name
         self.resources = resources
@@ -68,7 +68,6 @@ class RemoteService(object):
         else:           # use an available port from the pool
             self.ports = restServicePortPool
         self.advert = advert
-        self.block = block
         self.label = label
         self.advertSocket = None
         self.advertSequence = 0
@@ -76,7 +75,7 @@ class RemoteService(object):
         self.resourceTimeStamp = 0
         self.restServer = None
 
-    def start(self):
+    def start(self, block=True):
         # start the HTTP server
         debug('debugRemoteService', self.name, "starting RemoteService")
         self.port = 0
@@ -100,8 +99,9 @@ class RemoteService(object):
             # start the thread to send the resources or states when there is a change
             startThread(name="stateAdvertThread", target=self.stateAdvert)
         #wait forever
-        if self.block:
-            block()
+        if block:
+            while True:
+                time.sleep(1)
 
     # periodically send the advert message as a heartbeat
     def stateTrigger(self):
