@@ -84,10 +84,13 @@ class ControlGroup(SensorGroup):
         self.setStates = setStates
         self.stateSet = None
         if self.setStates is None:
-            try:
-                self.setStates = controlList[0].setStates   # inherit setStates from controls
-            except AttributeError:
-                pass        # this is a remote resource, ignore it
+            if self.states is None:
+                try:
+                    self.setStates = controlList[0].setStates   # inherit setStates from controls
+                except AttributeError:
+                    pass        # this is a remote resource, ignore it
+            else:
+                self.setStates = self.states
         self.wait = wait
         self.follow = follow
         if follow:                  # state of all controls follows any change
