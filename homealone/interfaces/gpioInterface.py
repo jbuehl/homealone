@@ -6,7 +6,12 @@ from homealone import *
 if int(gpio.RPI_INFO['REVISION'], 16) < 0x0010:
     bcmPins = [4, 17, 18, 22, 23, 24, 25, 27] # A/B
 else:
-    bcmPins = [4, 5, 6, 12, 13, 16, 17, 18, 22, 23, 24, 25, 26, 27] # B+
+    bcmPins = [0, 1, 4, 5, 6, 7, 12, 13, 16, 17, 19, 20, 21, 22, 23, 24, 26, 27] # B+,02W
+    # bcmPins = [4, 5, 6, 12, 13, 16, 17, 18, 22, 23, 24, 25, 26, 27] # B+
+
+# pin mapping to RPi expander
+#   23,  7,  1, 12, 16,  5,  0, 27      # expansion board 1
+#   21, 20, 26, 19, 13,  6, 22, 17      # expansion board 2
 
 gpioInterface = None
 
@@ -48,6 +53,7 @@ class GPIOInterface(Interface):
             if pin in bcmPins:
                 debug('debugGPIO', self.name, "setup", pin, gpio.OUT)
                 gpio.setup(pin, gpio.OUT)
+                self.states[pin] = 0
                 debug('debugGPIO', self.name, "write", pin, 0)
                 if self.invert:
                     gpio.output(pin, 1)
@@ -57,14 +63,25 @@ class GPIOInterface(Interface):
                 debug('debugGPIO', self.name, "ignoring", pin)
 
     def read(self, addr):
-        value = gpio.input(addr)
-        if self.invert:
-            value = 1 - value
-        debug('debugGPIO', self.name, "read", "addr:", addr, "value:", value)
-        return value
+        if addr in self.input:
+            value = gpio.input(addr)
+            if self.invert:
+                value = 1 - value
+            debug('debugGPIO', self.name, "read", "addr:", addr, "value:", value)
+            return value
+        elif addr in self.output:
+            debug('debugGPIO', self.name, "read", "addr:", addr, "value:", self.states[addr])
+            return self.states[addr]
+        else:
+            debug('debugGPIO', self.name, "read", "addr:", addr, "invalid")
+            return None
 
     def write(self, addr, value):
-        debug('debugGPIO', self.name, "write", "addr:", addr, "value:", value)
-        if self.invert:
-            value = 1 - value
-        gpio.output(addr, value)
+        if addr in self.output:
+            debug('debugGPIO', self.name, "write", "addr:", addr, "value:", value)
+            self.states[addr] = value
+            if self.invert:
+                value = 1 - value
+            gpio.output(addr, value)
+        else:
+            debug('debugGPIO', self.name, "write", "addr:", addr, "invalid")

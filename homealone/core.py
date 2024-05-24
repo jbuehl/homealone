@@ -104,7 +104,8 @@ class Interface(Resource):
     def addSensor(self, sensor):
         self.sensors[sensor.name] = sensor
         self.sensorAddrs[sensor.addr] = sensor
-        self.states[sensor.addr] = None
+        if sensor.addr not in self.states:
+            self.states[sensor.addr] = None
         sensor.event = self.event
 
 # Resource collection
