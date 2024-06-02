@@ -62,6 +62,7 @@ class ThermostatControl(Control):
             while True:
                 if self.inhibitSensor.event:        # wait for inhibitSensor state to change
                     debug('debugThermostatEvent', self.name, "waiting for", self.inhibitSensor.name, "event")
+                    self.inhibitSensor.event.clear()
                     self.inhibitSensor.event.wait()
                 else:                               # poll inhibitSensor state
                     debug('debugThermostatEvent', self.name, "waiting for", inhibitWatchInterval, "seconds")
