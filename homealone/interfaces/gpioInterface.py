@@ -15,19 +15,19 @@ else:
 
 gpioInterface = None
 
-# initial interrupt callback routine that is called when an interrupt pin goes low
+# initial interrupt callback routine that is called when an interrupt pin changes
 def interruptCallback(pin):
-    debug('debugGPIO', "interruptCallback", "pin:", pin)
+    debug('debugGPIOinterrupt', "interruptCallback", "pin:", pin)
     try:
         sensor = gpioInterface.sensorAddrs[pin]
         state = gpio.input(pin)
         if sensor.interrupt:
-            debug('debugGPIO', gpioInterface.name, "calling", sensor.name, "interrupt", state)
+            debug('debugGPIOinterrupt', gpioInterface.name, "calling", sensor.name, "interrupt", state)
             sensor.interrupt(sensor, state)
-        debug('debugGPIO', gpioInterface.name, "notifying", sensor.name, state)
+        debug('debugGPIOinterrupt', gpioInterface.name, "notifying", sensor.name, state)
         sensor.notify(state)
     except KeyError:
-        debug('debugGPIO', gpioInterface.name, "no sensor for interrupt on pin", pin)
+        debug('debugGPIOinterrupt', gpioInterface.name, "no sensor for interrupt on pin", pin)
 
 # Interface to direct GPIO
 class GPIOInterface(Interface):
@@ -46,7 +46,7 @@ class GPIOInterface(Interface):
             if pin in bcmPins:
                 debug('debugGPIO', self.name, "setup", pin, gpio.IN)
                 gpio.setup(pin, gpio.IN, pull_up_down=gpio.PUD_UP)
-                gpio.add_event_detect(pin, gpio.FALLING, callback=interruptCallback)
+                gpio.add_event_detect(pin, gpio.BOTH, callback=interruptCallback)
             else:
                 debug('debugGPIO', self.name, "ignoring", pin)
         for pin in self.output:               # output pin
