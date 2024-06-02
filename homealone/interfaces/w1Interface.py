@@ -7,11 +7,11 @@ class W1Interface(Interface):
         Interface.__init__(self, name, interface=interface, event=event)
         self.sensors = {}
         for sensor in W1ThermSensor.get_available_sensors():
-            self.sensors[sensor.id] = sensor
+            self.sensors[sensor.id.upper()] = sensor
 
     def read(self, addr):
         try:
-            return round(float(self.sensors[addr].get_temperature()) * 9 / 5 + 32, 2)
+            return float(self.sensors[addr.upper()].get_temperature()) * 9 / 5 + 32
         except KeyError:
             return 0
         except errors.SensorNotReadyError:    # sensor isn't responding
