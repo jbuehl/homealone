@@ -59,7 +59,7 @@ class Application(object):
             self.resource(Sensor(hostname+"CpuTemp", self.osInterface, "cpuTemp", type="tempC"))
             self.resource(Sensor(hostname+"CpuLoad", self.osInterface, "cpuLoad", type="%"))
             self.resource(Sensor(hostname+"Uptime", self.osInterface, "uptime"))
-            self.resource(Sensor(hostname+"IpAddr", self.osInterface, "ipAddr eth0"))
+            self.resource(Sensor(hostname+"IpAddr", self.osInterface, "ipAddr"))
             self.resource(Sensor(hostname+"DiskUsage", self.osInterface, "diskUse /", type="%"))
             self.group("System")
             self.label()

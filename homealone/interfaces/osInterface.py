@@ -33,7 +33,7 @@ class OSInterface(Interface):
                 return ""
         elif addrParts[0] == "ipAddr":
             try:
-                return subprocess.check_output("ifconfig "+addrParts[1]+"|grep inet\ ", shell=True).decode().strip("\n").split()[1]
+                return subprocess.check_output("ifconfig|grep inet\ |grep -v 127", shell=True).decode().strip("\n").split()[1]
             except subprocess.CalledProcessError:
                 return ""
         elif addrParts[0] == "uptime":
