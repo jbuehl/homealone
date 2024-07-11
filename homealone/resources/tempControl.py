@@ -53,7 +53,7 @@ class TempControl(Control):
                         if self.unitControl.getState() != off:
                             # turn the unit off
                             self.unitControl.setState(off)
-                            debug('debugTempControl', self.name, "unit off")
+                            debug('debugTempControl', self.name, "unit off", "currentTemp:", currentTemp, "targetTemp:", self.tempTarget)
                     elif not self.inhibited and \
                         (((self.unitType == unitTypeHeater) and (currentTemp <= self.tempTarget - self.hysteresis[0])) or \
                         ((self.unitType == unitTypeAc) and (currentTemp >= self.tempTarget + self.hysteresis[1]))):
@@ -61,7 +61,7 @@ class TempControl(Control):
                         if self.unitControl.getState() != on:
                             # turn the unit on
                             self.unitControl.setState(on)
-                            debug('debugTempControl', self.name, "unit on")
+                            debug('debugTempControl', self.name, "unit on", "currentTemp:", currentTemp, "targetTemp:", self.tempTarget)
                     else:
                         # do nothing
                         pass
