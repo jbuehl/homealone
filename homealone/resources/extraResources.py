@@ -218,7 +218,7 @@ class DependentSensor(Sensor):
 
 # A Control that can only be turned on if all the specified resources are in the specified states
 class DependentControl(Control):
-    def __init__(self, name, interface, control, conditions, states=None, setStates=None, **kwargs):
+    def __init__(self, name, interface, control, conditions, stateMode=False, states=None, setStates=None, **kwargs):
         if states is None:
             states = {0:"Off", 1:"On"}
         Control.__init__(self, name, states=states, setStates=setStates, **kwargs)
@@ -226,11 +226,17 @@ class DependentControl(Control):
         self.className = "Control"
         self.control = control
         self.conditions = conditions
+        self.stateMode = stateMode  # which state to return: False = control state, True = current state
+        self.curState = 0
 
     def getState(self, missing=None):
-        return self.control.getState()
+        if self.stateMode:
+            return self.curState
+        else:
+            return self.control.getState()
 
     def setState(self, state, wait=False):
+        self.curState = state
         debug('debugState', self.name, "setState ", state)
         for (sensor, condition, value) in self.conditions:
             sensorState = sensor.getState()
@@ -239,10 +245,11 @@ class DependentControl(Control):
                 value = value.getState()
             debug('debugDependentControl', self.name, sensorName, sensorState, condition, value)
             try:
-                if eval(str(sensorState)+condition+str(value)):
+                condition = str(sensorState)+condition+str(value)
+                if eval(condition):
                     self.control.setState(state)
             except Exception as ex:
-                log(self.name, "exception evaluating condition", str(ex))
+                log(self.name, "exception evaluating condition", str(ex), condition)
 
 # Special devices #############################################################
 
