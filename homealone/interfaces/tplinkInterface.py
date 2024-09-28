@@ -67,7 +67,7 @@ class TplinkInterface(Interface):
                                 self.states[sensor.addr] = sensorState
                                 sensor.notify(sensorState)
                 except Exception as ex:
-                    log("tplink state exception", self.sensorAddrs[ipAddr].name, ipAddr)
+                    log("tplink state exception", sensor.name, sensor.addr)
                     logException(self.name, ex)
                 time.sleep(self.sleepTime)
             debug("debugTplink", self.name, "getInfo terminated")
@@ -140,6 +140,6 @@ class TplinkInterface(Interface):
             else:
                 return None
         except Exception as ex:
-            log("tplink write exception", self.sensorAddrs[ipAddr].name, ipAddr)
+            log("tplink write exception", self.sensorAddrs[addr].name, addr)
             logException(self.name, ex)
             return None
