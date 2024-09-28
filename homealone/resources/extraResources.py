@@ -522,7 +522,7 @@ class RemoteSensor(Sensor):
             state = self.resources[self.name].getState(missing=missing)
             self.enable()
             return state
-        except KeyError:
+        except (KeyError, TypeError):
             self.disable()
             return missing
 
