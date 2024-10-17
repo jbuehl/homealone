@@ -93,6 +93,7 @@ class RestInterface(Interface):
                 return json.loads(response.text, object_pairs_hook=numericKeys2Int)
             else:
                 log(self.name, "read status", response.status_code, url)
+                self.disableService()
                 return {}
         except requests.exceptions.Timeout:
             log(self.name, "read state timeout", self.serviceAddr, path)
