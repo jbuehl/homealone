@@ -1,5 +1,7 @@
 # Utility functions
 
+pollResolution = 10 # how many times per second to possibly check for resource state changes
+
 import syslog
 import os
 import time
@@ -48,7 +50,7 @@ class StateCache(object):
                         if isinstance(resource, Sensor) and \
                                 (resource.enabled) and (not resource.event):            # only poll enabled sensors without events
                             if resource.name not in list(resourcePollCounts.keys()):    # a resource not seen before
-                                resourcePollCounts[resource.name] = resource.poll
+                                resourcePollCounts[resource.name] = resource.poll * pollResolution
                                 self.states[resource.name] = resource.getState()
                                 stateChanged = True
                             if resourcePollCounts[resource.name] == 0:                  # count has decremented to zero
@@ -56,7 +58,7 @@ class StateCache(object):
                                 if resourceState != self.states[resource.name]:         # save the state if it has changed
                                     self.states[resource.name] = resourceState
                                     stateChanged = True
-                                resourcePollCounts[resource.name] = resource.poll
+                                resourcePollCounts[resource.name] = resource.poll * pollResolution
                             else:   # decrement the count
                                 resourcePollCounts[resource.name] -= 1
                     except KeyError:
@@ -66,7 +68,7 @@ class StateCache(object):
             if stateChanged:    # at least one resource state changed
                 self.stateEvent.set()
                 stateChanged = False
-            time.sleep(1)
+            time.sleep(1 / pollResolution)
 
     # thread to watch for state change events
     def watchEventsThread(self):
