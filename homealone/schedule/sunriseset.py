@@ -7,15 +7,15 @@ from dateutil import tz
 # is the sun up at the specified time
 def sunIsUp(date, latLong):
     return (date > sunrise(date, latLong)) and (date < sunset(date, latLong))
-    
+
 # return the time of sunrise of the specified date
 def sunrise(date, latLong):
     return sunRiseSet(date, latLong[0], latLong[1], True)
-    
+
 # return the time of sunset of the specified date
 def sunset(date, latLong):
     return sunRiseSet(date, latLong[0], latLong[1], False)
-    
+
 # Source:
 #	Almanac for Computers, 1990
 #	published by Nautical Almanac Office
@@ -30,7 +30,7 @@ def sunset(date, latLong):
 #	  civil        = 96 degrees
 #	  nautical     = 102 degrees
 #	  astronomical = 108 degrees
-#	
+#
 #	NOTE: longitude is positive for East and negative for West
 #        NOTE: the algorithm assumes the use of a calculator with the
 #        trig functions in "degree" (rather than "radian") mode. Most
@@ -110,13 +110,13 @@ def sunRiseSet(date, latitude, longitude, rising):
 
 # 7a. calculate the Sun's local hour angle
     cosH = (cos(zenith) - (sinDec * sin(latitude))) / (cosDec * cos(latitude))
-#	if (cosH >  1) 
+#	if (cosH >  1)
 #	  the sun never rises on this location (on the specified date)
 #	if (cosH < -1)
 #	  the sun never sets on this location (on the specified date)
 
 # 7b. finish calculating H and convert into hours
-    if rising:	
+    if rising:
         H = 360 - acos(cosH)
     else:
         H = acos(cosH)
@@ -132,11 +132,10 @@ def sunRiseSet(date, latitude, longitude, rising):
         UT = UT - 24
     elif UT < 0:
         UT = UT + 24
-        
+
 # 10. convert UT value to local time zone of latitude/longitude
     hour = int(UT)
     minute = int((UT - hour)	 * 60)
     LT = datetime.datetime(date.year, date.month, date.day, hour, minute, tzinfo=tz.tzutc()).astimezone(tz.tzlocal())
     # return a datetime containing the specified date (yyyymmdd) and the computed time (hhmm)
     return datetime.datetime(date.year, date.month, date.day, LT.hour, LT.minute, tzinfo=LT.tzinfo)
-
