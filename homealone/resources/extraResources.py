@@ -47,7 +47,7 @@ class SensorGroup(Sensor):
         if states is None:
             try:
                 states = sensorList[0].states   # inherit states from sensors
-            except AttributeError:
+            except (AttributeError, IndexError):
                 pass        # this is a remote resource, ignore it
         Sensor.__init__(self, name, states=states, **kwargs)
         self.sensorList = sensorList
@@ -87,7 +87,7 @@ class ControlGroup(SensorGroup):
             if self.states is None:
                 try:
                     self.setStates = controlList[0].setStates   # inherit setStates from controls
-                except AttributeError:
+                except (AttributeError, IndexError):
                     pass        # this is a remote resource, ignore it
             else:
                 self.setStates = self.states
