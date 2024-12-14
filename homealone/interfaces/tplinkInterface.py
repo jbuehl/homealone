@@ -87,14 +87,15 @@ class TplinkInterface(Interface):
                 log(self.name, "enabling after", self.errorCount, "retries")
                 self.enable()
                 self.sleepTime = pollInterval
-                self.errorCount = 0
             sysInfo = json.loads(decrypt(data))["system"]["get_sysinfo"]
+            self.errorCount = 0
             return sysInfo
         except Exception as ex:
+            debug("debugTplink", self.name, "read exception", str(ex), self.ipAddr, self.errorCount, "errors")
             self.errorCount += 1
             if self.enabled:
-                log(self.name, "read exception", str(ex), self.ipAddr)
                 if self.errorCount == maxRetries:
+                    log(self.name, "read exception", str(ex), self.ipAddr)
                     log(self.name, "disabling after", maxRetries, "retries")
                     self.disable()
                     self.sleepTime = disabledPollInterval
