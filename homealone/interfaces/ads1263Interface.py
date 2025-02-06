@@ -1,5 +1,5 @@
 
-REF = 5.08          # Modify according to actual voltage
+REF = 5.22          # Modify according to actual voltage
                     # external AVDD and AVSS(Default), or internal 2.5V
 
 import os
@@ -24,7 +24,7 @@ class ADS1263Interface(Interface):
             with self.lock:
                 value = self.adc.ADS1263_GetChannelValue(addr)
                 debug('debugAdc', self.name, "value", value)
-            return float(value * REF / 0x7fffffff)
+            return float(value * REF / 0x7fffffff) # 2147483647
         except Exception as ex:
             log("ADS1263Interface exception", type(ex).__name__, str(ex))
             return 0
