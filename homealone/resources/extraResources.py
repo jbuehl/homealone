@@ -251,6 +251,22 @@ class DependentControl(Control):
             except Exception as ex:
                 log(self.name, "exception evaluating condition", str(ex), condition)
 
+# A Sensor that reports a constant predefined value if the state of the specified resource is on
+class ConstSensor(Sensor):
+    def __init__(self, name, interface, value, sensor, **kwargs):
+        Sensor.__init__(self, name, **kwargs)
+        type = "sensor"
+        self.className = "Sensor"
+        self.value = value
+        self.sensor = sensor
+
+    def getState(self, missing=0.0):
+        debug('debugState', self.name, "getState")
+        if self.sensor.getState():
+            return self.value
+        else:
+            return 0
+
 # Special devices #############################################################
 
 # Devices that involve math ###################################################
