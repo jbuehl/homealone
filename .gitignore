@@ -1,6 +1,7 @@
 *.pyc
 .DS_Store
 dist/
+docs/*.odg
 homealone.egg-info/
 pyproject.toml
 
