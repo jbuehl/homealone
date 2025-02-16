@@ -34,6 +34,8 @@ The Remote interface is implemented by objects derived from the following classe
 * ProxyService - used by RemoteClient to represent the proxy of a remote service
 * RestInterface - a Homealone Interface object used by proxy resources in the client
 
+![remote](remote.png)
+
 #### Service advertising
 A Homealone remote service uses a RemoteService object to send periodic messages to a known port of a multicast address to advertise itself on the local network.   The message contains the service name, and port that carries the corresponding REST interface that is implemented in an HTTP server. If multiple Homealone services are running on the same host they must use different HTTP ports.
 
