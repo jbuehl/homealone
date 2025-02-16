@@ -19,10 +19,14 @@ Homealone applications can expose their resources via a network interface that i
 * Homealone resource - a Homealone object implemented within a Homealone application
 * REST resource - an identifier used in the HTTP path in the REST interface that describes a Homealone resource
 
+While the Homealone object model defines the Interface, Collection, and Sensor classes to be derived from the Resource class, the remote resource interface only deals with Sensor objects and objects derived from Sensor.  So in this context, the term "resource" only refers to Sensors, Controls, and classes that inherit from them, and not Interfaces or Collections.
+
 ### Interface
-The interface consists of two parts:  A UDP message that is periodically broadcast by the server, and an HTTP server that supports a REST interface over TCP.  The UDP message performs the functions of advertising the availability of the server on the network, notifying clients of changes in the configuration or states of the server's Homealone resources, and letting clients know that the server is active.  The REST server allows clients to query details about Homealone resource configuration and states, and to direct a server to change the states of Control resources.
+The Homealone remote interface consists of two parts:  A UDP message that is periodically broadcast to the local area network by a server, and an HTTP server that supports a REST interface over TCP.  The UDP message performs the functions of advertising the availability of the server on the network, notifying clients of changes in the configuration or states of the server's Homealone resources, and letting clients know that the server is active.  The REST server allows clients to query details about Homealone resource configuration and states, and to direct a server to change the states of Control resources.
 
 While a service publishes its resources for discovery on the network, this interface does not define a subscription model for clients.  A service is not aware of the clients that may be following it.  Services use a push model to broadcast states to any client that is listening.  Clients maintain a cache of states for each service they are following, but services are stateless in regards to awareness of clients.  A client can request current state information from a service or direct the service to change the state of one of its devices at any time.  The only time a service is aware of a client is for the duration of the TCP connection for a REST request which is closed at the end of each request.
+
+![topology](topology.png)
 
 ### Implementation
 
@@ -35,6 +39,14 @@ The Remote interface is implemented by objects derived from the following classe
 * RestInterface - a Homealone Interface object used by proxy resources in the client
 
 ![remote](remote.png)
+
+```mermaid
+classDiagram
+    RemoteService
+    RemoteClient
+    Sensor <|-- ProxyService
+	Interface <|-- RestInterface
+```
 
 #### Service advertising
 A Homealone remote service uses a RemoteService object to send periodic messages to a known port of a multicast address to advertise itself on the local network.   The message contains the service name, and port that carries the corresponding REST interface that is implemented in an HTTP server. If multiple Homealone services are running on the same host they must use different HTTP ports.
