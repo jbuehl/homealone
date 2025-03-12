@@ -6,7 +6,7 @@ from homealone import *
 if int(gpio.RPI_INFO['REVISION'], 16) < 0x0010:
     bcmPins = [4, 17, 18, 22, 23, 24, 25, 27] # A/B
 else:
-    bcmPins = [0, 1, 4, 5, 6, 7, 12, 13, 16, 17, 18, 19, 20, 21, 22, 23, 24, 26, 27] # B+,02W
+    bcmPins = [0, 1, 4, 5, 6, 7, 12, 13, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27] # B+,02W
     # bcmPins = [4, 5, 6, 12, 13, 16, 17, 18, 22, 23, 24, 25, 26, 27] # B+
 
 # pin mapping to RPi expander v2.0
