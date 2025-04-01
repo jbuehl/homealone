@@ -30,9 +30,9 @@ While a service publishes its resources for discovery on the network, this inter
 All messages in the remote resource interface are JSON.
 
 #### Protocols
-UDP messages consist of a single JSON string.
+UDP messages consist of a single JSON string that is sent to a broadcast or multicast address.  There is no expected response.
 
-REST messages are HTTP 1.0 requests and responses, where the body component is a JSON string.
+REST messages are HTTP 1.0 requests and responses sent over a TCP connection, where the body component of the message is a JSON string.
 
 ![topology](topology.png)
 
