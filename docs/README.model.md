@@ -31,9 +31,31 @@ These terms describe the roles played by the software components in the system.
 - service - an application that implements the server side of the Remote interface to a client device or server device
 - client - an application that implements the client side of the Remote interface to a server device
 
+### Naming and style conventions
+
+The Homealone code somewhat follows the PEP conventions, but not entirely.  Here is a non-exhaustive list:
+
+- function, argument, variable, and constant names are camel case starting with a lowercase letter
+- class names are camel case starting with an uppercase letter
+- module names are camel case starting with a lowercase letter followed by .py
+- application names are all lowercase followed by .py
+- names are never all uppercase
+- there is no convention for distinguishing global and local names
+- human readable labels are composed of a capitalized word followed by zero or more lowercase words
+- underscores are not used in any names
+- indents are 4 spaces, not tabs
+- line lengths may be up to 120 characters
+- module imports are on separate lines
+- strings are delimited by double quotes
+- block comments and inline comments are used
+- documentation strings are not used
+- argument assignments in function calls do not have spaces around the = sign
+- variable assignments have spaces around the = sign
+- math and conditional operators generally have spaces around them
+- list items are followed immediately by a comma and a space
 
 ### Object model
-Physical devices are represented by members of an model that is defined within an application.  The object model is defined by the following core classes:
+Physical devices are represented by members of a model that is defined within an application.  The object model is defined by the following core classes:
 
 ```mermaid
 classDiagram
