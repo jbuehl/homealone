@@ -26,6 +26,14 @@ The Homealone remote interface consists of two parts:  A UDP message that is per
 
 While a service publishes its resources for discovery on the network, this interface does not define a subscription model for clients.  A service is not aware of the clients that may be following it.  Services use a push model to broadcast states to any client that is listening.  Clients maintain a cache of states for each service they are following, but services are stateless in regards to awareness of clients.  A client can request current state information from a service or direct the service to change the state of one of its devices at any time.  The only time a service is aware of a client is for the duration of the TCP connection for a REST request which is closed at the end of each request.
 
+#### Data format
+All messages in the remote resource interface are JSON.
+
+#### Protocols
+UDP messages consist of a single JSON string.
+
+REST messages are HTTP 1.0 requests and responses, where the body component is a JSON string.
+
 ![topology](topology.png)
 
 ### Implementation
