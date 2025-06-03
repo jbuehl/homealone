@@ -17,4 +17,4 @@ class TC74Interface(Interface):
                 value = float(value) * 9 / 5 + 32
             return value
         except:
-            return 0
+            return None

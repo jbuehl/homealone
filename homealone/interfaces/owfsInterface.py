@@ -18,4 +18,4 @@ class OWFSInterface(Interface):
                     logException(self.name, addr, str(value), ex)
                     return 0
         except:
-            return 0
+            return None
