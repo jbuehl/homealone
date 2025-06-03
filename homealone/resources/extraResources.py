@@ -305,9 +305,10 @@ class MinSensor(Sensor):
         type = "sensor"
         self.className = "Sensor"
         self.sensor = sensor
-        try:
-            self.minState = self.interface.read(self.addr)
-        except:
+        minState = self.interface.read(self.addr)
+        if minState is not None:    # start with previous value
+            self.minState = minState
+        else:                       # initialize
             self.minState = 999
 
     def getState(self, missing=None):
@@ -317,11 +318,12 @@ class MinSensor(Sensor):
             else:
                 self.minState = self.interface.read(self.addr)
         sensorState = self.sensor.getState()
-        if sensorState < self.minState:
-            if sensorState != 0:    # FIXME
-                self.minState = sensorState
-                if self.interface:
-                    self.interface.write(self.addr, self.minState)
+        if sensorState is not None:
+            if sensorState < self.minState:
+                if sensorState != 0:    # FIXME
+                    self.minState = sensorState
+                    if self.interface:
+                        self.interface.write(self.addr, self.minState)
         return self.minState
 
     # reset the min value
@@ -343,9 +345,10 @@ class MaxSensor(Sensor):
         type = "sensor"
         self.className = "Sensor"
         self.sensor = sensor
-        try:
-            self.maxState = self.interface.read(self.addr)
-        except:
+        maxState = self.interface.read(self.addr)
+        if maxState is not None:    # start with previous value
+            self.maxState = maxState
+        else:                       # initialize
             self.maxState = 0
 
     def getState(self, missing=0):
@@ -355,10 +358,11 @@ class MaxSensor(Sensor):
             else:
                 self.maxState = self.interface.read(self.addr)
         sensorState = self.sensor.getState()
-        if sensorState > self.maxState:
-            self.maxState = sensorState
-            if self.interface:
-                self.interface.write(self.addr, self.maxState)
+        if sensorState is not None:
+            if sensorState > self.maxState:
+                self.maxState = sensorState
+                if self.interface:
+                    self.interface.write(self.addr, self.maxState)
         return self.maxState
 
     # reset the max value
@@ -381,15 +385,18 @@ class AccumSensor(Sensor):
         self.className = "Sensor"
         self.sensor = sensor
         self.multiplier = multiplier
-        try:
-            self.accumValue = self.interface.read(self.name)
-        except:
+        accumValue = self.interface.read(self.name)
+        if accumValue is not None:      # start with previous value
+            self.accumValue = accumValue
+        else:                           # initialize
             self.accumValue = 0
 
     def getState(self, missing=0):
-        self.accumValue = self.sensor.getState() * self.multiplier
-        if self.interface:
-            self.interface.write(self.name, self.accumValue)
+        sensorState = self.sensor.getState()
+        if sensorState is not None:
+            self.accumValue = sensorState * self.multiplier
+            if self.interface:
+                self.interface.write(self.name, self.accumValue)
         return self.accumValue
 
     # reset the accumulated value
