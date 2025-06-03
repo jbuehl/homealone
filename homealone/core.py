@@ -156,10 +156,7 @@ class Collection(Resource, OrderedDict):
     def getResList(self, names):
         resList = []
         for name in names:
-            try:
-                resList.append(self.getRes(name))
-            except:
-                pass
+            resList.append(self.getRes(name))
         return resList
 
     # Return a list of resource references that are members of the specified group
