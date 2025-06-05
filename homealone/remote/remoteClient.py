@@ -98,10 +98,7 @@ class RemoteClient(LogThread):
                     if serviceAddr != service.interface.serviceAddr:
                         debug('debugRemoteClientUpdate', self.name, "updating address", service.name, serviceAddr)
                         service.interface.setServiceAddr(serviceAddr) # update the ipAddr:port in case it changed
-                    if serviceFault:
-                        service.setFault()
-                    else:
-                        service.clearFault()
+                    service.setFault(serviceFault)
                     if not service.enabled:     # the service was previously disabled but it is broadcasting again
                         debug('debugRemoteClientDisable', self.name, "reenabling", serviceName, serviceAddr, version, stateTimeStamp, resourceTimeStamp)
                         service.enable()

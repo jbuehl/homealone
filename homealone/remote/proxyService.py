@@ -62,11 +62,8 @@ class ProxyService(Sensor):
             self.disable("set")
         return True
 
-    def setFault(self):
-        self.fault = True
-
-    def clearFault(self):
-        self.fault = False
+    def setFault(self, value):
+        self.fault = value
 
     # string representation of the object for display in a UI
     def __repr__(self):
