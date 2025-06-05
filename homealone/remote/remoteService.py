@@ -104,11 +104,8 @@ class RemoteService(object):
             while True:
                 time.sleep(1)
 
-    def setFault(self):
-        self.fault = True
-
-    def clearFault(self):
-        self.fault = False
+    def setFault(self, value):
+        self.fault = value
 
     # periodically send the advert message as a heartbeat
     def stateTrigger(self):
