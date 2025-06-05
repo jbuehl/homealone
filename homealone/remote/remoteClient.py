@@ -18,7 +18,7 @@ def parseServiceData(data, addr):
             serviceResources = None
         try:
             serviceStates = serviceData["states"]
-        except:
+        except KeyError:
             serviceStates = None
         serviceData = serviceData["service"]
         serviceName = serviceData["name"]
@@ -33,12 +33,16 @@ def parseServiceData(data, addr):
             version = serviceData["version"]
         except KeyError:
             version = 0
+        try:
+            serviceFault = serviceData["fault"]
+        except KeyError:
+            serviceFault = False
         serviceLabel = serviceData["label"]
         serviceSeq = serviceData["seq"]
-        return (serviceName, serviceAddr, serviceLabel, version, serviceSeq, stateTimeStamp, resourceTimeStamp, serviceStates, serviceResources)
+        return (serviceName, serviceAddr, serviceLabel, version, serviceSeq, stateTimeStamp, resourceTimeStamp, serviceFault, serviceStates, serviceResources)
     except Exception as ex:
         logException("parseServiceData", ex)
-        return ("", "", "", 0, 0, 0, 0, {}, [])
+        return ("", "", "", 0, 0, 0, 0, False, {}, [])
 
 class RemoteClient(LogThread):
     def __init__(self, name, resources, watch=[], ignore=[], event=None, cache=True, resourceChanged=None):
@@ -67,7 +71,7 @@ class RemoteClient(LogThread):
                 continue
             debug('debugRemoteMessage', self.name, "notification data", data)
             # parse the message
-            (serviceName, serviceAddr, serviceLabel, version, serviceSeq, stateTimeStamp, resourceTimeStamp, serviceStates, serviceResources) = \
+            (serviceName, serviceAddr, serviceLabel, version, serviceSeq, stateTimeStamp, resourceTimeStamp, serviceFault, serviceStates, serviceResources) = \
                 parseServiceData(data, addr)
             if serviceName == "":   # message couldn't be parsed
                 continue
@@ -94,6 +98,10 @@ class RemoteClient(LogThread):
                     if serviceAddr != service.interface.serviceAddr:
                         debug('debugRemoteClientUpdate', self.name, "updating address", service.name, serviceAddr)
                         service.interface.setServiceAddr(serviceAddr) # update the ipAddr:port in case it changed
+                    if serviceFault:
+                        service.setFault()
+                    else:
+                        service.clearFault()
                     if not service.enabled:     # the service was previously disabled but it is broadcasting again
                         debug('debugRemoteClientDisable', self.name, "reenabling", serviceName, serviceAddr, version, stateTimeStamp, resourceTimeStamp)
                         service.enable()

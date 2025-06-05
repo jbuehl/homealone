@@ -74,6 +74,7 @@ class RemoteService(object):
         self.stateTimeStamp = 0
         self.resourceTimeStamp = 0
         self.restServer = None
+        self.fault = False
 
     def start(self, block=True):
         # start the HTTP server
@@ -103,6 +104,12 @@ class RemoteService(object):
             while True:
                 time.sleep(1)
 
+    def setFault(self):
+        self.fault = True
+
+    def clearFault(self):
+        self.fault = False
+
     # periodically send the advert message as a heartbeat
     def stateTrigger(self):
         debug('debugRemoteService', self.name, "Remote state trigger started", remoteAdvertInterval)
@@ -129,6 +136,9 @@ class RemoteService(object):
                 # a state changed
                 states = currentStates
                 self.stateTimeStamp = int(time.time())
+                # fault if there is an invalid state
+                if self.states.noneState:
+                    self.fault = True
             if sorted(list(currentStates.keys())) != sorted(list(lastStates.keys())):
                 # a resource was either added or removed
                 resources = self.resources.dump()   # don't send expanded resources
@@ -149,7 +159,8 @@ class RemoteService(object):
                "label": self.label,
                "statetimestamp": self.stateTimeStamp,
                "resourcetimestamp": self.resourceTimeStamp,
-               "seq": self.advertSequence}
+               "seq": self.advertSequence,
+               "fault": self.fault}
 
     def sendAdvertMessage(self, resources=None, states=None):
         stateMsg = {"service": self.getServiceData()}

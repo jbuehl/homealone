@@ -26,11 +26,13 @@ def loadResource(classDict, globalDict):
     exec("resource = "+parseClass(classDict), globalDict, localDict)
     return localDict["resource"]
 
+serviceFault = 2    # fault state
+
 # proxy for a remote service
 class ProxyService(Sensor):
     def __init__(self, name, interface, addr=None, version=0, stateTimeStamp=-1, resourceTimeStamp=-1, remoteClient=None, type="service", **kwargs):
         Sensor.__init__(self, name, interface, addr=addr, type=type,
-                        states={0:"Down", 1:"Up"}, **kwargs)
+                        states={0:"Down", 1:"Up", 2:"Fault"}, **kwargs)
         debug('debugProxyService', "ProxyService", name, "created")
         self.version = version
         self.stateTimeStamp = stateTimeStamp      # the last time the states were updated
@@ -38,6 +40,7 @@ class ProxyService(Sensor):
         self.resources = Collection(self.name+"/Resources")           # resources on this service
         self.remoteClient = remoteClient              # RemoteClient that is following this service
         self.enabled = False
+        self.fault = False
         self.messageTimer = None
         self.updating = False
         self.lastSeq = 0                # the last message sequence number received
@@ -47,7 +50,10 @@ class ProxyService(Sensor):
         self.missedSeqPctSensor = AttributeSensor(self.name+"-missedSeqPct", None, None, self, "missedSeqPct")
 
     def getState(self, missing=None):
-        return normalState(self.enabled)
+        if self.fault:
+            return serviceFault
+        else:
+            return normalState(self.enabled)
 
     def setState(self, state, wait=False):
         if state:
@@ -55,6 +61,12 @@ class ProxyService(Sensor):
         else:
             self.disable("set")
         return True
+
+    def setFault(self):
+        self.fault = True
+
+    def clearFault(self):
+        self.fault = False
 
     # string representation of the object for display in a UI
     def __repr__(self):
