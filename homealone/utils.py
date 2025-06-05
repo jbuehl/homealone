@@ -21,6 +21,7 @@ class StateCache(object):
         self.resources = resources
         self.resourceEvent = event          # externalresource state change event
         self.stateEvent = threading.Event() # state change event
+        self.noneState = False              # at least one state is invalid
         self.states = {}                    # cache of current sensor states
         if start:
             self.start()
@@ -58,6 +59,8 @@ class StateCache(object):
                                 if resourceState != self.states[resource.name]:         # save the state if it has changed
                                     self.states[resource.name] = resourceState
                                     stateChanged = True
+                                if resourceState is None:
+                                    self.noneState = True
                                 resourcePollCounts[resource.name] = resource.poll * pollResolution
                             else:   # decrement the count
                                 resourcePollCounts[resource.name] -= 1
@@ -87,6 +90,8 @@ class StateCache(object):
                             if resourceState != self.states[resource.name]:     # save the state if it has changed
                                 self.states[resource.name] = resourceState
                                 stateChanged = True
+                            if resourceState is None:
+                                self.noneState = True
                     except KeyError:                                            # resource hasn't been seen before, save the state
                         self.states[resource.name] = resourceState
                     except Exception as ex:
@@ -98,6 +103,7 @@ class StateCache(object):
     # wait for a change and return the current state of all sensors in the resource collection
     def getStates(self, wait=True):
         if wait:
+            self.noneState = False
             self.stateEvent.clear()
             self.stateEvent.wait()
         return copy.copy(self.states)
