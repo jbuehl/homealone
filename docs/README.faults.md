@@ -4,7 +4,7 @@
 
 Homealone provides the infrastructure to support a dashboard that shows the state of Homealone Services and to send notifications if the state changes.  The Remote Resource interface currently allows a Client to discover the existence of all Homealone Services in the system, and is aware when a Service that was previously advertising itself has stopped doing so.  This results in a change in the state of the Service that is presented on a dashboard UI, and it may also trigger a notification.
 
-There are occasionally situations where an Application is running and broadcasting messages to the system, but something has occurred internally that causes it to stop performing some critical function.  This may be caused by a hardware issue or a bug in the code.  There is usually information in the system log that shows what has happened, but there isn't a mechanism to alert someone that there is a problem.
+There are occasionally situations where a Service is running and broadcasting messages to the system, but something has occurred internally that causes it to stop performing some critical function.  This may be caused by a hardware issue or a bug in the code.  There is usually information in the system log that shows what has happened, but there isn't a mechanism to alert someone that there is a problem.
 
 ## Requirements
 
@@ -20,6 +20,8 @@ Conditions within a service that cause the "Fault" state:
 - unexpected thread termination
 - external server not reachable
 - other (TBD)
+
+When a Service goes into the "Fault" state, the state may be displayed on a user interface and a notification may be triggered.
 
 ## Implementation
 
