@@ -85,7 +85,7 @@ class Interface(Resource):
         self.states = {}        # sensor state cache
         self.lock = threading.Lock()
 
-    def start(self):
+    def start(self, notify=None):
         return True
 
     def stop(self):
