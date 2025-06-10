@@ -82,8 +82,7 @@ class ThermostatControl(Control):
 
         self.inhibited = False
         if self.inhibitSensor:                      # start the thread to watch the state of the inhibit sensor
-            inhibitWatchThread = LogThread(name="inhibitWatchThread", target=inhibitWatch)
-            inhibitWatchThread.start()
+            inhibitWatchThread = startThread(name="inhibitWatchThread", target=inhibitWatch)
 
     def setInhibit(self, value):
         debug('debugThermostat', self.name, "inhibit", value)

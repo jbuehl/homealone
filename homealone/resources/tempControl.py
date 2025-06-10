@@ -73,8 +73,7 @@ class TempControl(Control):
             debug('debugTempControl', self.name, "tempWatch terminated")
         self.controlState = state
         if self.controlState == enabled:      # start the monitor thread when state set to enabled
-            tempWatchThread = LogThread(name="tempWatchThread", target=tempWatch)
-            tempWatchThread.start()
+            tempWatchThread = startThread(name="tempWatchThread", target=tempWatch)
         self.notify()
 
     def setTarget(self, tempTarget, hysteresis=[1, 1], wait=False):

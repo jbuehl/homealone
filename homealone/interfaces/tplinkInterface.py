@@ -71,8 +71,7 @@ class TplinkInterface(Interface):
                     logException(self.name, ex)
                 time.sleep(self.sleepTime)
             debug("debugTplink", self.name, "getInfo terminated")
-        stateThread = LogThread(name=self.name+" getInfo", target=getInfo)
-        stateThread.start()
+        stateThread = startThread(name=self.name+" getInfo", target=getInfo)
 
     def readSysInfo(self):
         debug("debugTplink", self.name, "readSysInfo", self.ipAddr)
