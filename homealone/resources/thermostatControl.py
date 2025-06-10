@@ -40,7 +40,7 @@ class ThermostatControl(Control):
         self.hysteresis = hysteresis
         self.states = {0:"Off", 1:"Heat", 2:"Cool", 3:"Fan", 4:"Auto"}
 
-    def start(self):
+    def start(self, notify=None):
         if self.persistenceControl:
             self.currentState = self.persistenceControl.getState()
             if self.currentState == None:

@@ -16,7 +16,7 @@ class DataLogger(object):
         if start:
             self.start()
 
-    def start(self):
+    def start(self, notify=None):
         # create the log directory if it doesn't exist
         os.makedirs(self.logDir, exist_ok=True)
         # locate the archive server

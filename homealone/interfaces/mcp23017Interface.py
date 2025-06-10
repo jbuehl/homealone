@@ -63,7 +63,7 @@ class MCP23017Interface(Interface):
             self.interface = None
             self.bank = 0
 
-    def start(self):
+    def start(self, notify=None):
         debug('debugGPIO', self.name, "using GPIO library", gpioLibrary)
         gpio.setwarnings(False)
         if self.interface:

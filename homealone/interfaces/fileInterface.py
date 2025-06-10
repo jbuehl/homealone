@@ -24,7 +24,7 @@ class FileInterface(Interface):
         if start:                           # immediately start the interface
             self.start()
 
-    def start(self):
+    def start(self, notify=None):
         try:
             # if the file exists, cache the data
             debug('debugFile', self.name, "reading", self.fileName)

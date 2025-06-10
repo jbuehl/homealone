@@ -181,7 +181,7 @@ class Schedule(Collection):
     def __init__(self, name, tasks=[]):
         Collection.__init__(self, name, resources=tasks)
 
-    def start(self):
+    def start(self, notify=None):
         self.initControls()
         startThread("scheduleThread", self.scheduleThread)
 

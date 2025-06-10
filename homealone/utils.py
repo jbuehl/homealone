@@ -26,7 +26,7 @@ class StateCache(object):
         if start:
             self.start()
 
-    def start(self):
+    def start(self, notify=None):
         # initialize the resource state cache
         debug("debugStateCache", self.name, "starting")
         for resource in list(self.resources.values()):

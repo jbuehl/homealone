@@ -8,7 +8,7 @@ class SerialInterface(Interface):
         self.device = device
         self.config = config
 
-    def start(self):
+    def start(self, notify=None):
         if self.device == "/dev/stdin":
             log(self.name, "using stdin", self.device)
             self.inPort = sys.stdin

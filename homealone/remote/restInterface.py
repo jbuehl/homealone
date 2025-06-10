@@ -24,7 +24,7 @@ class RestInterface(Interface):
         self.setServiceAddr(serviceAddr)
         debug('debugRest', self.name, "created", self.serviceAddr)
 
-    def start(self):
+    def start(self, notify=None):
         debug('debugRest', self.name, "starting")
         self.enabled = True
 
