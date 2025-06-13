@@ -67,7 +67,7 @@ class Application(object):
         if state:
             os.makedirs(stateDir, exist_ok=True)
             self.stateInterface = FileInterface("stateInterface", fileName=stateDir+self.name+".state", shared=shared, changeMonitor=changeMonitor)
-            self.stateInterface.start()
+            self.stateInterface.start(notify=self.fault)
             self.globals["stateInterface"] = self.stateInterface
         else:
             self.stateInterface = None                  # Interface resource for state file
@@ -77,16 +77,16 @@ class Application(object):
         # wait for the network to be available
         waitForNetwork(localController)
         if self.remoteClient:                   # remote resource proxy
-            self.remoteClient.start()
+            self.remoteClient.start(notify=self.fault)
             if self.separateRemote:
-                self.remoteStates.start()       # remote resource state polling and monitoring
-        self.states.start()                     # resource state polling and monitoring
+                self.remoteStates.start(notify=self.fault)       # remote resource state polling and monitoring
+        self.states.start(notify=self.fault)                     # resource state polling and monitoring
         if self.logger:                         # data logger
-            self.logger.start()
+            self.logger.start(notify=self.fault)
         for resource in self.startList:         # other resources
-            resource.start()
+            resource.start(notify=self.fault)
         if list(self.schedule.keys()) != []:    # task scheduler
-            self.schedule.start()
+            self.schedule.start(notify=self.fault)
         if self.remoteService:                  # resource publication
             self.remoteService.start(block=block)
         else:
@@ -150,3 +150,9 @@ class Application(object):
                     resource.label = label
                 else:               # create a label from the name
                     resource.label = labelize(resource.name)
+
+    # callback for faults
+    def fault(self, module, ex):
+        log(self.name, module, str(ex))
+        if self.remoteService:
+            self.remoteService.setFault(True)
