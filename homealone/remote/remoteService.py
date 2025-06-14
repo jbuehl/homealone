@@ -135,6 +135,7 @@ class RemoteService(object):
                 self.stateTimeStamp = int(time.time())
                 # fault if there is an invalid state
                 if self.states.noneState:
+                    debug('debugRemoteService', self.name, "Missing state")
                     self.fault = True
             if sorted(list(currentStates.keys())) != sorted(list(lastStates.keys())):
                 # a resource was either added or removed

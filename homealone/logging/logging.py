@@ -26,7 +26,7 @@ class DataLogger(object):
             log("no archive server found")
         else:
             self.archiveServer = archiveServers[0][0]
-        startThread("loggingThread", self.loggingThread)
+        startThread("loggingThread", self.loggingThread, notify=notify)
 
     def loggingThread(self):
         debug("debugLogging", "logging thread started")

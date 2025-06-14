@@ -90,7 +90,7 @@ class MCP23017Interface(Interface):
             elif gpioLibrary == "RPi.GPIO":
                 gpio.setup(self.interruptPin, gpio.IN, pull_up_down=gpio.PUD_UP)
                 gpio.add_event_detect(self.interruptPin, gpio.FALLING, callback=interruptCallback)
-            startThread(self.name, self.interrupt)
+            startThread(self.name, self.interrupt, notify=notify)
         else:   # direct only supports output - FIXME
             gpio.setmode(gpio.BOARD)
             for pin in MCP23017Interface.gpioPins:

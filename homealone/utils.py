@@ -35,8 +35,8 @@ class StateCache(object):
                     self.states[resource.name] = resource.getState()    # load the initial state
                 except Exception as ex:
                     logException(self.name+" start", ex)
-        startThread("pollStatesThread", self.pollStatesThread)
-        startThread("watchEventsThread", self.watchEventsThread)
+        startThread("pollStatesThread", self.pollStatesThread, notify=notify)
+        startThread("watchEventsThread", self.watchEventsThread, notify=notify)
 
     # thread to periodically poll the state of the resources in the collection
     def pollStatesThread(self):

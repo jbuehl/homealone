@@ -183,7 +183,7 @@ class Schedule(Collection):
 
     def start(self, notify=None):
         self.initControls()
-        startThread("scheduleThread", self.scheduleThread)
+        startThread("scheduleThread", self.scheduleThread, notify=notify)
 
     # initialize control states in certain cases
     def initControls(self):

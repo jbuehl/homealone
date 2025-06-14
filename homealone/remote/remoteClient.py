@@ -47,7 +47,7 @@ def parseServiceData(data, addr):
 class RemoteClient(LogThread):
     def __init__(self, name, resources, watch=[], ignore=[], event=None, cache=True, resourceChanged=None):
         debug('debugRemoteClient', name, "starting", name)
-        LogThread.__init__(self, target=self.restProxyThread)
+        LogThread.__init__(self, name=name, target=self.restProxyThread)
         self.name = name
         self.services = {}                      # proxied services
         self.resources = resources              # local resources

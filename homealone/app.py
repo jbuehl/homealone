@@ -77,7 +77,7 @@ class Application(object):
         # wait for the network to be available
         waitForNetwork(localController)
         if self.remoteClient:                   # remote resource proxy
-            self.remoteClient.start(notify=self.fault)
+            self.remoteClient.start()
             if self.separateRemote:
                 self.remoteStates.start(notify=self.fault)       # remote resource state polling and monitoring
         self.states.start(notify=self.fault)                     # resource state polling and monitoring

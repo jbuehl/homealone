@@ -52,7 +52,7 @@ class FileInterface(Interface):
                         for sensor in list(self.sensors.keys()): # notify all sensors
                             if sensor in self.data:
                                 self.sensors[sensor].notify(self.data[sensor])
-            readStatesThread = startThread(name="readStatesThread", target=readData)
+            readStatesThread = startThread(name="readStatesThread", target=readData, notify=notify)
 
     def read(self, addr):
         if not self.changeMonitor:   # read the file every time

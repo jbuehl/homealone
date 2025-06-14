@@ -36,13 +36,17 @@ def decrypt(msg):
     return result.decode("utf-8")
 
 class TplinkInterface(Interface):
-    def __init__(self, name, ipAddr, model=None, interface=None, event=None):
+    def __init__(self, name, ipAddr, model=None, interface=None, event=None, start=False):
         Interface.__init__(self, name, interface, event=event)
         self.ipAddr = ipAddr            # IP address of TPLink device
         self.model = model              # TPLink model number
         self.sysInfo = {}               # TPLink device information
         self.sleepTime = pollInterval   # how often to poll for state data
         self.errorCount = 0             # number of consecutive read errors
+        if start:
+            self.start()
+
+    def start(self, notify=None):
         # poll the device every second to generate state change notifications
         # cached state is the dictionary that is returned
         def getInfo():
@@ -71,7 +75,7 @@ class TplinkInterface(Interface):
                     logException(self.name, ex)
                 time.sleep(self.sleepTime)
             debug("debugTplink", self.name, "getInfo terminated")
-        stateThread = startThread(name=self.name+" getInfo", target=getInfo)
+        stateThread = startThread(name=self.name+" getInfo", target=getInfo, notify=notify)
 
     def readSysInfo(self):
         debug("debugTplink", self.name, "readSysInfo", self.ipAddr)
