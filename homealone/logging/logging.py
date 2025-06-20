@@ -26,7 +26,8 @@ class DataLogger(object):
             log("no archive server found")
         else:
             self.archiveServer = archiveServers[0][0]
-        startThread("loggingThread", self.loggingThread, notify=notify)
+        self.notify = notify
+        startThread("loggingThread", self.loggingThread, notify=self.notify)
 
     def loggingThread(self):
         debug("debugLogging", "logging thread started")
@@ -65,6 +66,8 @@ class DataLogger(object):
                             debug("debugMetrics", "skipping", resourceName, state)
                 except socket.error as exception:
                     log("sendMetrics", "socket error", str(exception))
+                    if self.notify:
+                        self.notify(self.name, exception)
                 if metricsSocket:
                     debug("debugMetrics", "closing socket to", metricsHost)
                     metricsSocket.close()
