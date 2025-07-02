@@ -61,6 +61,7 @@ class StateCache(object):
                                     stateChanged = True
                                 if resourceState is None:
                                     self.noneState = True
+                                    debug("debugStateCache", self.name, "missing state", resource.name)
                                 resourcePollCounts[resource.name] = resource.poll * pollResolution
                             else:   # decrement the count
                                 resourcePollCounts[resource.name] -= 1
@@ -92,6 +93,7 @@ class StateCache(object):
                                 stateChanged = True
                             if resourceState is None:
                                 self.noneState = True
+                                debug("debugStateCache", self.name, "missing state", resource.name)
                     except KeyError:                                            # resource hasn't been seen before, save the state
                         self.states[resource.name] = resourceState
                     except Exception as ex:
