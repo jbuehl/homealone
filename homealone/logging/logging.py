@@ -76,13 +76,13 @@ class DataLogger(object):
             if archiveData:
                 if self.archiveServer:
                     if today != lastDay:
-                        startThread("archiveDataThread", self.archiveDataThread)
+                        startThread("archiveDataThread", self.archiveDataThread, notify=self.notify)
 
             # purge logs that have been archived
             if purgeData:
                 if self.archiveServer:
                     if today != lastDay:
-                        startThread("purgeDataThread", self.purgeDataThread)
+                        startThread("purgeDataThread", self.purgeDataThread, notify=self.notify)
 
             lastDay = today
         debug("debugLogging", "logging thread ended")
@@ -92,8 +92,10 @@ class DataLogger(object):
         try:
             debug("debugArchiveData", "archiving "+self.logDir+" to", self.archiveServer+":"+archiveDir+self.appName+"/")
             pid = subprocess.Popen("rsync -a "+self.logDir+"* "+self.archiveServer+":"+archiveDir+self.appName+"/", shell=True)
-        except Exception as ex:
-            log("metrics", "exception archiving metrics", str(ex))
+        except Exception as exception:
+            log("metrics", "exception archiving metrics", str(exception))
+            if self.notify:
+                self.notify(self.name, exception)
 
     def purgeDataThread(self):
         # get list of log files that are eligible to be purged
@@ -113,8 +115,10 @@ class DataLogger(object):
                         os.remove(self.logDir+logFile)
                     else:
                         log("not deleting", self.logDir+logFile, "fileSize:", fileSize, "archiveSize:", archiveSize)
-                except Exception as ex:
-                    log("exception purging log file", logFile, str(ex))
+                except Exception as exception:
+                    log("exception purging log file", logFile, str(exception))
+                    if self.notify:
+                        self.notify(self.name, exception)
 
 # separate some parts of a camel case name by dots for easier parsing by the metrics server
 def formatName(name, prefixes=[], suffixes=[]):
