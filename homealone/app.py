@@ -10,7 +10,7 @@ from homealone.interfaces.osInterface import *
 
 class Application(object):
     def __init__(self, name, globals,
-                 publish=True, advert=True,                                 # resource publishing parameters
+                 publish=True, advert=True, faults=True,                    # resource publishing parameters
                  remote=False, watch=[], ignore=[], separateRemote=True,    # remote resource proxy parameters
                     resourceChanged=None,
                  logger=True,                                               # data logger
@@ -20,6 +20,7 @@ class Application(object):
         self.globals = globals                                              # application global variables
         self.event = threading.Event()                                      # state change event
         self.resources = Collection("resources")                            # application resources
+        self.faults = faults                                                # advertise fault conditions
         self.separateRemote = separateRemote
         self.globals["resources"] = self.resources
         self.states = StateCache("states", self.resources, self.event)      # resource state cache
@@ -155,4 +156,5 @@ class Application(object):
     def fault(self, module, ex):
         log(self.name, module, str(ex))
         if self.remoteService:
-            self.remoteService.setFault(True)
+            if self.faults:
+                self.remoteService.setFault(True)
