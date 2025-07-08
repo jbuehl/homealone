@@ -40,7 +40,7 @@ class ProxyService(Sensor):
         self.resources = Collection(self.name+"/Resources")           # resources on this service
         self.remoteClient = remoteClient              # RemoteClient that is following this service
         self.enabled = False
-        self.fault = False
+        self.faults = {}
         self.messageTimer = None
         self.updating = False
         self.lastSeq = 0                # the last message sequence number received
@@ -50,7 +50,7 @@ class ProxyService(Sensor):
         self.missedSeqPctSensor = AttributeSensor(self.name+"-missedSeqPct", None, None, self, "missedSeqPct")
 
     def getState(self, missing=None):
-        if self.fault:
+        if self.faults != {}:
             return serviceFault
         else:
             return normalState(self.enabled)
@@ -62,16 +62,20 @@ class ProxyService(Sensor):
             self.disable("set")
         return True
 
-    def setFault(self, value):
-        self.fault = value
+    def setFaults(self, faults):
+        self.faults = faults
 
     # string representation of the object for display in a UI
     def __repr__(self):
+        faults = ""
+        for fault in self.faults:
+            faults += "fault: "+fault+": "+self.faults[fault]+"\n"
         return "server: "+self.interface.serviceAddr+"\n"+ \
                "version: "+str(self.version)+"\n"+ \
                "resource time: "+str(self.resourceTimeStamp)+"\n"+ \
                "state time: "+str(self.stateTimeStamp)+"\n"+ \
                "missed seq: "+str(self.missedSeq)+"\n"+ \
+               faults+ \
                "---------------"
 
     def enable(self):

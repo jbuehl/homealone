@@ -153,8 +153,8 @@ class Application(object):
                     resource.label = labelize(resource.name)
 
     # callback for faults
-    def fault(self, module, ex):
-        log(self.name, module, str(ex))
+    def fault(self, id, ex):
+        log(self.name, id, str(ex))
         if self.remoteService:
             if self.faults:
-                self.remoteService.setFault(True)
+                self.remoteService.setFault(id, str(ex))

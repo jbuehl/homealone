@@ -21,7 +21,7 @@ class StateCache(object):
         self.resources = resources
         self.resourceEvent = event          # externalresource state change event
         self.stateEvent = threading.Event() # state change event
-        self.noneState = False              # at least one state is invalid
+        self.missingStates = []             # sensors with missing states
         self.states = {}                    # cache of current sensor states
         if start:
             self.start()
@@ -60,7 +60,7 @@ class StateCache(object):
                                     self.states[resource.name] = resourceState
                                     stateChanged = True
                                 if resourceState is None:
-                                    self.noneState = True
+                                    self.missingStates.append(resource.name)
                                     debug("debugStateCache", self.name, "missing state", resource.name)
                                 resourcePollCounts[resource.name] = resource.poll * pollResolution
                             else:   # decrement the count
@@ -92,7 +92,7 @@ class StateCache(object):
                                 self.states[resource.name] = resourceState
                                 stateChanged = True
                             if resourceState is None:
-                                self.noneState = True
+                                self.missingStates.append(resource.name)
                                 debug("debugStateCache", self.name, "missing state", resource.name)
                     except KeyError:                                            # resource hasn't been seen before, save the state
                         self.states[resource.name] = resourceState
@@ -105,7 +105,7 @@ class StateCache(object):
     # wait for a change and return the current state of all sensors in the resource collection
     def getStates(self, wait=True):
         if wait:
-            self.noneState = False
+            self.missingStates = []
             self.stateEvent.clear()
             self.stateEvent.wait()
         return copy.copy(self.states)
