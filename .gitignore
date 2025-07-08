@@ -2,6 +2,7 @@
 .DS_Store
 dist/
 docs/*.odg
+docs/*.ods
 homealone.egg-info/
 pyproject.toml
 
