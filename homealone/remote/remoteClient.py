@@ -34,10 +34,6 @@ def parseServiceData(data, addr):
         except KeyError:
             version = 0
         try:
-            serviceFault = serviceData["fault"]
-        except KeyError:
-            serviceFault = False
-        try:
             serviceFaults = serviceData["faults"]
         except KeyError:
             serviceFaults = {}
