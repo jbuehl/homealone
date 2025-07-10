@@ -152,9 +152,12 @@ class Application(object):
                 else:               # create a label from the name
                     resource.label = labelize(resource.name)
 
-    # callback for faults
-    def fault(self, id, ex):
-        log(self.name, id, str(ex))
+    # callback to send notifications for faults
+    def fault(self, id, exception=None):
         if self.remoteService:
             if self.faults:
-                self.remoteService.setFault(id, str(ex))
+                if exception:   # add the fault to the list
+                    log(self.name, id, str(exception))
+                    self.remoteService.setFault(id, str(exception))
+                else:           # clear the fault
+                    self.remoteService.clearFault(id)
