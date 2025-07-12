@@ -17,21 +17,23 @@ class DataLogger(object):
             self.start()
 
     def start(self, notify=None):
+        self.notify = notify
         # create the log directory if it doesn't exist
         os.makedirs(self.logDir, exist_ok=True)
         # locate the archive server
         archiveServers = findService(archiveService)
         if archiveServers == []:
             self.archiveServer = None
-            log("no archive server found")
+            if self.notify:
+                self.notify(self.name, "no archive server found")
         else:
             self.archiveServer = archiveServers[0][0]
-        self.notify = notify
         startThread("loggingThread", self.loggingThread, notify=self.notify)
 
     def loggingThread(self):
         debug("debugLogging", "logging thread started")
         lastDay = ""
+        fault = False   # a fault has occurred
         while True:
             # wait for a new set of states
             states = self.states.getStates(wait=True)
@@ -65,12 +67,17 @@ class DataLogger(object):
                         else:
                             debug("debugMetrics", "skipping", resourceName, state)
                 except socket.error as exception:
-                    log("sendMetrics", "socket error", str(exception))
                     if self.notify:
-                        self.notify(self.name, exception)
+                        if not fault:   # don't notify more than one consecutive faults
+                            self.notify(self.name, "metrics socket error "+str(exception))
+                            fault = True
                 if metricsSocket:
                     debug("debugMetrics", "closing socket to", metricsHost)
                     metricsSocket.close()
+                    if self.notify:
+                        if fault:   # there was a fault, but it's OK now
+                            notify(self.name)  # reset the fault
+                            fault = False
 
             # copy to the archive server once per day
             if archiveData:
@@ -93,9 +100,8 @@ class DataLogger(object):
             debug("debugArchiveData", "archiving "+self.logDir+" to", self.archiveServer+":"+archiveDir+self.appName+"/")
             pid = subprocess.Popen("rsync -a "+self.logDir+"* "+self.archiveServer+":"+archiveDir+self.appName+"/", shell=True)
         except Exception as exception:
-            log("metrics", "exception archiving metrics", str(exception))
             if self.notify:
-                self.notify(self.name, exception)
+                self.notify(self.name, "exception archiving metrics "+str(exception))
 
     def purgeDataThread(self):
         # get list of log files that are eligible to be purged
@@ -116,9 +122,8 @@ class DataLogger(object):
                     else:
                         log("not deleting", self.logDir+logFile, "fileSize:", fileSize, "archiveSize:", archiveSize)
                 except Exception as exception:
-                    log("exception purging log file", logFile, str(exception))
                     if self.notify:
-                        self.notify(self.name, exception)
+                        self.notify(self.name, "exception purging log file "+logFile+" "+str(exception))
 
 # separate some parts of a camel case name by dots for easier parsing by the metrics server
 def formatName(name, prefixes=[], suffixes=[]):
