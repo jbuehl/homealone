@@ -76,7 +76,7 @@ class DataLogger(object):
                     metricsSocket.close()
                     if self.notify:
                         if fault:   # there was a fault, but it's OK now
-                            notify(self.name)  # reset the fault
+                            self.notify(self.name)  # reset the fault
                             fault = False
 
             # copy to the archive server once per day
