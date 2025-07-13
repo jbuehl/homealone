@@ -108,7 +108,8 @@ class RemoteService(object):
         self.faults[id] = fault
 
     def clearFault(self, id):
-        del(self.faults[id])
+        if id in self.faults:
+            del(self.faults[id])
 
     # periodically send the advert message as a heartbeat
     def stateTrigger(self):
