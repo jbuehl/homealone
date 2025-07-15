@@ -64,6 +64,10 @@ class DataLogger(object):
                             msg = metricsPrefix+"."+metricName+" "+str(state)+" "+str(int(time.time()))
                             debug("debugMetricsMsg", "msg:", msg)
                             metricsSocket.send(bytes(msg+"\n", "utf-8"))
+                            if self.notify:
+                                if fault:   # there was a fault, but it's OK now
+                                    self.notify(self.name)  # reset the fault
+                                    fault = False
                         else:
                             debug("debugMetrics", "skipping", resourceName, state)
                 except socket.error as exception:
@@ -74,10 +78,6 @@ class DataLogger(object):
                 if metricsSocket:
                     debug("debugMetrics", "closing socket to", metricsHost)
                     metricsSocket.close()
-                    if self.notify:
-                        if fault:   # there was a fault, but it's OK now
-                            self.notify(self.name)  # reset the fault
-                            fault = False
 
             # copy to the archive server once per day
             if archiveData:
