@@ -1,6 +1,7 @@
 # Utility functions
 
 pollResolution = 10 # how many times per second to possibly check for resource state changes
+missingStateDelay = 30  # how many seconds to wait before reporting missing states
 
 import syslog
 import os
@@ -35,6 +36,7 @@ class StateCache(object):
                     self.states[resource.name] = resource.getState()    # load the initial state
                 except Exception as ex:
                     logException(self.name+" start", ex)
+        self.startTime = time.time()
         startThread("pollStatesThread", self.pollStatesThread, notify=notify)
         startThread("watchEventsThread", self.watchEventsThread, notify=notify)
 
@@ -59,9 +61,11 @@ class StateCache(object):
                                 if resourceState != self.states[resource.name]:         # save the state if it has changed
                                     self.states[resource.name] = resourceState
                                     stateChanged = True
-                                if resourceState is None:
-                                    self.missingStates.append(resource.name)
-                                    debug("debugStateCache", self.name, "missing state", resource.name)
+                                if resourceState is None:                               # state is missing
+                                    currentTime = time.time()
+                                    if currentTime > self.startTime + missingStateDelay:     # wait before reporting it
+                                        self.missingStates.append(resource.name)
+                                        debug("debugStateCache", self.name, "missing state", resource.name)
                                 resourcePollCounts[resource.name] = resource.poll * pollResolution
                             else:   # decrement the count
                                 resourcePollCounts[resource.name] -= 1
@@ -92,8 +96,10 @@ class StateCache(object):
                                 self.states[resource.name] = resourceState
                                 stateChanged = True
                             if resourceState is None:
-                                self.missingStates.append(resource.name)
-                                debug("debugStateCache", self.name, "missing state", resource.name)
+                                currentTime = time.time()
+                                if currentTime > self.startTime + missingStateDelay:     # wait before reporting it
+                                    self.missingStates.append(resource.name)
+                                    debug("debugStateCache", self.name, "missing state", resource.name)
                     except KeyError:                                            # resource hasn't been seen before, save the state
                         self.states[resource.name] = resourceState
                     except Exception as ex:
