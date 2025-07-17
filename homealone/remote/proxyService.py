@@ -15,6 +15,14 @@ def loadResource(classDict, globalDict):
                     argStr += parseClass(args[arg])+", "
                 else:                           # arg is just a dict
                     argStr += str(args[arg])+", "
+            elif isinstance(args[arg], list):    # arg is a list
+                if len(args[arg]) > 0 and isinstance(args[arg][0], dict):    # arg is a list of classes
+                    argStr += "["
+                    for subArg in args[arg]:
+                        argStr += parseClass(subArg)+", "
+                    argStr += "], "
+                else:                           # arg is a list of other objects
+                    argStr += str(args[arg])+", "
             elif isinstance(args[arg], str):    # arg is a string
                 argStr += "'"+args[arg]+"', "
             elif not arg:                       # arg is None
@@ -23,7 +31,8 @@ def loadResource(classDict, globalDict):
                 argStr += str(args[arg])+", "
         return classDict["class"]+"("+argStr[:-2]+")"
     localDict = {}
-    exec("resource = "+parseClass(classDict), globalDict, localDict)
+    classStr = "resource = "+parseClass(classDict)
+    exec(classStr, globalDict, localDict)
     return localDict["resource"]
 
 serviceFault = 2    # fault state
