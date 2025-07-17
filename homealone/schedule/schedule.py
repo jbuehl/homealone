@@ -90,7 +90,11 @@ class Cycle(Object):
 
     # string representation of the object for display in a UI
     def __repr__(self):
-        return self.control.__str__()+","+self.duration.__str__()+","+self.delay.__str__()+","+self.startState.__str__()+","+self.endState.__str__()
+        return "control: "+self.control.__str__()+"\n"+ \
+                "duration: "+self.duration.__str__()+"\n"+ \
+                "delay: "+self.delay.__str__()+"\n"+ \
+                "startState: "+self.startState.__str__()+"\n"+ \
+                "endState: "+self.endState.__str__()
 
 # a Sequence is a Control that consists of a list of Cycles or Sequences that are run in the specified order
 
@@ -173,7 +177,7 @@ class Sequence(Control):
     def __repr__(self):
         msg = ""
         for cycle in self.cycleList:
-            msg += cycle.__str__()+"\n"
+            msg += cycle.__repr__()+"\n"
         return msg.rstrip("\n")
 
 # the Schedule manages a list of Tasks and runs them at the times specified
