@@ -8,27 +8,27 @@ def loadResource(classDict, globalDict):
     def parseClass(classDict):
         args = classDict["args"]
         argStr = ""
-        for arg in list(args.keys()):
-            argStr += arg+"="
-            if isinstance(args[arg], dict):
-                if "class" in args[arg]:        # arg is a class
-                    argStr += parseClass(args[arg])+", "
-                else:                           # arg is just a dict
-                    argStr += str(args[arg])+", "
-            elif isinstance(args[arg], list):    # arg is a list
-                if len(args[arg]) > 0 and isinstance(args[arg][0], dict):    # arg is a list of classes
+        for argKey in list(args.keys()):
+            argValue = args[argKey]
+            argStr += argKey+"="
+            if isinstance(argValue, dict):
+                if "class" in argValue:             # arg is a class
+                    argStr += parseClass(argValue)+", "
+                else:                               # arg is just a dict
+                    argStr += str(argValue)+", "
+            elif isinstance(argValue, list) and \
+                 len(argValue) > 0 and \
+                 isinstance(argValue[0], dict):     # arg is a list of classes
                     argStr += "["
-                    for subArg in args[arg]:
+                    for subArg in argValue:
                         argStr += parseClass(subArg)+", "
                     argStr += "], "
-                else:                           # arg is a list of other objects
-                    argStr += str(args[arg])+", "
-            elif isinstance(args[arg], str):    # arg is a string
-                argStr += "'"+args[arg]+"', "
-            elif not arg:                       # arg is None
+            elif isinstance(argValue, str):         # arg is a string
+                argStr += "'"+argValue+"', "
+            elif not argKey:                        # arg is None
                 argStr += "None"
-            else:                               # arg is numeric or other
-                argStr += str(args[arg])+", "
+            else:                                   # arg is numeric or other
+                argStr += str(argValue)+", "
         return classDict["class"]+"("+argStr[:-2]+")"
     localDict = {}
     classStr = "resource = "+parseClass(classDict)
