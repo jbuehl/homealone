@@ -33,7 +33,7 @@ class DataLogger(object):
     def loggingThread(self):
         debug("debugLogging", "logging thread started")
         lastDay = ""
-        fault = False   # a fault has occurred
+        metricsFault = False   # a fault has occurred sending metrics
         while True:
             # wait for a new set of states
             states = self.states.getStates(wait=True)
@@ -64,20 +64,24 @@ class DataLogger(object):
                             msg = metricsPrefix+"."+metricName+" "+str(state)+" "+str(int(time.time()))
                             debug("debugMetricsMsg", "msg:", msg)
                             metricsSocket.send(bytes(msg+"\n", "utf-8"))
-                            if self.notify:
-                                if fault:   # there was a fault, but it's OK now
-                                    self.notify(self.name)  # reset the fault
-                                    fault = False
                         else:
                             debug("debugMetrics", "skipping", resourceName, state)
+                    if metricsSocket:
+                        debug("debugMetrics", "closing socket to", metricsHost)
+                        metricsSocket.close()
+                    # sending metrics was successful
+                    if self.notify:
+                        if metricsFault:   # there was a fault, but it's OK now
+                            self.notify("sendMetrics")  # reset the fault
+                            metricsFault = False
                 except socket.error as exception:
                     if self.notify:
-                        if not fault:   # don't notify more than one consecutive faults
-                            self.notify(self.name, "metrics socket error "+str(exception))
-                            fault = True
-                if metricsSocket:
-                    debug("debugMetrics", "closing socket to", metricsHost)
-                    metricsSocket.close()
+                        if not metricsFault:   # don't notify more than one consecutive faults
+                            self.notify("sendMetrics", "socket error "+str(exception))
+                            metricsFault = True
+                    if metricsSocket:
+                        debug("debugMetrics", "closing socket to", metricsHost)
+                        metricsSocket.close()
 
             # copy to the archive server once per day
             if archiveData:
@@ -140,4 +144,3 @@ def formatName(name, prefixes=[], suffixes=[]):
             name = name[:-len(suffix)]
             break
     return newPrefix+name[0].lower()+name[1:]+newSuffix
-# .replace(" ", "_")
