@@ -35,13 +35,17 @@ def interruptCallback(pin):
 
 # Interface to direct GPIO
 class GPIOInterface(Interface):
-    def __init__(self, name, interface=None, event=None, input=[], output=[], inverts=[], invert=False):
+    def __init__(self, name, interface=None, event=None, input=[], output=[], inverts=[], invert=False, start=True):
         Interface.__init__(self, name, interface=interface, event=event)
         global gpioInterface
         gpioInterface = self
         self.input = input
         self.output = output
         self.inverts = inverts
+        if start:
+            self.start()
+
+    def start(self, notify=None)
         # initialize everything
         gpio.setwarnings(False)
         gpio.setmode(gpio.BCM)
