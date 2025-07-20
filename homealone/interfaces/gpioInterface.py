@@ -45,7 +45,7 @@ class GPIOInterface(Interface):
         if start:
             self.start()
 
-    def start(self, notify=None)
+    def start(self, notify=None):
         # initialize everything
         gpio.setwarnings(False)
         gpio.setmode(gpio.BCM)
