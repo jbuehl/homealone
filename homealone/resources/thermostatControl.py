@@ -49,7 +49,7 @@ class ThermostatControl(Control):
                 self.setState(self.currentState)
         else:
             self.setState(modeOff)
-        self.notify = notify
+        self.faultNotify = notify
 
         # inhibit the tempControl after a delay
         def inhibitTimer():
@@ -83,7 +83,7 @@ class ThermostatControl(Control):
 
         self.inhibited = False
         if self.inhibitSensor:                      # start the thread to watch the state of the inhibit sensor
-            inhibitWatchThread = startThread(name="inhibitWatchThread", target=inhibitWatch, notify=self.notify)
+            inhibitWatchThread = startThread(name="inhibitWatchThread", target=inhibitWatch, notify=self.faultNotify)
 
     def setInhibit(self, value):
         debug('debugThermostat', self.name, "inhibit", value)
