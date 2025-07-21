@@ -1,7 +1,7 @@
 # application template
 
 from .core import *
-from .schedule import *
+from .scheduler import *
 from .remote.remoteService import *
 from .remote.remoteClient import *
 from .logging.logging import *
@@ -25,7 +25,7 @@ class Application(object):
         self.globals["resources"] = self.resources
         self.states = StateCache("states", self.resources, self.event)      # resource state cache
         self.globals["states"] = self.states
-        self.schedule = Schedule("schedule")                                # schedule manager
+        self.scheduler = Scheduler("scheduler")                             # schedule manager
         self.startList = []                                                 # resources that need to be started
         # publish resources via remote service
         if publish:
@@ -86,8 +86,8 @@ class Application(object):
             self.logger.start(notify=self.fault)
         for resource in self.startList:         # other resources
             resource.start(notify=self.fault)
-        if list(self.schedule.keys()) != []:    # task scheduler
-            self.schedule.start(notify=self.fault)
+        if list(self.scheduler.keys()) != []:   # scheduler
+            self.scheduler.start(notify=self.fault)
         if self.remoteService:                  # resource publication
             self.remoteService.start(block=block)
         else:
@@ -117,14 +117,14 @@ class Application(object):
         self.globals[resource.name] = resource
         resource.resources = self.remoteResources
 
-    # define a Task resource
-    def task(self, task, event=True, publish=True):
-        self.schedule.addRes(task)
-        self.globals[task.name] = task
+    # define a Schedule resource
+    def schedule(self, schedule, event=True, publish=True):
+        self.scheduler.addRes(schedule)
+        self.globals[schedule.name] = schedule
         if event:
-            task.event = self.event
+            schedule.event = self.event
         if publish:
-            self.resources.addRes(task)
+            self.resources.addRes(schedule)
 
     # apply a UI type to one or more resources
     def type(self, type, resources=[]):

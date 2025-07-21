@@ -1,6 +1,6 @@
 from homealone import *
 from homealone.resources.extraResources import *
-from homealone.schedule import *
+from homealone.scheduler import *
 import threading
 
 # create a Resource from a serialized dict

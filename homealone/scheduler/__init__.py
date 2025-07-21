@@ -1,2 +1,2 @@
-from .schedule import *
+from .scheduler import *
 from .sunriseset import *
