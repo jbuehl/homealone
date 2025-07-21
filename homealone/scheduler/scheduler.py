@@ -145,7 +145,10 @@ class Job(Control):
     def __repr__(self):
         msg = ""
         for task in self.taskList:
-            msg += task.__repr__()+"\n"
+            if isinstance(task, str):
+                msg += task+"\n"
+            else:
+                msg += task.__repr__()+"\n"
         return msg.rstrip("\n")
 
 # the Scheduler manages a list of Schedules and runs them at the times specified
