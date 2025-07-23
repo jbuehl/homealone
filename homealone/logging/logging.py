@@ -33,7 +33,6 @@ class DataLogger(object):
     def loggingThread(self):
         debug("debugLogging", "logging thread started")
         lastDay = ""
-        metricsFault = False   # a fault has occurred sending metrics
         while True:
             # wait for a new set of states
             states = self.states.getStates(wait=True)
@@ -71,14 +70,10 @@ class DataLogger(object):
                         metricsSocket.close()
                     # sending metrics was successful
                     if self.notify:
-                        if metricsFault:   # there was a fault, but it's OK now
-                            self.notify("sendMetrics")  # reset the fault
-                            metricsFault = False
+                        self.notify("sendMetrics")  # reset the fault
                 except socket.error as exception:
                     if self.notify:
-                        if not metricsFault:   # don't notify more than one consecutive faults
-                            self.notify("sendMetrics", "socket error "+str(exception))
-                            metricsFault = True
+                        self.notify("sendMetrics", "socket error "+str(exception))
                     if metricsSocket:
                         debug("debugMetrics", "closing socket to", metricsHost)
                         metricsSocket.close()
