@@ -104,10 +104,15 @@ class RemoteService(object):
             while True:
                 time.sleep(1)
 
-    def setFault(self, id, fault):
-        self.faults[id] = fault
+    def setFault(self, id, fault, logFault=True):
+        debug('debugRemoteService', self.name, "setFault", id, fault, self.faults)
+        if id not in self.faults:
+            self.faults[id] = fault
+            if logFault:
+                log(self.name, id, str(fault))
 
     def clearFault(self, id):
+        debug('debugRemoteService', self.name, "clearFault", id, self.faults)
         if id in self.faults:
             del(self.faults[id])
 
