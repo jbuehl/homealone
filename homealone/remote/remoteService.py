@@ -138,9 +138,12 @@ class RemoteService(object):
                 states = currentStates
                 self.stateTimeStamp = int(time.time())
                 # fault if there is an invalid state
-                for resourceName in self.states.missingStates:
-                    debug('debugRemoteService', resourceName, "Missing state")
-                    self.setFault(resourceName, "missing state")
+                for resourceName in list(states.keys()):
+                    if states[resourceName] is None:
+                        debug('debugRemoteService', resourceName, "Missing state")
+                        self.setFault(resourceName, "missing state")
+                    else:
+                        self.clearFault(resourceName)
             if sorted(list(currentStates.keys())) != sorted(list(lastStates.keys())):
                 # a resource was either added or removed
                 resources = self.resources.dump()   # don't send expanded resources

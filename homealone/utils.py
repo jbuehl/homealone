@@ -1,7 +1,6 @@
 # Utility functions
 
 pollResolution = 10 # how many times per second to possibly check for resource state changes
-missingStateDelay = 30  # how many seconds to wait before reporting missing states
 
 import syslog
 import os
@@ -22,7 +21,6 @@ class StateCache(object):
         self.resources = resources
         self.resourceEvent = event          # externalresource state change event
         self.stateEvent = threading.Event() # state change event
-        self.missingStates = []             # sensors with missing states
         self.states = {}                    # cache of current sensor states
         if start:
             self.start()
@@ -61,11 +59,6 @@ class StateCache(object):
                                 if resourceState != self.states[resource.name]:         # save the state if it has changed
                                     self.states[resource.name] = resourceState
                                     stateChanged = True
-                                if resourceState is None:                               # state is missing
-                                    currentTime = time.time()
-                                    if currentTime > self.startTime + missingStateDelay:     # wait before reporting it
-                                        self.missingStates.append(resource.name)
-                                        debug("debugStateCache", self.name, "missing state", resource.name)
                                 resourcePollCounts[resource.name] = resource.poll * pollResolution
                             else:   # decrement the count
                                 resourcePollCounts[resource.name] -= 1
@@ -95,11 +88,6 @@ class StateCache(object):
                             if resourceState != self.states[resource.name]:     # save the state if it has changed
                                 self.states[resource.name] = resourceState
                                 stateChanged = True
-                            if resourceState is None:
-                                currentTime = time.time()
-                                if currentTime > self.startTime + missingStateDelay:     # wait before reporting it
-                                    self.missingStates.append(resource.name)
-                                    debug("debugStateCache", self.name, "missing state", resource.name)
                     except KeyError:                                            # resource hasn't been seen before, save the state
                         self.states[resource.name] = resourceState
                     except Exception as ex:
@@ -111,7 +99,6 @@ class StateCache(object):
     # wait for a change and return the current state of all sensors in the resource collection
     def getStates(self, wait=True):
         if wait:
-            self.missingStates = []
             self.stateEvent.clear()
             self.stateEvent.wait()
         return copy.copy(self.states)
