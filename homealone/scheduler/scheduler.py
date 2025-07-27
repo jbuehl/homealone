@@ -356,6 +356,8 @@ class SchedTime(Object):
         self.event = ""
         tsList = timeSpec.split(" ")      # first, split the string on spaces
         self.parseList(tsList)
+        if self.error:
+            raise ValueError(self.errorMsg)
 
     # parse a list of items either space or comma delimited
     def parseList(self, tsList):
