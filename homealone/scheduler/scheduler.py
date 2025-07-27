@@ -356,6 +356,12 @@ class SchedTime(Object):
         self.event = ""
         tsList = timeSpec.split(" ")      # first, split the string on spaces
         self.parseList(tsList)
+        self.year.sort()
+        self.month.sort()
+        self.day.sort()
+        self.hour.sort()
+        self.minute.sort()
+        self.weekday.sort()
         if self.error:
             raise ValueError(self.errorMsg)
 
