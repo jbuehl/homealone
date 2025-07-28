@@ -99,6 +99,10 @@ class RestInterface(Interface):
             log(self.name, "read state timeout", self.serviceAddr, path)
             self.disableService()
             return {}
+        except requests.exceptions.ConnectionError:
+            log(self.name, "read state connection error", self.serviceAddr, path)
+            self.disableService()
+            return {}
             ####################################################################
             # debug('debugRestGet', self.name, "GET", self.serviceAddr+path)
             # response = self.client.get(path)
@@ -117,7 +121,7 @@ class RestInterface(Interface):
             #     return {}
             ####################################################################
         except Exception as ex:
-            logException(self.name+" uncaught read exception "+self.serviceAddr, ex)
+            logException(self.name+" uncaught read exception "+self.serviceAddr, str(ex))
             self.disableService()
             return {}
 
