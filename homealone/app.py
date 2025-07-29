@@ -118,7 +118,9 @@ class Application(object):
         resource.resources = self.remoteResources
 
     # define a Schedule resource
-    def schedule(self, schedule, event=True, publish=True):
+    def schedule(self, schedule, event=True, publish=True, state=True):
+        if state:
+            schedule.interface = self.stateInterface
         self.scheduler.addRes(schedule)
         self.globals[schedule.name] = schedule
         if event:
