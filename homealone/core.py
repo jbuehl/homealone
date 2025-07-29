@@ -260,7 +260,7 @@ class Control(Sensor):
     # Set the state of the control by writing the value to the address on the interface.
     def setState(self, state, wait=False, notify=True):
         debug('debugState', "setState", self.name, "state:", state, "notify:", notify)
-        if self.enabled:
+        if self.enabled and self.interface:
             self.interface.write(self.addr, state)
             if notify:
                 Resource.notify(self, state)
