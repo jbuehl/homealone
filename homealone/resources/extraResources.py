@@ -76,6 +76,16 @@ class SensorGroup(Sensor):
         return "\n".join([sensor.__str__() for sensor in self.sensorList])
 
 # A set of Controls whose state can be changed together
+
+# The controlList argument can either be a list of Controls or a list of tuples each of which contains
+# a Control and a list of states that define the state of the Control for each of the possible
+# states of the ControlGroup.
+
+# controlList = [control0, control1, ... controlN]
+# controlList = [(control0, [state0, state1, ... stateN]),
+#                (control1, [state0, state1, ... stateN]), ...
+#                (controlN, [state0, state1, ... stateN])]
+
 class ControlGroup(SensorGroup):
     def __init__(self, name, controlList, stateMode=False, wait=False, follow=False,
                  states=None, setStates=None, type="controlGroup", **kwargs):
