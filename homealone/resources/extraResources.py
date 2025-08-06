@@ -77,9 +77,19 @@ class SensorGroup(Sensor):
 
 # A set of Controls whose state can be changed together
 class ControlGroup(SensorGroup):
-    def __init__(self, name, controlList, stateList=[], stateMode=False, wait=False, follow=False,
+    def __init__(self, name, controlList, stateMode=False, wait=False, follow=False,
                  states=None, setStates=None, type="controlGroup", **kwargs):
-        SensorGroup.__init__(self, name, controlList, type=type, states=states, **kwargs)
+        sensorList = []
+        self.stateList = []
+        for control in controlList:
+            if (isinstance(control, list) or isinstance(control, tuple)) and len(control) > 1:  # states are specified
+                sensorList.append(control[0])
+                self.stateList.append(control[1])
+            else:                               # use default states
+                sensorList.append(control)
+                self.stateList.append([Off, On])
+        SensorGroup.__init__(self, name, sensorList, type=type, states=states, **kwargs)
+        debug("debugControlGroup", self.name, str(self.sensorList), str(self.stateList))
         self.stateMode = stateMode  # which state to return: False = SensorGroup, True = groupState
         self.setStates = setStates
         self.stateSet = None
@@ -97,10 +107,10 @@ class ControlGroup(SensorGroup):
             for sensor in self.sensorList:
                 sensor.stateSet = self.stateWasSet
         self.groupState = 0
-        if stateList == []:
-            self.stateList = [[0,1]]*(len(self.sensorList))
-        else:
-            self.stateList = stateList
+        # if stateList == []:
+        #     self.stateList = [[0,1]]*(len(self.sensorList))
+        # else:
+        #     self.stateList = stateList
 
     def getState(self, missing=None):
         if self.interface:
@@ -150,8 +160,12 @@ class ControlGroup(SensorGroup):
     # attributes to include in the serialized object
     def dict(self, expand=False):
         attrs = Control.dict(self)
-        attrs.update({"controlList": [sensor.__str__() for sensor in self.sensorList]})
+        attrs.update({"controlList": [[self.sensorList[i].__str__(),  self.stateList[i].__str__()] for i in range(len(self.sensorList))]})
         return attrs
+
+    # string representation of the object for display in a UI
+    def __repr__(self):
+        return "\n".join(["("+self.sensorList[i].__str__()+",  "+self.stateList[i].__str__()+")" for i in range(len(self.sensorList))])
 
 # A Control whose state depends on the states of a group of Sensors
 class SensorGroupControl(SensorGroup):
