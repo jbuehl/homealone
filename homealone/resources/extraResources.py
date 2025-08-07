@@ -48,7 +48,7 @@ class SensorGroup(Sensor):
             try:
                 states = sensorList[0].states   # inherit states from sensors
             except (AttributeError, IndexError):
-                pass        # this is a remote resource, ignore it
+                states = {0:"Off", 1:"On"}      # this is a remote resource, use defaults
         Sensor.__init__(self, name, states=states, **kwargs)
         self.sensorList = sensorList
 
@@ -108,7 +108,7 @@ class ControlGroup(SensorGroup):
                 try:
                     self.setStates = controlList[0].setStates   # inherit setStates from controls
                 except (AttributeError, IndexError):
-                    pass        # this is a remote resource, ignore it
+                    self.setStates = {0:"Off", 1:"On"}          # this is a remote resource, use defaults
             else:
                 self.setStates = self.states
         self.wait = wait
