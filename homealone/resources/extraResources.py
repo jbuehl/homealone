@@ -506,12 +506,13 @@ class MinMaxControl(StateControl):
             value = state
         Control.setState(self, value)
 
-# Control that has a specified list of values it can be set to
-# the interface must be one that supports persistence such as FileInterface
-class MultiControl(StateControl):
+# Control that has an enumerated list of values it can be set to.
+# The interface must be one that supports persistence such as FileInterface.
+# type must be "str", "int", or "float".
+class EnumControl(StateControl):
     def __init__(self, name, interface, addr=None, values=[], **kwargs):
         StateControl.__init__(self, name, interface, addr, **kwargs)
-        type = "control"
+        type = "str"
         self.className = "MultiControl"
         self.values = values
 
