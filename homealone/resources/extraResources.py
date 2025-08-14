@@ -510,14 +510,13 @@ class MinMaxControl(StateControl):
 # The interface must be one that supports persistence such as FileInterface.
 # type must be "str", "int", or "float".
 class EnumControl(StateControl):
-    def __init__(self, name, interface, addr=None, values=[], **kwargs):
-        StateControl.__init__(self, name, interface, addr, **kwargs)
-        type = "str"
-        self.className = "MultiControl"
+    def __init__(self, name, interface, addr=None, values=[], type="str", **kwargs):
+        StateControl.__init__(self, name, interface, addr, type=type, **kwargs)
+        self.className = "EnumControl"
         self.values = values
 
     def setState(self, state, wait=False):
-        debug("debugState", "MultiControl", self.name, "setState", state, self.values)
+        debug("debugState", "EnumControl", self.name, "setState", state, self.values)
         if state in self.values:
             return Control.setState(self, state)
         else:
