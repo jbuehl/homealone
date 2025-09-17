@@ -36,15 +36,15 @@ class StateCache(object):
                     logException(self.name+" start", ex)
         self.startTime = time.time()
         startThread("pollStatesThread", self.pollStatesThread, notify=notify)
-        startThread("watchEventsThread", self.watchEventsThread, notify=notify)
+        # startThread("watchEventsThread", self.watchEventsThread, notify=notify)
 
     # thread to periodically poll the state of the resources in the collection
     def pollStatesThread(self):
-        debug("debugStateCache", self.name, "starting pollStatesThread")
+        debug("debugStateCachePoll", self.name, "starting pollStatesThread")
         resourcePollCounts = {}
         while True:
             stateChanged = False
-            debug("debugStateCache", self.name, "polling", len(self.resources), "resources")
+            debug("debugStateCachePoll", self.name, "polling", len(self.resources), "resources")
             with self.resources.lock:
                 for resource in list(self.resources.values()):
                     try:
@@ -57,6 +57,8 @@ class StateCache(object):
                             if resourcePollCounts[resource.name] == 0:                  # count has decremented to zero
                                 resourceState = resource.getState()
                                 if resourceState != self.states[resource.name]:         # save the state if it has changed
+                                    debug("debugStateCachePoll", self.name, resource.name,
+                                                "changed from", self.states[resource.name], "to", resourceState)
                                     self.states[resource.name] = resourceState
                                     stateChanged = True
                                 resourcePollCounts[resource.name] = resource.poll * pollResolution
@@ -73,12 +75,12 @@ class StateCache(object):
 
     # thread to watch for state change events
     def watchEventsThread(self):
-        debug("debugStateCache", self.name, "starting watchEventsThread")
+        debug("debugStateCacheEvent", self.name, "starting watchEventsThread")
         while True:
-            debug("debugStateCache", self.name, "waiting for", len(self.resources), "resources")
+            debug("debugStateCacheEvent", self.name, "waiting for", len(self.resources), "resources")
             self.resourceEvent.clear()
             self.resourceEvent.wait()
-            debug("debugStateCache", self.name, "state change event")
+            debug("debugStateCacheEvent", self.name, "state change event")
             stateChanged = False
             with self.resources.lock:
                 for resource in list(self.resources.values()):
@@ -86,6 +88,8 @@ class StateCache(object):
                         if resource.event:                                      # only get resources with events
                             resourceState = resource.getState()
                             if resourceState != self.states[resource.name]:     # save the state if it has changed
+                                debug("debugStateCacheEvent", self.name, resource.name,
+                                            "changed from", self.states[resource.name], "to", resourceState)
                                 self.states[resource.name] = resourceState
                                 stateChanged = True
                     except KeyError:                                            # resource hasn't been seen before, save the state
