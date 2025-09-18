@@ -71,8 +71,8 @@ class RemoteService(object):
         self.label = label
         self.advertSocket = None
         self.advertSequence = 0
-        self.stateTimeStamp = 0
-        self.resourceTimeStamp = 0
+        self.stateTimeStamp = int(time.time())
+        self.resourceTimeStamp = int(time.time())
         self.restServer = None
         self.faults = {}
 
@@ -95,10 +95,10 @@ class RemoteService(object):
         if self.advert:
             if self.label == "":
                 self.label = hostname+":"+str(self.port)
-            # start the thread to trigger the advertisement message periodically
-            startThread(name="stateTriggerThread", target=self.stateTrigger)
             # start the thread to send the resources or states when there is a change
             startThread(name="stateAdvertThread", target=self.stateAdvert)
+            # start the thread to trigger the advertisement message periodically
+            startThread(name="stateTriggerThread", target=self.stateTrigger)
         #wait forever
         if block:
             while True:
@@ -120,8 +120,8 @@ class RemoteService(object):
     def stateTrigger(self):
         debug('debugRemoteService', self.name, "Remote state trigger started", remoteAdvertInterval)
         while True:
-            self.sendAdvertMessage(None, None)
             time.sleep(remoteAdvertInterval)
+            self.sendAdvertMessage(None, None)
         debug('debugRemoteService', self.name, "Remote state trigger ended")
 
     # send the advert message with states and/or resources if there was a change
@@ -129,38 +129,29 @@ class RemoteService(object):
         debug('debugRemoteService', self.name, "Advert thread started")
         resources = self.resources.dump()   # don't send expanded resources
         states = self.states.getStates(wait=False)
+        self.sendAdvertMessage(resources, states)
         lastStates = states
-        self.stateTimeStamp = int(time.time())
-        self.resourceTimeStamp = int(time.time())
         while True:
             resources = None
             states = None
             # wait for a state to change
-            currentStates = self.states.getStates(wait=True)
-            # compare the current states to the previous states
-            if diffStates(lastStates, currentStates) != {}:
-                # a state changed
-                states = currentStates
-                self.stateTimeStamp = int(time.time())
-                # fault if there is an invalid state
-                for resourceName in list(states.keys()):
-                    if states[resourceName] is None:
-                        debug('debugRemoteService', resourceName, "Missing state")
-                        self.setFault(resourceName, "missing state")
-                    else:
-                        self.clearFault(resourceName)
-            if sorted(list(currentStates.keys())) != sorted(list(lastStates.keys())):
+            states = self.states.getStates(wait=True)
+            # a state changed
+            self.stateTimeStamp = int(time.time())
+            # fault if there is an invalid state
+            for resourceName in list(states.keys()):
+                if states[resourceName] is None:
+                    debug('debugRemoteService', resourceName, "Missing state")
+                    self.setFault(resourceName, "missing state")
+                else:
+                    self.clearFault(resourceName)
+            if sorted(list(states.keys())) != sorted(list(lastStates.keys())):
                 # a resource was either added or removed
                 resources = self.resources.dump()   # don't send expanded resources
                 self.resourceTimeStamp = int(time.time())
             self.sendAdvertMessage(resources, states)
-            lastStates = currentStates
+            lastStates = states
         debug('debugRemoteService', self.name, "Advert thread ended")
-
-    def openSocket(self):
-        msgSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        msgSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return msgSocket
 
     def getServiceData(self):
         return {"name": self.name,
@@ -179,7 +170,8 @@ class RemoteService(object):
         if states:
             stateMsg["states"] = states
         if not self.advertSocket:
-            self.advertSocket = self.openSocket()
+            self.advertSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.advertSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             debug('debugRemoteAdvert', self.name, str(list(stateMsg.keys())))
             self.advertSocket.sendto(bytes(json.dumps(stateMsg), "utf-8"),
