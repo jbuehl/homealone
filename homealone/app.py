@@ -56,11 +56,13 @@ class Application(object):
         # system resources
         if system:
             self.osInterface = OSInterface("osInterface")
+            self.osInterface.start(notify=self.fault)
             self.globals["osInterface"] = self.osInterface
             self.resource(Sensor(hostname+"CpuTemp", self.osInterface, "cpuTemp", type="tempC"))
             self.resource(Sensor(hostname+"CpuLoad", self.osInterface, "cpuLoad", type="%"))
+            self.resource(Sensor(hostname+"IpAddr", self.osInterface, "ipAddr"))
             self.resource(Sensor(hostname+"Uptime", self.osInterface, "uptime"))
-            self.resource(Sensor(hostname+"DiskUsage", self.osInterface, "diskUse /", type="%"))
+            self.resource(Sensor(hostname+"DiskUsage", self.osInterface, "diskUse", type="%"))
             self.group("System")
             self.label()
         # persistent state
