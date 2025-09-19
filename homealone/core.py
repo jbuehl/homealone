@@ -160,10 +160,13 @@ class Collection(Resource, OrderedDict):
         return resList
 
     # Return a list of resource references that are members of the specified group
-    # in order of addition to the table
-    def getGroup(self, group):
+    # in order of addition to the table or sorted
+    def getGroup(self, group, sort=False):
         resourceList = []
-        for resourceName in list(self.keys()):
+        resourceNames = list(self.keys())
+        if sort:
+            resourceNames.sort()
+        for resourceName in resourceNames:
             resource = self.__getitem__(resourceName)
             if group in listize(resource.group):
                 resourceList.append(resource)
