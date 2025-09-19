@@ -81,8 +81,8 @@ class ProxyService(Sensor):
             faults += "fault: "+fault+": "+self.faults[fault]+"\n"
         return "server: "+self.interface.serviceAddr+"\n"+ \
                "version: "+str(self.version)+"\n"+ \
-               "resource time: "+str(self.resourceTimeStamp)+"\n"+ \
-               "state time: "+str(self.stateTimeStamp)+"\n"+ \
+               "resource time: "+time.strftime("%Y %b %d %H:%M",time.localtime(self.resourceTimeStamp))+"\n"+ \
+               "state time: "+time.strftime("%Y %b %d %H:%M",time.localtime(self.stateTimeStamp))+"\n"+ \
                "missed seq: "+str(self.missedSeq)+"\n"+ \
                faults+ \
                "---------------"
