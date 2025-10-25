@@ -128,14 +128,17 @@ def sunRiseSet(date, latitude, longitude, rising):
 # 9. adjust back to UTC
     UT = T - lngHour
 #	NOTE: UT potentially needs to be adjusted into the range [0,24) by adding/subtracting 24
-    if UT >= 24:
+    if UT >= 24:    # UTC is tomorrow
         UT = UT - 24
-    elif UT < 0:
+        date += datetime.timedelta(days=1)
+    elif UT < 0:    # UTC is yesterday
         UT = UT + 24
+        date -= datetime.timedelta(days=1)
 
 # 10. convert UT value to local time zone of latitude/longitude
     hour = int(UT)
     minute = int((UT - hour)	 * 60)
     LT = datetime.datetime(date.year, date.month, date.day, hour, minute, tzinfo=tz.tzutc()).astimezone(tz.tzlocal())
+    print(T, date.year, date.month, date.day, hour, minute, LT.hour, LT.minute)
     # return a datetime containing the specified date (yyyymmdd) and the computed time (hhmm)
     return datetime.datetime(date.year, date.month, date.day, LT.hour, LT.minute, tzinfo=LT.tzinfo)
