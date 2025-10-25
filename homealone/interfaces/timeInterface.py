@@ -38,7 +38,7 @@ class TimeInterface(Interface):
 
         debug('debugTime', self.name, "clock:", self.clock, "latLong:", self.latLong, "tz:", self.tz)
 
-    def read(self, addr=None):
+    def read(self, addr=None, date=None):
         # get gps location and figure out the time zone
         if self.interface:
             self.latLong = (self.interface.read("Lat"), self.interface.read("Long"))
@@ -50,6 +50,8 @@ class TimeInterface(Interface):
         # get the naive UTC time
         if self.clock == "gps":                 # from file
             utcNow = datetime.datetime(*time.strptime(self.interface.read("Time"), "%Y-%m-%d %H:%M:%S")[0:6])
+        elif self.clock == "spec":                 # specified each time
+            utcNow = datetime.datetime(*time.strptime(date, "%Y-%m-%d")[0:6])
         elif self.clock in ["utc", "local"]:    # from system clock
             utcNow = datetime.datetime.utcnow()
         # convert to TZ aware local time
