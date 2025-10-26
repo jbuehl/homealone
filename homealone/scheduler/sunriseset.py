@@ -139,6 +139,5 @@ def sunRiseSet(date, latitude, longitude, rising):
     hour = int(UT)
     minute = int((UT - hour)	 * 60)
     LT = datetime.datetime(date.year, date.month, date.day, hour, minute, tzinfo=tz.tzutc()).astimezone(tz.tzlocal())
-    print(T, date.year, date.month, date.day, hour, minute, LT.hour, LT.minute)
     # return a datetime containing the specified date (yyyymmdd) and the computed time (hhmm)
     return datetime.datetime(date.year, date.month, date.day, LT.hour, LT.minute, tzinfo=LT.tzinfo)
