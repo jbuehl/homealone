@@ -68,7 +68,7 @@ def sunRiseSet(date, latitude, longitude, rising):
 #	N3 = (1 + floor((year - 4 * floor(year / 4) + 2) / 3))
 #	N = N1 - (N2 * N3) + day - 30
     N = date.timetuple().tm_yday
-    zenith = 90
+    zenith = 90.8333 # official: 90 degrees 50 minutes
 
 # 2. convert the longitude to hour value and calculate an approximate time
     lngHour = longitude / 15
