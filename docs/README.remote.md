@@ -21,22 +21,16 @@ Homealone applications can expose their resources via the Homealone Remote Resou
 * Homealone resource - a Homealone object implemented within a Homealone application
 * REST resource - an identifier used in the HTTP path in the REST interface that describes a Homealone resource
 
-While the Homealone object model defines the Interface, Collection, and Sensor classes to be derived from the Resource class, HRRP only deals with Sensor objects and objects derived from Sensor.  So in this context, the term "resource" only refers to Sensors, Controls, and classes that inherit from them, and not Interfaces or Collections.
+Note that while the Homealone object model defines the Interface, Collection, and Sensor classes to be derived from the Resource class, HRRP only deals with Sensor objects and objects derived from Sensor.  So in this context, the term "resource" only refers to Sensors, Controls, and classes that inherit from them, and not Interfaces or Collections.
 
-### Interface
+### Description
 The Homealone Remote Resource Protocol consists of two parts:  A UDP message that is periodically broadcast to the local area network by a server, and an HTTP server that supports a REST interface over TCP.  The UDP message performs the functions of advertising the availability of the server on the network, notifying clients of changes in the configuration or states of the server's Homealone resources, and letting clients know that the server is active.  The REST server allows clients to query details about Homealone resource configuration and states, and to direct a server to change the states of Control resources.
 
 While a service publishes its resources for discovery on the network, this interface does not define a subscription model for clients.  A service is not aware of the clients that may be following it.  Services use a push model to broadcast states to any client that is listening.  Clients may maintain a cache of states for each service they are following, but services are stateless in regards to awareness of clients.  A client can request current state information from a service or direct the service to change the state of one of its devices at any time.  The only time a service is aware of a client is for the duration of the TCP connection for a REST request which is closed at the end of each request.
 
-#### Data format
-All messages in the remote resource interface are formatted as JSON strings.
-
-#### Protocol components
-UDP messages consist of a single JSON string that is sent to a broadcast or multicast address.  There is no expected response.
-
-REST messages are HTTP 1.0 requests and responses sent over a TCP connection, where the body component of the message is a JSON string.
-
 ![topology](topology.png)
+
+In the illustration above, there are five servers running Homealone applications.  Servers s3, s4, and s5 manage various hardware sensors and controls. Server s2 doesn't manage any hardware devices, but it runs an application that performs some functions that use remote resources on servers s4 and s5.  Server s1 runs an application that implements a user interface to monitor and control the sensors and controls that are managed on the other servers.  The user interface may be accessed from devices either on the local network or outside the home.
 
 ### Why don't you use an existing protocol?
 
@@ -63,6 +57,14 @@ classDiagram
     Sensor <|-- ProxyService
 	Interface <|-- RestInterface
 ```
+
+#### Data format
+All messages in the remote resource interface are formatted as JSON strings.
+
+#### Protocol components
+UDP messages consist of a single JSON string that is sent to a broadcast or multicast address.  There is no expected response.
+
+REST messages are HTTP 1.0 requests and responses sent over a TCP connection, where the body component of the message is a JSON string.
 
 #### Service advertising
 A Homealone remote service uses a RemoteService object to send periodic messages to a known port of a multicast address to advertise itself on the local network.   The message contains the service name, and port that carries the corresponding REST interface that is implemented in an HTTP server. If multiple Homealone services are running on the same host they must use different HTTP ports.
@@ -146,7 +148,8 @@ The /service/ resource contains attributes of the Homealone service.
 			 "label": <service display name>,
 			 "stateTimestamp": <last update time of the resource states>,
 			 "resourceTimestamp": <last update time of the resources and attributes>,
-			 "seq": <sequence number of the message>}
+			 "seq": <sequence number of the message>,
+             "faults": {dictionary of service faults}}
 ```
 The /resources/ REST resource contains a JSON representation of the Homealone resource that the service is exposing.  It may be a single Homealone Resource but typically this is a Homealone Collection resource that contains a list of Homealone resource names.
 ```
