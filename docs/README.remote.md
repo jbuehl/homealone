@@ -1,15 +1,17 @@
-# Homealone home automation platform remote resource interface
+# Homealone Remote Resource Protocol
 
 ### Overview
-Homealone applications can expose their resources via a network interface that is described here. This allows a client application to access Homealone objects on other servers.
+Homealone applications can expose their resources via the Homealone Remote Resource Protocol (HRRP) that is described here. This allows a client application to access Homealone objects on other servers.
 
 ### Requirements
-* Enables distributability of Homealone resource management
-* Uses a client-server model
-* Implements autodiscovery of Homealone services
-* Implements notification of resource configuration changes
-* Implements notification of resource state changes
-* Servers are stateless in regards to the interface
+* Enable distributability of resource management
+* Use a client-server model
+* Implement autodiscovery of services
+* Implement notification of resource configuration changes
+* Implement notification of resource state changes
+* Clients and servers do not maintain connections
+* Messages are human readable
+* Does not require a hub or message broker
 * Does not implement a security model
 
 ### Terminology
@@ -19,27 +21,33 @@ Homealone applications can expose their resources via a network interface that i
 * Homealone resource - a Homealone object implemented within a Homealone application
 * REST resource - an identifier used in the HTTP path in the REST interface that describes a Homealone resource
 
-While the Homealone object model defines the Interface, Collection, and Sensor classes to be derived from the Resource class, the remote resource interface only deals with Sensor objects and objects derived from Sensor.  So in this context, the term "resource" only refers to Sensors, Controls, and classes that inherit from them, and not Interfaces or Collections.
+While the Homealone object model defines the Interface, Collection, and Sensor classes to be derived from the Resource class, HRRP only deals with Sensor objects and objects derived from Sensor.  So in this context, the term "resource" only refers to Sensors, Controls, and classes that inherit from them, and not Interfaces or Collections.
 
 ### Interface
-The Homealone remote interface consists of two parts:  A UDP message that is periodically broadcast to the local area network by a server, and an HTTP server that supports a REST interface over TCP.  The UDP message performs the functions of advertising the availability of the server on the network, notifying clients of changes in the configuration or states of the server's Homealone resources, and letting clients know that the server is active.  The REST server allows clients to query details about Homealone resource configuration and states, and to direct a server to change the states of Control resources.
+The Homealone Remote Resource Protocol consists of two parts:  A UDP message that is periodically broadcast to the local area network by a server, and an HTTP server that supports a REST interface over TCP.  The UDP message performs the functions of advertising the availability of the server on the network, notifying clients of changes in the configuration or states of the server's Homealone resources, and letting clients know that the server is active.  The REST server allows clients to query details about Homealone resource configuration and states, and to direct a server to change the states of Control resources.
 
-While a service publishes its resources for discovery on the network, this interface does not define a subscription model for clients.  A service is not aware of the clients that may be following it.  Services use a push model to broadcast states to any client that is listening.  Clients maintain a cache of states for each service they are following, but services are stateless in regards to awareness of clients.  A client can request current state information from a service or direct the service to change the state of one of its devices at any time.  The only time a service is aware of a client is for the duration of the TCP connection for a REST request which is closed at the end of each request.
+While a service publishes its resources for discovery on the network, this interface does not define a subscription model for clients.  A service is not aware of the clients that may be following it.  Services use a push model to broadcast states to any client that is listening.  Clients may maintain a cache of states for each service they are following, but services are stateless in regards to awareness of clients.  A client can request current state information from a service or direct the service to change the state of one of its devices at any time.  The only time a service is aware of a client is for the duration of the TCP connection for a REST request which is closed at the end of each request.
 
 #### Data format
-All messages in the remote resource interface are JSON.
+All messages in the remote resource interface are formatted as JSON strings.
 
-#### Protocols
+#### Protocol components
 UDP messages consist of a single JSON string that is sent to a broadcast or multicast address.  There is no expected response.
 
 REST messages are HTTP 1.0 requests and responses sent over a TCP connection, where the body component of the message is a JSON string.
 
 ![topology](topology.png)
 
+### Why don't you use an existing protocol?
+
+There are a number of existing application level protocols that are commonly used for IoT, such as MQTT, CoAP, AMQP, etc.  While an exhaustive search was not done, none of the popular protocols seems to be a good fit for the Homealone requirements.  Protocols such as MQTT require a central hub or message broker.  Others require clients and servers to maintain connections.
+
+Another difference is that HRRP defines all message payloads whereas the other protocols tend to have payloads that are not defined by the protocol.
+
 ### Implementation
 
 #### Components
-The Remote interface is implemented by objects derived from the following classes:
+The Homealone Remote Resource Protocol is implemented by objects derived from the following classes:
 
 * RemoteService - implements the server side of the interface
 * RemoteClient - implements the client side of the interface
