@@ -30,13 +30,13 @@ While a service publishes its resources for discovery on the network, this inter
 
 ![topology](topology.png)
 
-In the illustration above, there are five servers running Homealone applications.  Servers s3, s4, and s5 manage various hardware sensors and controls. Server s2 doesn't manage any hardware devices, but it runs an application that performs some functions that use remote resources on servers s4 and s5.  Server s1 runs an application that implements a user interface to monitor and control the sensors and controls that are managed on the other servers.  The user interface may be accessed from devices either on the local network or outside the home.
+In the illustration above, there are five servers running Homealone applications, represented by blue boxes.  They communicate with each other via HRRP (red lines).  Servers s3, s4, and s5 manage various hardware sensors and controls. Server s2 doesn't manage any hardware devices, but it runs an application that performs some functions that use remote resources on servers s4 and s5.  Server s1 runs an application that implements a user interface to monitor and control the sensors and controls that are managed on the other servers.  The user interface may be accessed from devices either on the local network or outside the home (magenta lines).
 
 ### Why don't you use an existing protocol?
 
 There are a number of existing application level protocols that are commonly used for IoT, such as MQTT, CoAP, AMQP, etc.  While an exhaustive search was not done, none of the popular protocols seems to be a good fit for the Homealone requirements.  Protocols such as MQTT require a central hub or message broker.  Others require clients and servers to maintain connections.
 
-Another difference is that HRRP defines all message payloads whereas the other protocols tend to have payloads that are not defined by the protocol.
+Another difference is that HRRP defines all message payloads whereas the other protocols are intended for general messaging and do not define the contents of the payload.
 
 ### Implementation
 
