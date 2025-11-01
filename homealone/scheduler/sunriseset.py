@@ -131,12 +131,12 @@ def sunRiseSet(date, latitude, longitude, rising):
     year = date.year
     month = date.month
     day = date.day
-    if UT >= 24:    # UTC is tomorrow
+    if UT >= 24:
         UT = UT - 24
-        date += datetime.timedelta(days=1)
-    elif UT < 0:    # UTC is yesterday
+        if not rising:
+            date += datetime.timedelta(days=1)    # UTC is tomorrow
+    elif UT < 0:
         UT = UT + 24
-        date -= datetime.timedelta(days=1)
 
 # 10. convert UT value to local time zone of latitude/longitude
     hour = int(UT)
