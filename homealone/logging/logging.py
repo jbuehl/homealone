@@ -113,7 +113,10 @@ class DataLogger(object):
                 try:
                     # get sizes of the file and its archive
                     fileSize = int(subprocess.check_output("ls -l "+self.logDir+logFile+"|cut -f5 -d' '", shell=True))
-                    archiveSize = int(subprocess.check_output("ssh "+self.archiveServer+" ls -l "+archiveDir+self.appName+"/"+logFile+"|cut -f5 -d' '", shell=True))
+                    try:
+                        archiveSize = int(subprocess.check_output("ssh "+self.archiveServer+" ls -l "+archiveDir+self.appName+"/"+logFile+"|cut -f5 -d' '", shell=True))
+                    except ValueError:  # archive file doesn't exist or isn't accessible
+                        archiveSize = -1
                     # only delete if the sizes are the same
                     if archiveSize == fileSize:
                         debug("debugPurgeData", "deleting", logFile)
