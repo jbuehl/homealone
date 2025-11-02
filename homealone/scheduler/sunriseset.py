@@ -140,4 +140,4 @@ def sunRiseSet(date, latitude, longitude, rising):
     minute = int((UT - hour) * 60)
     LT = datetime.datetime(date.year, date.month, date.day, hour, minute, tzinfo=tz.tzutc()).astimezone(tz.tzlocal())
     # return a datetime containing the specified date (yyyymmdd) and the computed time (hhmm)
-    return LT # datetime.datetime(year, month, day, LT.hour, LT.minute, tzinfo=LT.tzinfo)
+    return LT
