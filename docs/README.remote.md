@@ -202,7 +202,7 @@ Examples 1-6 show messages that are used for discovery of the configuration of r
                      "states"]
 ```
 2. Return the attributes of the Homealone service on the host sprinklers.local.
-
+```
 	   Request:     GET sprinklers.local:7378/service
 
 	   Response:    {"name": "sprinklerService",
@@ -210,9 +210,9 @@ Examples 1-6 show messages that are used for discovery of the configuration of r
 					 "stateTimestamp": 1595529166,
 					 "resourceTimestamp": 1595529166,
 					 "seq": 666}
-
+```
 3. Return the list of Homealone resources on the host sprinklers.local.
-
+```
         Request:     GET sprinklers.local:7378/resources
 
         Response:    {"class": "Collection",
@@ -220,7 +220,7 @@ Examples 1-6 show messages that are used for discovery of the configuration of r
                                 "type": "collection",
                                 "resources": ["gardenTemp",
                                               "gardenSprinkler"]}}
-
+```
 4. Return the list of Homealone resources on the host sprinklers.local containing the expanded
 	resource representations.
 ```
@@ -248,7 +248,7 @@ Examples 1-6 show messages that are used for discovery of the configuration of r
 ```
 5. Return the attributes for the resource "gardenSprinkler".  Note that the attribute
        "state" is not included.
-
+```
        Request:     GET sprinklers.local:7378/resources/gardenSprinkler
 
 	   Response:    {"class": "Control",
@@ -259,36 +259,36 @@ Examples 1-6 show messages that are used for discovery of the configuration of r
                                "type": "sprinkler",
                                "group": "Sprinklers",
                                "label": "Garden sprinkler"}}
-
+```
 6. Return the value of the attribute "addr" of the resource "gardenSprinkler".
-
+```
 	   Request:     GET sprinklers.local:7378/resources/gardenSprinkler/addr
 
 	   Response:    {"addr": 17}
-
+```
 7. Return the current state of the resource "gardenSprinkler".
-
+```
        Request:     GET sprinklers.local:7378/resources/gardenSprinkler/state
 
        Response:    {"state": 0}
-
+```
 8. Return the current states of all resources on the host sprinklers.local.
-
+```
        Request:     GET sprinklers.local:7378/states
 
        Response:    {"states": {"gardenTemp": 28.0,
                                 "gardenSprinkler": 0}}
-
+```
 9. Set the state of the resource "gardenSprinkler" to 1.  The request body contains
 	   the requested state.  The response body returns the resulting state.
-
+```
        Request:     PUT sprinklers.local:7378/resources/gardenSprinkler/state
                     {"state": 1}
 
        Response:    {"state": 1}
-
+```
 10. Unsolicited message that is broadcast periodically and whenever one of the states changes that shows the current states of all resources in the service sprinklerService.
-
+```
        Message:     
                     {"service": {"name": "sprinklerService",
                                  "label": "Sprinklers",
@@ -297,3 +297,4 @@ Examples 1-6 show messages that are used for discovery of the configuration of r
                                  "seq": 667},
                      "states": {"gardenTemp": 28.0,
                                 "gardenSprinkler": 0}}
+```
