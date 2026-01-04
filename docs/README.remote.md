@@ -194,13 +194,13 @@ If an HTTP request is sent to the REST port on a host that is running the remote
 Examples 1-6 show messages that are used for discovery of the configuration of resources.  Examples 7-8 show messages that get the current state of resources.  Example 9 shows changing the state of a resource.  Example 10 shows the notification of state changes of resources.
 
 1. Return the list of resources on the host sprinklers.local.
-
+```
 	   Request:     GET sprinklers.local:7378
 
 	   Response:    ["service",
                      "resources",
                      "states"]
-
+```
 2. Return the attributes of the Homealone service on the host sprinklers.local.
 
 	   Request:     GET sprinklers.local:7378/service
@@ -223,7 +223,7 @@ Examples 1-6 show messages that are used for discovery of the configuration of r
 
 4. Return the list of Homealone resources on the host sprinklers.local containing the expanded
 	resource representations.
-
+```
      Request:     GET sprinklers.local:7378/resources?expand=true
 
      Response:    {"class": "Collection",
@@ -245,7 +245,7 @@ Examples 1-6 show messages that are used for discovery of the configuration of r
 						                               "type": "sprinkler",
 						                               "group": "Sprinklers",
 						                               "label": "Garden sprinkler"}}]}}
-
+```
 5. Return the attributes for the resource "gardenSprinkler".  Note that the attribute
        "state" is not included.
 
