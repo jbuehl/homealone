@@ -146,8 +146,8 @@ The /service/ resource contains attributes of the Homealone service.
 			 "hostname": <host name>,
 			 "port": <port>,
 			 "label": <service display name>,
-			 "stateTimestamp": <last update time of the resource states>,
-			 "resourceTimestamp": <last update time of the resources and attributes>,
+			 "statetimestamp": <last update time of the resource states>,
+			 "resourcetimestamp": <last update time of the resources and attributes>,
 			 "seq": <sequence number of the message>,
              "faults": {dictionary of service faults}}
 ```
@@ -280,20 +280,20 @@ Examples 1-6 show messages that are used for discovery of the configuration of r
                                 "gardenSprinkler": 0}}
 ```
 9. Set the state of the resource "gardenSprinkler" to 1.  The request body contains
-	   the requested state.  The response body returns the resulting state.
+	   the requested state.
 ```
        Request:     PUT sprinklers.local:7378/resources/gardenSprinkler/state
                     {"state": 1}
-
-       Response:    {"state": 1}
 ```
 10. Unsolicited message that is broadcast periodically and whenever one of the states changes that shows the current states of all resources in the service sprinklerService.
 ```
        Message:     
                     {"service": {"name": "sprinklerService",
+                                 "hostname": "sprinklers",
+                                 "port": 7378,
                                  "label": "Sprinklers",
-								 "stateTimestamp": 1595529456,
-								 "resourceTimestamp": 1595529456,
+								 "statetimestamp": 1595529456,
+								 "resourcetimestamp": 1595529456,
                                  "seq": 667},
                      "states": {"gardenTemp": 28.0,
                                 "gardenSprinkler": 0}}
