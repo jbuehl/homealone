@@ -33,6 +33,16 @@ class DataLogger(object):
     def loggingThread(self):
         debug("debugLogging", "logging thread started")
         lastDay = ""
+        if sendMetrics:
+            try:
+                metricsIp = socket.gethostbyname(metricsHost)
+            except socket.error as exception:
+                if self.notify:
+                    self.notify("sendMetrics", "socket error "+str(exception))
+                time.sleep(1)
+            debug("debugMetrics", "got IP address", metricsIp, "for", metricsHost)
+            if self.notify:
+                self.notify("sendMetrics")  # reset the fault
         while True:
             # wait for a new set of states
             states = self.states.getStates(wait=True)
@@ -52,10 +62,10 @@ class DataLogger(object):
 
             # send states to the metrics server
             if sendMetrics:
-                debug("debugMetrics", "opening socket to", metricsHost, metricsPort)
+                debug("debugMetrics", "opening socket to", metricsIp, metricsPort)
                 try:
                     metricsSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    metricsSocket.connect((metricsHost, metricsPort))
+                    metricsSocket.connect((metricsIp, metricsPort))
                     debug("debugMetrics", "sending", len(states), "metrics")
                     for (resourceName, state) in states.items():
                         if isinstance(state, (int, float)):     # only send numeric states
@@ -66,7 +76,7 @@ class DataLogger(object):
                         else:
                             debug("debugMetrics", "skipping", resourceName, state)
                     if metricsSocket:
-                        debug("debugMetrics", "closing socket to", metricsHost)
+                        debug("debugMetrics", "closing socket to", metricsIp)
                         metricsSocket.close()
                     # sending metrics was successful
                     if self.notify:
@@ -75,7 +85,7 @@ class DataLogger(object):
                     if self.notify:
                         self.notify("sendMetrics", "socket error "+str(exception))
                     if metricsSocket:
-                        debug("debugMetrics", "closing socket to", metricsHost)
+                        debug("debugMetrics", "closing socket to", metricsIp)
                         metricsSocket.close()
 
             # copy to the archive server once per day
