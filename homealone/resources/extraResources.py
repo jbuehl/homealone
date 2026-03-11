@@ -18,6 +18,13 @@ class LightControl(Control):
                          type=type, states={0: "Off", 1: "On"}, **kwargs)
         self.className = "Control"
 
+# A Control for a dimmer switch
+class DimmerControl(Control):
+    def __init__(self, name, interface, addr, type="dimmer", **kwargs):
+        Control.__init__(self, name, interface, addr,
+                         type=type, states={0: "Off", 20: "20%", 40: "40%", 60: "60%", 80: "80%", 100: "On"}, **kwargs)
+        self.className = "Control"
+
 # A Control for an electrical outlet
 class OutletControl(Control):
     def __init__(self, name, interface, addr, type="outlet", **kwargs):
