@@ -37,12 +37,14 @@ classDiagram
 	Sensor <|-- Control
     Control <|-- DeviceControl
     Control <|-- LightControl
+    Control <|-- DimmerControl
     Control <|-- OutletControl
     Sensor <|-- DoorSensor
     Sensor <|-- WindowSensor
 ```
 - DeviceControl - A Control for a generic device with two enumerated states.
 - LightControl - A Control for a light switch.
+- DimmerControl - A Control for a light dimmer.
 - OutletControl - A Control for an electrical outlet.
 - DoorSensor - A Sensor for a door.
 - WindowSensor - A Sensor for a window.
@@ -52,15 +54,19 @@ These implement virtual Resources that relate to multiple Sensors or Controls.
 ```mermaid
 classDiagram
 	Sensor <|-- Control
-    Sensor <|-- SensorGroup
-	SensorGroup <|-- ControlGroup
-	SensorGroup <|-- SensorGroupControl
+    Sensor <|-- GroupSensor
+    GroupSensor <|-- GroupControl
+    GroupControl <|-- StatefulGroupControl
+    GroupControl <|-- StatelessGroupControl
+	GroupSensor <|-- GroupSensorControl
 	Sensor <|-- DependentSensor
 	Control <|-- DependentControl
 ```
-- SensorGroup - A collection of sensors whose state is on if any one of them is on.
-- ControlGroup - A set of Controls whose state can be changed together.
-- SensorGroupControl - A Control whose state depends on the states of a group of Sensors.
+- GroupSensor - A collection of sensors whose state is On if any one of them is On.
+- GroupControl - A set of Controls whose states can be changed together. The state of the GroupControl is On if any of its Controls is On.
+- StatefulGroupControl - A GroupControl whose state is was explicitly set regardless of subsequent changes in the states of its Controls.
+- StatelessGroupControl - A GroupControl that has no state.
+- GroupSensorControl - A Control whose state depends on the states of a group of Sensors.
 - DependentSensor - A Sensor that only reports its state if all the specified resources are in the specified states.
 - DependentControl - A Control that can only be turned on if all the specified resources are in the specified states.
 
