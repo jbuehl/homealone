@@ -64,7 +64,7 @@ classDiagram
 ```
 - GroupSensor - A collection of sensors whose state is On if any one of them is On.
 - GroupControl - A set of Controls whose states can be changed together. The state of the GroupControl is On if any of its Controls is On.
-- StatefulGroupControl - A GroupControl whose state is was explicitly set regardless of subsequent changes in the states of its Controls.
+- StatefulGroupControl - A GroupControl whose state is what was explicitly set regardless of subsequent changes in the states of its Controls.
 - StatelessGroupControl - A GroupControl that has no state.
 - GroupSensorControl - A Control whose state depends on the states of a group of Sensors.
 - DependentSensor - A Sensor that only reports its state if all the specified resources are in the specified states.
