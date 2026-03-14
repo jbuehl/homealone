@@ -55,16 +55,16 @@ These implement virtual Resources that relate to multiple Sensors or Controls.
 classDiagram
 	Sensor <|-- Control
     Sensor <|-- GroupSensor
+    GroupSensor: sensorList
     Control <|-- GroupControl
-    GroupControl <|-- StatefulGroupControl
-    GroupControl <|-- StatelessGroupControl
+    GroupControl: controlList
+    GroupControl: stateMode
+    GroupControl: follow
 	Sensor <|-- DependentSensor
 	Control <|-- DependentControl
 ```
 - GroupSensor - A collection of sensors whose state is On if any one of them is On.
 - GroupControl - A set of Controls whose states can be changed together. The state of the GroupControl is On if any of its Controls is On.
-- StatefulGroupControl - A GroupControl whose state is what was explicitly set regardless of subsequent changes in the states of its Controls.
-- StatelessGroupControl - A GroupControl that has no state.
 - DependentSensor - A Sensor that only reports its state if all the specified resources are in the specified states.
 - DependentControl - A Control that can only be turned on if all the specified resources are in the specified states.
 
